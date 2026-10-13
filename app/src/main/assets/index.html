@@ -118,17 +118,19 @@ button{border:0}
     </section>
 
     <section class="page" id="page-service">
-      <div class="section-head"><h3>Peugeot-Service</h3><button id="serviceTabOpenBtn">Service eintragen</button></div>
-      <div class="service-card" id="serviceCard">
-        <div class="service-icon">🔧</div>
-        <div><h3>Nächster Peugeot-Service</h3><p id="serviceCardText">Service wird berechnet …</p><div class="service-extra" id="serviceCardExtra"></div></div>
-        <span class="badge unknown" id="serviceCardBadge">Offen</span>
-      </div>
+      <div class="section-head"><h3>Peugeot-Service</h3></div>
       <div class="panel">
-        <h3>Serviceumfang</h3>
-        <p class="small-note">Die Checkliste enthält den Grundservice, typische Sicht- und Funktionskontrollen und die für den nächsten Termin fälligen Zusatzarbeiten.</p>
-        <div id="serviceTabExtras" class="small-note"></div>
-        <button class="primary-btn" id="serviceTabChecklistBtn">Service-Checkliste öffnen</button>
+        <div class="service-note" id="serviceDueSummary"></div>
+        <div class="check-section"><h4>Grundservice</h4><div id="serviceBaseList"></div></div>
+        <div class="check-section"><h4>Sicht- und Funktionskontrollen</h4><div id="serviceInspectionList"></div></div>
+        <div class="check-section"><h4>Bei diesem Service fällige Zusatzarbeiten</h4><div id="serviceExtraList"></div></div>
+        <div class="row2">
+          <div class="field"><label>Datum</label><input id="serviceDate" class="input" type="date"></div>
+          <div class="field"><label>Kilometerstand</label><input id="serviceMileage" class="input" type="number" inputmode="numeric" min="0"></div>
+        </div>
+        <div class="field"><label>Kosten (€) – optional</label><input id="serviceCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>
+        <div class="field"><label>Notiz – optional</label><textarea id="serviceNote" class="input" rows="3" placeholder="z. B. Werkstatt, Öl-Spezifikation, Besonderheiten …"></textarea></div>
+        <button class="primary-btn" id="saveServiceBtn">Service bestätigen und speichern</button>
       </div>
     </section>
 
@@ -234,25 +236,6 @@ button{border:0}
   <div class="settings-panel">
     <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Wartungsinformationen</h2><span class="settings-head-spacer"></span></div>
     <div class="settings-sub-body" id="settingsInfoPanel"><p class="settings-sub-note">Die App ist eine Erinnerungs- und Dokumentationshilfe. Beim Peugeot 508 von 2012 entscheidet der Produktionszeitraum bzw. die OPR/DAM-Nummer über den Wartungsplan. Die Erstzulassung allein ist dafür nicht zuverlässig.</p></div>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="serviceModal">
-  <div class="modal">
-    <div class="handle"></div>
-    <div class="modal-head"><h3>Peugeot-Service</h3><button class="close" data-close="serviceModal">×</button></div>
-    <div class="service-note" id="serviceDueSummary"></div>
-    <div class="check-section"><h4>Grundservice</h4><div id="serviceBaseList"></div></div>
-    <div class="check-section"><h4>Typische Sicht- und Funktionskontrollen</h4><div id="serviceInspectionList"></div></div>
-    <div class="check-section"><h4>Zusatzarbeiten bei diesem Service</h4><div id="serviceExtraList"></div></div>
-    <div class="row2">
-      <div class="field"><label>Datum</label><input id="serviceDate" class="input" type="date"></div>
-      <div class="field"><label>Kilometerstand</label><input id="serviceMileage" class="input" type="number" inputmode="numeric" min="0"></div>
-    </div>
-    <div class="field"><label>Kosten (€) – optional</label><input id="serviceCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>
-    <div class="field"><label>Notiz – optional</label><textarea id="serviceNote" class="input" rows="3" placeholder="z. B. Werkstatt, Öl-Spezifikation, Besonderheiten …"></textarea></div>
-    <button class="primary-btn" id="saveServiceBtn">Service als erledigt speichern</button>
-    <p class="small-note">Die Checkliste orientiert sich am Peugeot-Serviceumfang. Maßgeblich bleibt der VIN-spezifische Wartungsplan in Peugeot Service Box.</p>
   </div>
 </div>
 
@@ -515,24 +498,6 @@ function servicePlan(v){
   }).map(rule=>({rule,info:dueInfo(v,rule)}));
   return {serviceRule,serviceInfo,extras};
 }
-function renderServiceSummary(v){
-  const {serviceInfo,extras}=servicePlan(v);
-  const text=document.getElementById("serviceCardText"),extra=document.getElementById("serviceCardExtra"),badge=document.getElementById("serviceCardBadge"),card=document.getElementById("serviceCard");
-  if(!serviceInfo){
-    text.textContent="Kein Serviceintervall vorhanden.";extra.textContent="";badge.textContent="Offen";badge.className="badge unknown";card.onclick=openServiceChecklist;return;
-  }
-  text.textContent=serviceInfo.detail||"Serviceintervall";
-  extra.textContent=extras.length?`${extras.length} Zusatzarbeit${extras.length===1?"":"en"} eingeplant`:"Keine zusätzlichen Wechselarbeiten zu diesem Termin";
-  badge.textContent=serviceInfo.label;
-  badge.className=`badge ${serviceInfo.status}`;
-  card.onclick=openServiceChecklist;
-  const tabExtras=document.getElementById("serviceTabExtras");
-  if(tabExtras){
-    tabExtras.innerHTML=extras.length
-      ?extras.map(({rule,info})=>`<div style="padding:7px 0;border-bottom:1px solid var(--rule)"><b>${rule.icon} ${esc(rule.name)}</b><br><span>${esc(info.detail||info.label||"")}</span></div>`).join("")
-      :"Für den nächsten Service sind keine zusätzlichen Wechselarbeiten eingeplant.";
-  }
-}
 function checklistRows(items,kind){
   return items.map((name,i)=>`<label class="check-row"><input type="checkbox" data-service-kind="${kind}" data-service-index="${i}"><span><b>${esc(name)}</b></span></label>`).join("");
 }
@@ -551,7 +516,7 @@ function openServiceChecklist(){
   document.getElementById("serviceMileage").value=v.mileage||"";
   document.getElementById("serviceCost").value="";
   document.getElementById("serviceNote").value="";
-  openModal("serviceModal");
+  showPage("service");
 }
 function saveServiceChecklist(){
   const v=vehicle(),rules=rulesFor(v);
@@ -561,11 +526,11 @@ function saveServiceChecklist(){
   const note=document.getElementById("serviceNote").value.trim();
   if(!date){alert("Bitte ein Datum eintragen.");return;}
   if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}
-  const checkedBase=[...document.querySelectorAll('#serviceModal [data-service-kind]:checked')].map(el=>{
+  const checkedBase=[...document.querySelectorAll('#page-service [data-service-kind]:checked')].map(el=>{
     const arr=el.dataset.serviceKind==="base"?SERVICE_BASE_ITEMS:SERVICE_INSPECTION_ITEMS;
     return arr[Number(el.dataset.serviceIndex)];
   }).filter(Boolean);
-  const checkedExtras=[...document.querySelectorAll('#serviceModal [data-service-task]:checked')].map(el=>el.dataset.serviceTask);
+  const checkedExtras=[...document.querySelectorAll('#page-service [data-service-task]:checked')].map(el=>el.dataset.serviceTask);
   const notes=[];
   if(checkedBase.length) notes.push(`Checkliste: ${checkedBase.join("; ")}`);
   if(note) notes.push(note);
@@ -577,7 +542,7 @@ function saveServiceChecklist(){
     v.records.push({id:`${serviceGroup}_${i}`,serviceGroup,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
   });
   if(mileage>Number(v.mileage||0)) v.mileage=mileage;
-  save();closeModal("serviceModal");renderAll();alert("Service und ausgewählte Zusatzarbeiten gespeichert.");
+  save();renderAll();openServiceChecklist();alert("Service und ausgewählte Zusatzarbeiten gespeichert.");
 }
 
 function renderAll(){
@@ -605,10 +570,9 @@ function renderDashboard(){
   if(!v.huDue) missing.push("HU-Termin");
   notice.innerHTML=missing.length?`<div class="notice"><b>Noch unvollständig:</b> ${missing.join(", ")}. Für die automatische Serviceplanung bitte unter Fahrzeugdaten ergänzen.</div>`:"";
   renderNextServicePlan(v);
-  renderServiceSummary(v);
 }
 function renderNextServicePlan(v){
-  const {serviceInfo,extras}=servicePlan(v);
+  const {serviceRule,serviceInfo,extras}=servicePlan(v);
   const due=document.getElementById("nextServiceDue");
   const list=document.getElementById("nextServiceList");
   if(!serviceInfo){
@@ -621,16 +585,17 @@ function renderNextServicePlan(v){
     const lastText=last?`Letzter Service: ${fmtDate(last.date)} · ${fmtKm(last.mileage)} km.<br>`:"Noch kein Service gespeichert.<br>";
     due.innerHTML=`<b>${lastText}</b>Nächster Service: ${target.length?target.join(" oder "):"nach hinterlegtem Wartungsplan"}.`;
   }
-  const baseItems=[
-    ...SERVICE_BASE_ITEMS.map(name=>({name,note:"Grundservice"})),
-    ...SERVICE_INSPECTION_ITEMS.map(name=>({name,note:"Prüfung"}))
-  ];
   const extraItems=extras.map(({rule,info})=>({
     name:`${rule.icon||"🔧"} ${rule.name}`,
-    note:info&&info.detail?`Zusatzarbeit · ${info.detail}`:"Zusatzarbeit"
+    note:info&&info.detail?info.detail:"Beim nächsten Service fällig"
   }));
-  const items=[...baseItems,...extraItems];
-  list.innerHTML=items.map(item=>`<div class="next-service-item"><span class="mark">✓</span><span><b>${esc(item.name)}</b><small>${esc(item.note)}</small></span></div>`).join("");
+  const items=serviceInfo?[
+    {name:serviceRule?serviceRule.name:"Motoröl + Ölfilter / Inspektion",note:"Beim nächsten Service fällig"},
+    ...extraItems
+  ]:[];
+  list.innerHTML=items.length
+    ?items.map(item=>`<div class="next-service-item"><span class="mark">✓</span><span><b>${esc(item.name)}</b><small>${esc(item.note)}</small></span></div>`).join("")
+    :`<div class="small-note">Noch nicht berechenbar. Bitte Kilometerstand und Fahrzeugdaten ergänzen.</div>`;
 }
 function renderHistory(){
   const v=vehicle();
@@ -816,7 +781,7 @@ async function backupAction(){
   }
 }
 
-document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>b.dataset.page==="service"?openServiceChecklist():showPage(b.dataset.page));
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
 document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id);}));
 document.getElementById("cancelDeleteHistoryBtn").onclick=closeHistoryDeleteConfirm;
@@ -833,8 +798,6 @@ document.getElementById("settingsOverlay").addEventListener("click",e=>{if(e.tar
 document.querySelectorAll('[id^="settingsSubOverlay-"]').forEach(sub=>sub.addEventListener("click",e=>{if(e.target===sub)sub.classList.remove("open");}));
 document.getElementById("saveEntryBtn").onclick=saveEntry;
 document.getElementById("saveServiceBtn").onclick=saveServiceChecklist;
-document.getElementById("serviceTabOpenBtn").onclick=openServiceChecklist;
-document.getElementById("serviceTabChecklistBtn").onclick=openServiceChecklist;
 document.getElementById("nextServiceChecklistBtn").onclick=openServiceChecklist;
 document.getElementById("settingsVehicle").onchange=e=>{state.selectedVehicle=e.target.value;save();renderAll();};
 document.getElementById("saveVehicleSettings").onclick=saveVehicleSettings;
