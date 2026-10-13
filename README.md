@@ -16,6 +16,8 @@ Die feste Zuordnung der Fahrzeugtypen zu den erlaubten Wartungsprofilen ist zus�
 - Service-Historie mit Datum, Kilometerstand, Kosten und Notizen
 - HU/AU (TÜV) mit frei eintragbarem nächsten Termin; nach eingetragener HU wird automatisch +24 Monate berechnet
 - Schnelländerung des Kilometerstands
+- Fahrzeugdaten mit HSN/TSN, Kennzeichen, FIN/VIN, Erstzulassung und HU-Termin
+- Kompakte Startseitenkarte **Als Nächstes fällig**
 - Wartungsprofile für normale bzw. erschwerte Nutzung beim 2008
 - Zwei auswählbare 2012er Wartungsprofile beim 508
 - Eigene Wartungspunkte mit km- und/oder Monatsintervall
