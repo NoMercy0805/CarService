@@ -1,0 +1,122 @@
+name: Fix history delete confirmation
+
+'on':
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  migrate:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - name: Patch history deletion
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('app/src/main/assets/index.html')
+          s = p.read_text(encoding='utf-8')
+
+          modal = '''
+<div class="modal-backdrop" id="deleteHistoryModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3>Eintrag l\u00f6schen?</h3><button class="close" id="closeDeleteHistoryBtn" aria-label="Schlie\u00dfen">&times;</button></div>
+    <p class="small-note" id="deleteHistoryText">Soll dieser Historien-Eintrag wirklich gel\u00f6scht werden?</p>
+    <div class="row2">
+      <button class="secondary-btn" id="cancelDeleteHistoryBtn">Abbrechen</button>
+      <button class="danger-btn" id="confirmDeleteHistoryBtn">L\u00f6schen</button>
+    </div>
+  </div>
+</div>
+
+'''
+          if 'id="deleteHistoryModal"' not in s:
+              marker = '<script>\nconst STORAGE_KEY = "carservice_v1";'
+              assert marker in s, 'script marker not found'
+              s = s.replace(marker, modal + marker, 1)
+
+          pattern = re.compile(r'''function deleteHistoryRecord\(recordId\)\{.*?\n\}\nfunction renderSettings\(\)\{''', re.S)
+          replacement = r'''let pendingHistoryDeleteId=null;
+function deleteHistoryRecord(recordId){
+  const v=vehicle();
+  const rec=(v.records||[]).find(r=>r.id===recordId);
+  if(!rec)return;
+  pendingHistoryDeleteId=recordId;
+  document.getElementById("deleteHistoryText").textContent=rec.taskId==="service"
+    ?"Diesen Service wirklich l\u00f6schen? Zugeh\u00f6rige Zusatzarbeiten dieses Servicevorgangs werden ebenfalls entfernt."
+    :"Diesen Historien-Eintrag wirklich l\u00f6schen?";
+  openModal("deleteHistoryModal");
+}
+function closeHistoryDeleteConfirm(){
+  pendingHistoryDeleteId=null;
+  closeModal("deleteHistoryModal");
+}
+function confirmHistoryDelete(){
+  const recordId=pendingHistoryDeleteId;
+  const v=vehicle();
+  const rec=(v.records||[]).find(r=>r.id===recordId);
+  if(!recordId||!rec){closeHistoryDeleteConfirm();return;}
+  if(rec.taskId==="service"){
+    const group=rec.serviceGroup||null;
+    v.records=(v.records||[]).filter(r=>{
+      if(r.id===rec.id)return false;
+      if(group&&r.serviceGroup===group)return false;
+      if(!group&&r.date===rec.date&&Number(r.mileage||0)===Number(rec.mileage||0)&&r.note==="Im Rahmen des Service erledigt")return false;
+      return true;
+    });
+  }else{
+    v.records=(v.records||[]).filter(r=>r.id!==rec.id);
+  }
+  pendingHistoryDeleteId=null;
+  save();
+  closeModal("deleteHistoryModal");
+  renderAll();
+}
+function renderSettings(){'''
+          s, n = pattern.subn(lambda m: replacement, s, count=1)
+          assert n == 1, 'deleteHistoryRecord block not found'
+
+          handler_marker = 'document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id);}));'
+          handlers = handler_marker + '''\ndocument.getElementById("cancelDeleteHistoryBtn").onclick=closeHistoryDeleteConfirm;\ndocument.getElementById("closeDeleteHistoryBtn").onclick=closeHistoryDeleteConfirm;\ndocument.getElementById("confirmDeleteHistoryBtn").onclick=confirmHistoryDelete;\ndocument.getElementById("deleteHistoryModal").addEventListener("click",e=>{if(e.target===e.currentTarget)closeHistoryDeleteConfirm();});'''
+          assert handler_marker in s, 'modal handler marker not found'
+          s = s.replace(handler_marker, handlers, 1)
+
+          assert 'id="deleteHistoryModal"' in s
+          assert 'confirmDeleteHistoryBtn' in s
+          assert 'function confirmHistoryDelete()' in s
+          assert 'if(!confirm(question))return;' not in s
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          js=s.split('<script>',1)[1].rsplit('</script>',1)[0]
+          Path('/tmp/carservice.js').write_text(js,encoding='utf-8')
+          assert 'deleteHistoryModal' in s
+          assert 'confirmHistoryDeleteBtn' in s
+          assert 'function confirmHistoryDelete()' in s
+          assert 'if(!confirm(question))return;' not in s
+          PY
+          node --check /tmp/carservice.js
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/assets/index.html
+          git commit -m 'Fix history deletion confirmation'
+          git push
+      - name: Start signed build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build.yml --ref main
