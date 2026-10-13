@@ -20,33 +20,36 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           p=Path('app/src/main/assets/index.html')
           s=p.read_text()
 
-          old_css='''.bottom-nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);padding:9px 20px calc(9px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-top:1px solid var(--rule);z-index:30}\n.nav-btn{background:none;color:var(--muted);padding:7px 4px 4px;font-size:10px}.nav-btn i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}.nav-btn.active{color:var(--primary);font-weight:700}'''
-          new_css='''.bottom-nav{display:flex;background:var(--surface);border-radius:26px;overflow:hidden;padding:6px;gap:2px;position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:30;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.5);box-shadow:0 4px 16px rgba(0,0,0,.12),0 1px 4px rgba(0,0,0,.08)}\nhtml[data-theme="dark"] .bottom-nav{border-color:rgba(255,255,255,.16)}\n.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;background:none;color:var(--muted);border-radius:20px;font-weight:700;font-size:10.5px;white-space:nowrap;transition:color .15s ease,transform .12s ease}.nav-btn:active{transform:scale(.96)}.nav-btn svg{width:20px;height:20px;flex-shrink:0;stroke-linecap:round;stroke-linejoin:round}.nav-btn span{overflow:hidden;text-overflow:ellipsis;max-width:100%}.nav-btn.active{color:var(--primary);background:none;box-shadow:none}.nav-btn.active svg{stroke-width:2.6}'''
-          assert old_css in s, 'old bottom nav css not found'
-          s=s.replace(old_css,new_css,1)
+          new_css='''.bottom-nav{display:flex;background:var(--surface);border-radius:26px;overflow:hidden;padding:6px;gap:2px;position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:30;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.5);box-shadow:0 4px 16px rgba(0,0,0,.12),0 1px 4px rgba(0,0,0,.08)}
+html[data-theme="dark"] .bottom-nav{border-color:rgba(255,255,255,.16)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 4px;background:none;color:var(--muted);border-radius:20px;font-weight:700;font-size:10.5px;white-space:nowrap;transition:color .15s ease,transform .12s ease}.nav-btn:active{transform:scale(.96)}.nav-btn svg{width:20px;height:20px;flex-shrink:0;stroke-linecap:round;stroke-linejoin:round}.nav-btn span{overflow:hidden;text-overflow:ellipsis;max-width:100%}.nav-btn.active{color:var(--primary);background:none;box-shadow:none}.nav-btn.active svg{stroke-width:2.6}
+'''
+          s,n=re.subn(r'\.bottom-nav\{.*?(?=\.fab\{)',new_css,s,count=1,flags=re.S)
+          assert n==1, f'bottom nav css replacements: {n}'
 
-          old_settings='#settingsMenuBtn{border-radius:50%}'
-          new_settings='''#settingsMenuBtn{width:38px;height:38px;border-radius:50%;background:var(--surface);color:var(--muted);box-shadow:none;border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:0}#settingsMenuBtn:hover{color:var(--primary);background:var(--primary-soft)}#settingsMenuBtn svg{width:20px;height:20px;stroke-linecap:round;stroke-linejoin:round}html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16)}'''
-          assert old_settings in s, 'settings css not found'
-          s=s.replace(old_settings,new_settings,1)
+          settings_css='''#settingsMenuBtn{width:38px;height:38px;border-radius:50%;background:var(--surface);color:var(--muted);box-shadow:none;border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:0}#settingsMenuBtn:hover{color:var(--primary);background:var(--primary-soft)}#settingsMenuBtn svg{width:20px;height:20px;stroke-linecap:round;stroke-linejoin:round}html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16)}'''
+          s,n=re.subn(r'#settingsMenuBtn\{[^}]*\}',settings_css,s,count=1)
+          assert n==1, f'settings css replacements: {n}'
 
-          old_btn='''<button class="icon-btn" id="settingsMenuBtn" title="Einstellungen" aria-label="Einstellungen">⚙</button>'''
           gear='''<button class="icon-btn" id="settingsMenuBtn" title="Einstellungen" aria-label="Einstellungen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>'''
-          assert old_btn in s, 'old settings button not found'
-          s=s.replace(old_btn,gear,1)
+          s,n=re.subn(r'<button class="icon-btn" id="settingsMenuBtn".*?</button>',gear,s,count=1,flags=re.S)
+          assert n==1, f'settings button replacements: {n}'
 
-          old_nav='''<nav class="bottom-nav">\n  <button class="nav-btn active" data-page="dashboard"><i>⌂</i>Übersicht</button>\n  <button class="nav-btn" data-page="service"><i>🔧</i>Peugeot-Service</button>\n  <button class="nav-btn" data-page="history"><i>◷</i>Historie</button>\n</nav>'''
-          new_nav='''<nav class="bottom-nav">\n  <button class="nav-btn active" data-page="dashboard" aria-label="Übersicht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.8 12 3l9 7.8"/><path d="M5.5 9.2V21h13V9.2"/><path d="M9.5 21v-6h5v6"/></svg><span>Übersicht</span></button>\n  <button class="nav-btn" data-page="service" aria-label="Peugeot-Service"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5 5L3.5 17.5a2.1 2.1 0 0 0 3 3l6.2-6.2a4 4 0 0 0 5-5l-2.5 2.5-3-3 2.5-2.5Z"/><path d="m15.5 15.5 5 5"/><path d="m18 13 3 3"/></svg><span>Peugeot-Service</span></button>\n  <button class="nav-btn" data-page="history" aria-label="Historie"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/><path d="M5.6 5.6 3.8 3.8"/></svg><span>Historie</span></button>\n</nav>'''
-          assert old_nav in s, 'old bottom nav html not found'
-          s=s.replace(old_nav,new_nav,1)
+          nav='''<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="dashboard" aria-label="Übersicht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.8 12 3l9 7.8"/><path d="M5.5 9.2V21h13V9.2"/><path d="M9.5 21v-6h5v6"/></svg><span>Übersicht</span></button>
+  <button class="nav-btn" data-page="service" aria-label="Peugeot-Service"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5 5L3.5 17.5a2.1 2.1 0 0 0 3 3l6.2-6.2a4 4 0 0 0 5-5l-2.5 2.5-3-3 2.5-2.5Z"/><path d="m15.5 15.5 5 5"/><path d="m18 13 3 3"/></svg><span>Peugeot-Service</span></button>
+  <button class="nav-btn" data-page="history" aria-label="Historie"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/><path d="M5.6 5.6 3.8 3.8"/></svg><span>Historie</span></button>
+</nav>'''
+          s,n=re.subn(r'<nav class="bottom-nav">.*?</nav>',nav,s,count=1,flags=re.S)
+          assert n==1, f'bottom nav html replacements: {n}'
 
-          # Guardrails: no emoji/text icons left in the bottom bar/settings button.
-          assert '<i>⌂</i>' not in s and '<i>🔧</i>' not in s and '<i>◷</i>' not in s
-          assert '>⚙</button>' not in s
+          for forbidden in ['<i>⌂</i>','<i>🔧</i>','<i>◷</i>','>⚙</button>']:
+            assert forbidden not in s, forbidden
           assert 'data-page="dashboard" aria-label="Übersicht"><svg' in s
           assert 'data-page="service" aria-label="Peugeot-Service"><svg' in s
           assert 'data-page="history" aria-label="Historie"><svg' in s
