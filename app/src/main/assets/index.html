@@ -73,7 +73,12 @@ button{border:0}
 .handle{width:42px;height:5px;border-radius:5px;background:var(--rule);margin:2px auto 14px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.modal-head h3{margin:0;font-size:19px}.close{width:34px;height:34px;border-radius:50%;background:var(--paper);color:var(--ink)}
 .theme-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.theme-pills button{padding:10px;border-radius:12px;background:var(--paper);color:var(--ink)}.theme-pills button.active{background:var(--primary);color:#fff}
 .small-note{font-size:11px;color:var(--muted);line-height:1.5}
-.settings-menu-list{display:flex;flex-direction:column;gap:8px;margin:4px 0 8px}.settings-menu-item{width:100%;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:15px;padding:13px 14px;display:grid;grid-template-columns:38px 1fr auto;gap:11px;align-items:center;text-align:left}.settings-menu-item .menu-icon{width:38px;height:38px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:18px}.settings-menu-item b{display:block;font-size:14px}.settings-menu-item small{display:block;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.35}.settings-menu-item .chevron{color:var(--muted);font-size:20px}.settings-page-title{display:flex;align-items:center;gap:10px;margin:2px 2px 14px}.settings-page-title h2{margin:0;font-size:22px}.settings-back{width:38px;height:38px;border-radius:12px;background:var(--surface2);box-shadow:var(--shadow);color:var(--ink);font-size:25px;line-height:1}
+.settings-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,22,.45);align-items:center;justify-content:center;padding:20px;z-index:1000;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.settings-overlay.open{display:flex;animation:settingsFade .15s ease}.settings-panel{background:var(--surface2);border:1px solid rgba(255,255,255,.5);border-radius:26px;padding:22px;width:min(400px,100%);max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.25);animation:settingsPop .22s cubic-bezier(.4,0,.2,1)}html[data-theme="dark"] .settings-panel{border-color:rgba(255,255,255,.16)}
+.settings-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;min-height:42px}.settings-panel-head h2{font-size:19px;font-weight:800;color:var(--ink);margin:0;text-align:center}.settings-close-btn{background:var(--paper);border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:8px 13px;border-radius:50%}.settings-back-btn{background:var(--paper);border:none;color:var(--muted);cursor:pointer;padding:9px;border-radius:50%;width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center}.settings-head-spacer{width:36px;height:36px;flex-shrink:0}
+.settings-nav-list{margin-top:6px}.settings-nav-row{display:flex;align-items:center;width:100%;background:none;border:none;text-align:left;padding:13px 2px;cursor:pointer;gap:14px;border-bottom:1px solid var(--rule);color:var(--ink)}.settings-nav-row:last-child{border-bottom:none}.settings-nav-icon{flex-shrink:0;width:32px;height:32px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff}.settings-nav-icon svg{width:21px;height:21px}.settings-nav-text{flex:1;display:flex;flex-direction:column;gap:2px}.settings-nav-title{font-size:16px;font-weight:700;color:var(--ink)}.settings-nav-sub{font-size:13px;color:var(--muted);line-height:1.3}.settings-nav-arrow{font-size:22px;color:var(--muted);flex-shrink:0}.settings-sub-body{padding-top:12px}.settings-sub-body .field:last-of-type{margin-bottom:0}.settings-sub-note{font-size:12px;color:var(--muted);line-height:1.5;margin:4px 0 12px}
+#settingsMenuBtn{border-radius:50%}
+@keyframes settingsFade{from{opacity:0}to{opacity:1}}@keyframes settingsPop{from{transform:scale(.96);opacity:.65}to{transform:scale(1);opacity:1}}
 .maintenance-details{margin:0 0 16px}.maintenance-details>summary{list-style:none;cursor:pointer;background:var(--surface2);box-shadow:var(--shadow);border-radius:16px;padding:14px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px}.maintenance-details>summary::-webkit-details-marker{display:none}.maintenance-details>summary b{display:block;font-size:15px}.maintenance-details>summary small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.maintenance-details[open]>summary{margin-bottom:12px}.maintenance-details .section-head{margin-top:0}.profile-explain{background:var(--primary-soft);color:var(--ink);border-radius:13px;padding:11px 12px;margin-top:8px;font-size:11px;line-height:1.5}
 .service-card{background:var(--surface2);box-shadow:var(--shadow);border-radius:18px;padding:15px 16px;margin:0 0 16px;display:grid;grid-template-columns:42px 1fr auto;gap:11px;align-items:center;cursor:pointer}.service-card .service-icon{width:42px;height:42px;border-radius:13px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:20px}.service-card h3{margin:0 0 4px;font-size:15px}.service-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.service-card .service-extra{font-size:11px;color:var(--primary);margin-top:5px}.check-section{margin:14px 0}.check-section h4{margin:0 0 8px;font-size:13px}.check-row{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;padding:10px 2px;border-bottom:1px solid var(--rule)}.check-row:last-child{border-bottom:0}.check-row input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--primary)}.check-row b{font-size:13px}.check-row small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}.service-note{background:var(--primary-soft);border-radius:13px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--ink)}
 @media(max-width:380px){.summary{grid-template-columns:1fr 1fr 1fr}.km-value{font-size:28px}.vehicle-tab{min-width:195px}}
@@ -138,49 +143,6 @@ button{border:0}
       <div class="history-list" id="historyList"></div>
     </section>
 
-    <section class="page" id="page-settings">
-      <div class="settings-page-title"><button class="settings-back" id="settingsBackBtn" aria-label="Zurück">‹</button><h2>Einstellungen</h2></div>
-      <div class="panel" id="settingsVehiclePanel">
-        <h3>Fahrzeugdaten</h3>
-        <div class="field"><label>Fahrzeug</label><select id="settingsVehicle" class="input"></select></div>
-        <div class="field"><label>HSN / TSN</label><div class="readonly-id"><div class="id-box"><small>HSN</small><b id="settingsHsn">–</b></div><div class="id-box"><small>TSN</small><b id="settingsTsn">–</b></div></div></div>
-        <div class="row2"><div class="field"><label>Kennzeichen</label><input id="settingsPlate" class="input" type="text" maxlength="12" autocapitalize="characters" placeholder="z. B. HN-AB 123"></div><div class="field"><label>Aktueller Kilometerstand</label><input id="settingsMileage" class="input" type="number" inputmode="numeric" min="0"></div></div>
-        <div class="field"><label>FIN / VIN</label><input id="settingsVin" class="input" type="text" maxlength="17" autocapitalize="characters" autocomplete="off" placeholder="17-stellige Fahrzeug-Ident-Nr."><div class="help">Optional. Wird nur lokal auf diesem Gerät gespeichert.</div></div>
-        <div class="field"><label>Erstzulassung</label><input id="settingsFirstReg" class="input" type="date"></div>
-        <div class="field"><label>Nächste HU / TÜV</label><input id="settingsHuDue" class="input" type="date"></div>
-        <div class="field" id="profileField"><label id="profileLabel">Wartungsplan</label><select id="settingsProfile" class="input"></select><div class="help" id="profileHelp"></div><div class="profile-explain" id="profileExplain"></div></div>
-        <button class="primary-btn" id="saveVehicleSettings">Fahrzeugdaten speichern</button>
-      </div>
-
-      <div class="panel" id="settingsMaintenancePanel">
-        <h3>Eigene Wartungspunkte</h3>
-        <p class="small-note">Für Reparaturen oder Arbeiten, die du zusätzlich verfolgen möchtest, z. B. Batterie, Getriebeöl oder Klimaservice.</p>
-        <button class="secondary-btn" id="addCustomTaskBtn">+ Wartungspunkt anlegen</button>
-        <div id="customTaskList"></div>
-      </div>
-
-      <div class="panel" id="settingsAppearancePanel">
-        <h3>Darstellung</h3>
-        <div class="theme-pills">
-          <button data-theme-choice="system">System</button>
-          <button data-theme-choice="light">Hell</button>
-          <button data-theme-choice="dark">Dunkel</button>
-        </div>
-      </div>
-
-      <div class="panel" id="settingsDataPanel">
-        <h3>Daten & Sicherung</h3>
-        <p class="small-note">Alle Daten liegen ausschließlich lokal auf diesem Gerät. Beim Löschen der App gehen sie ohne Sicherung verloren.</p>
-        <button class="secondary-btn" id="copyBackupBtn">Sicherung als Text kopieren</button>
-        <button class="secondary-btn" id="importBackupBtn">Sicherung einfügen</button>
-        <button class="danger-btn" id="resetBtn">Alle App-Daten zurücksetzen</button>
-      </div>
-
-      <div class="panel" id="settingsInfoPanel">
-        <h3>Wartungsinformationen</h3>
-        <p class="small-note">Die App ist eine Erinnerungs- und Dokumentationshilfe. Beim Peugeot 508 von 2012 entscheidet der Produktionszeitraum bzw. die OPR/DAM-Nummer über den Wartungsplan. Die Erstzulassung allein ist dafür nicht zuverlässig.</p>
-      </div>
-    </section>
   </main>
 </div>
 
@@ -191,17 +153,93 @@ button{border:0}
   <button class="nav-btn" data-page="history"><i>◷</i>Historie</button>
 </nav>
 
-<div class="modal-backdrop" id="settingsMenuModal">
-  <div class="modal">
-    <div class="handle"></div>
-    <div class="modal-head"><h3>Einstellungen</h3><button class="close" data-close="settingsMenuModal">×</button></div>
-    <div class="settings-menu-list">
-      <button class="settings-menu-item" data-settings-target="settingsVehiclePanel"><span class="menu-icon">🚗</span><span><b>Fahrzeugdaten</b><small>Kennzeichen, Kilometer, FIN, HU und Wartungsplan</small></span><span class="chevron">›</span></button>
-      <button class="settings-menu-item" data-settings-target="settingsMaintenancePanel"><span class="menu-icon">🔧</span><span><b>Wartungspunkte</b><small>Eigene zusätzliche Arbeiten verwalten</small></span><span class="chevron">›</span></button>
-      <button class="settings-menu-item" data-settings-target="settingsAppearancePanel"><span class="menu-icon">◐</span><span><b>Darstellung</b><small>System, hell oder dunkel</small></span><span class="chevron">›</span></button>
-      <button class="settings-menu-item" data-settings-target="settingsDataPanel"><span class="menu-icon">💾</span><span><b>Daten & Sicherung</b><small>Sicherung exportieren, importieren oder Daten zurücksetzen</small></span><span class="chevron">›</span></button>
-      <button class="settings-menu-item" data-settings-target="settingsInfoPanel"><span class="menu-icon">ℹ</span><span><b>Wartungsinformationen</b><small>Hinweise zu Intervallen und Wartungsplänen</small></span><span class="chevron">›</span></button>
+
+<div id="settingsOverlay" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head">
+      <h2>Einstellungen</h2>
+      <button class="settings-close-btn" id="settingsCloseBtn" aria-label="Schließen">×</button>
     </div>
+    <div class="settings-nav-list">
+      <button type="button" class="settings-nav-row" data-open-settings="fahrzeug">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14l1-5-3-5H7l-3 5 1 5Z"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Fahrzeugdaten</span><span class="settings-nav-sub">Kennzeichen, Kilometer, FIN, HU und Wartungsplan</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+      <button type="button" class="settings-nav-row" data-open-settings="wartung">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5 5L4 17l3 3 5.7-5.7a4 4 0 0 0 5-5l-2.5 2.5-3-3 2.5-2.5Z"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Wartungspunkte</span><span class="settings-nav-sub">Eigene zusätzliche Arbeiten verwalten</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+      <button type="button" class="settings-nav-row" data-open-settings="darstellung">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Darstellung</span><span class="settings-nav-sub">Hell, Dunkel oder System</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+      <button type="button" class="settings-nav-row" data-open-settings="daten">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17.5a4.5 4.5 0 0 1-.9-8.9A5.5 5.5 0 0 1 16.7 7 4.5 4.5 0 0 1 17.2 15.9"/><path d="M12 10.5v8M9 15.5l3 3 3-3"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Daten &amp; Sicherung</span><span class="settings-nav-sub">Sichern, wiederherstellen oder zurücksetzen</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+      <button type="button" class="settings-nav-row" data-open-settings="info">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 10v7M12 7h.01"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Wartungsinformationen</span><span class="settings-nav-sub">Hinweise zu Intervallen und Wartungsplänen</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-fahrzeug" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Fahrzeugdaten</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsVehiclePanel">
+      <div class="field"><label>Fahrzeug</label><select id="settingsVehicle" class="input"></select></div>
+      <div class="field"><label>HSN / TSN</label><div class="readonly-id"><div class="id-box"><small>HSN</small><b id="settingsHsn">–</b></div><div class="id-box"><small>TSN</small><b id="settingsTsn">–</b></div></div></div>
+      <div class="row2"><div class="field"><label>Kennzeichen</label><input id="settingsPlate" class="input" type="text" maxlength="12" autocapitalize="characters" placeholder="z. B. HN-AB 123"></div><div class="field"><label>Aktueller Kilometerstand</label><input id="settingsMileage" class="input" type="number" inputmode="numeric" min="0"></div></div>
+      <div class="field"><label>FIN / VIN</label><input id="settingsVin" class="input" type="text" maxlength="17" autocapitalize="characters" autocomplete="off" placeholder="17-stellige Fahrzeug-Ident-Nr."><div class="help">Optional. Wird nur lokal auf diesem Gerät gespeichert.</div></div>
+      <div class="field"><label>Erstzulassung</label><input id="settingsFirstReg" class="input" type="date"></div>
+      <div class="field"><label>Nächste HU / TÜV</label><input id="settingsHuDue" class="input" type="date"></div>
+      <div class="field" id="profileField"><label id="profileLabel">Wartungsplan</label><select id="settingsProfile" class="input"></select><div class="help" id="profileHelp"></div><div class="profile-explain" id="profileExplain"></div></div>
+      <button class="primary-btn" id="saveVehicleSettings">Fahrzeugdaten speichern</button>
+    </div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-wartung" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Wartungspunkte</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsMaintenancePanel">
+      <p class="settings-sub-note">Für Reparaturen oder Arbeiten, die du zusätzlich verfolgen möchtest, z. B. Batterie, Getriebeöl oder Klimaservice.</p>
+      <button class="secondary-btn" id="addCustomTaskBtn">+ Wartungspunkt anlegen</button>
+      <div id="customTaskList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-darstellung" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Darstellung</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsAppearancePanel"><div class="theme-pills"><button data-theme-choice="system">System</button><button data-theme-choice="light">Hell</button><button data-theme-choice="dark">Dunkel</button></div></div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-daten" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Daten &amp; Sicherung</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsDataPanel">
+      <p class="settings-sub-note">Alle Daten liegen ausschließlich lokal auf diesem Gerät. Beim Löschen der App gehen sie ohne Sicherung verloren.</p>
+      <button class="secondary-btn" id="copyBackupBtn">Sicherung als Text kopieren</button>
+      <button class="secondary-btn" id="importBackupBtn">Sicherung einfügen</button>
+      <button class="danger-btn" id="resetBtn">Alle App-Daten zurücksetzen</button>
+    </div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-info" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Wartungsinformationen</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsInfoPanel"><p class="settings-sub-note">Die App ist eine Erinnerungs- und Dokumentationshilfe. Beim Peugeot 508 von 2012 entscheidet der Produktionszeitraum bzw. die OPR/DAM-Nummer über den Wartungsplan. Die Erstzulassung allein ist dafür nicht zuverlässig.</p></div>
   </div>
 </div>
 
@@ -644,20 +682,35 @@ function syncNav(){
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",document.getElementById("page-"+b.dataset.page).classList.contains("active")));
 }
 function showPage(name){
+  const page=document.getElementById("page-"+name);
+  if(!page)return;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById("page-"+name).classList.add("active");
+  page.classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
   window.scrollTo(0,0);
-  if(name==="settings")renderSettings();
 }
-function openSettingsSection(targetId){
-  closeModal("settingsMenuModal");
-  showPage("settings");
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    const target=document.getElementById(targetId);
-    if(target) target.scrollIntoView({behavior:"smooth",block:"start"});
-  }));
+function openSettings(){
+  renderSettings();
+  document.getElementById("settingsOverlay").classList.add("open");
 }
+function openSettingsSub(key){
+  const sub=document.getElementById("settingsSubOverlay-"+key);
+  if(!sub)return;
+  renderSettings();
+  document.getElementById("settingsOverlay").classList.remove("open");
+  sub.classList.add("open");
+}
+window.closeAnyOpenOverlay=function(){
+  const modal=document.querySelector(".modal-backdrop.open");
+  if(modal){modal.classList.remove("open");return true;}
+  const sub=document.querySelector('[id^="settingsSubOverlay-"].open');
+  if(sub){sub.classList.remove("open");document.getElementById("settingsOverlay").classList.add("open");return true;}
+  const settings=document.getElementById("settingsOverlay");
+  if(settings&&settings.classList.contains("open")){settings.classList.remove("open");return true;}
+  return false;
+};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")window.closeAnyOpenOverlay();});
+
 function openModal(id){document.getElementById(id).classList.add("open");}
 function closeModal(id){document.getElementById(id).classList.remove("open");}
 function openEntry(taskId){
@@ -737,9 +790,12 @@ document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("clic
 document.getElementById("fab").onclick=()=>openEntry();
 document.getElementById("openLogBtn").onclick=()=>openEntry();
 document.getElementById("historyAddBtn").onclick=()=>openEntry();
-document.getElementById("settingsMenuBtn").onclick=()=>openModal("settingsMenuModal");
-document.getElementById("settingsBackBtn").onclick=()=>showPage("dashboard");
-document.querySelectorAll("[data-settings-target]").forEach(b=>b.onclick=()=>openSettingsSection(b.dataset.settingsTarget));
+document.getElementById("settingsMenuBtn").onclick=openSettings;
+document.getElementById("settingsCloseBtn").onclick=()=>document.getElementById("settingsOverlay").classList.remove("open");
+document.querySelectorAll("[data-open-settings]").forEach(b=>b.onclick=()=>openSettingsSub(b.dataset.openSettings));
+document.querySelectorAll("[data-back-settings]").forEach(b=>b.onclick=()=>{b.closest(".settings-overlay").classList.remove("open");document.getElementById("settingsOverlay").classList.add("open");});
+document.getElementById("settingsOverlay").addEventListener("click",e=>{if(e.target.id==="settingsOverlay")e.currentTarget.classList.remove("open");});
+document.querySelectorAll('[id^="settingsSubOverlay-"]').forEach(sub=>sub.addEventListener("click",e=>{if(e.target===sub)sub.classList.remove("open");}));
 document.getElementById("saveEntryBtn").onclick=saveEntry;
 document.getElementById("saveServiceBtn").onclick=saveServiceChecklist;
 document.getElementById("filterChips").onclick=e=>{const b=e.target.closest("[data-filter]");if(!b)return;state.filter=b.dataset.filter;save();renderDashboard();};
