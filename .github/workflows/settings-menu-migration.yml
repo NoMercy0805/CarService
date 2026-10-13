@@ -1,0 +1,164 @@
+name: CarService settings menu migration
+
+on:
+  push:
+    paths:
+      - '.github/workflows/settings-menu-migration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Move settings into top-right menu
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('app/src/main/assets/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly one match, found {count}')
+              text = text.replace(old, new, 1)
+
+          replace_once(
+              '.bottom-nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);padding:9px 20px calc(9px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-top:1px solid var(--rule);z-index:30}',
+              '.bottom-nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);padding:9px 20px calc(9px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(2,1fr);gap:6px;border-top:1px solid var(--rule);z-index:30}',
+              'two-column bottom nav')
+
+          replace_once(
+              '.small-note{font-size:11px;color:var(--muted);line-height:1.5}\n',
+              '.small-note{font-size:11px;color:var(--muted);line-height:1.5}\n.settings-menu-list{display:flex;flex-direction:column;gap:8px;margin:4px 0 8px}.settings-menu-item{width:100%;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:15px;padding:13px 14px;display:grid;grid-template-columns:38px 1fr auto;gap:11px;align-items:center;text-align:left}.settings-menu-item .menu-icon{width:38px;height:38px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:18px}.settings-menu-item b{display:block;font-size:14px}.settings-menu-item small{display:block;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.35}.settings-menu-item .chevron{color:var(--muted);font-size:20px}.settings-page-title{display:flex;align-items:center;gap:10px;margin:2px 2px 14px}.settings-page-title h2{margin:0;font-size:22px}.settings-back{width:38px;height:38px;border-radius:12px;background:var(--surface2);box-shadow:var(--shadow);color:var(--ink);font-size:25px;line-height:1}\n',
+              'settings menu CSS')
+
+          replace_once(
+              '    <button class="icon-btn" id="quickTheme" title="Darstellung">◐</button>',
+              '    <button class="icon-btn" id="settingsMenuBtn" title="Einstellungen" aria-label="Einstellungen">⚙</button>',
+              'top-right settings button')
+
+          replace_once(
+              '    <section class="page" id="page-settings">\n      <div class="panel">\n        <h3>Fahrzeugdaten</h3>',
+              '    <section class="page" id="page-settings">\n      <div class="settings-page-title"><button class="settings-back" id="settingsBackBtn" aria-label="Zurück">‹</button><h2>Einstellungen</h2></div>\n      <div class="panel" id="settingsVehiclePanel">\n        <h3>Fahrzeugdaten</h3>',
+              'settings page heading and vehicle panel id')
+
+          replace_once(
+              '      <div class="panel">\n        <h3>Eigene Wartungspunkte</h3>',
+              '      <div class="panel" id="settingsMaintenancePanel">\n        <h3>Eigene Wartungspunkte</h3>',
+              'maintenance panel id')
+
+          replace_once(
+              '      <div class="panel">\n        <h3>Darstellung</h3>',
+              '      <div class="panel" id="settingsAppearancePanel">\n        <h3>Darstellung</h3>',
+              'appearance panel id')
+
+          replace_once(
+              '      <div class="panel">\n        <h3>Daten</h3>',
+              '      <div class="panel" id="settingsDataPanel">\n        <h3>Daten & Sicherung</h3>',
+              'data panel id')
+
+          replace_once(
+              '      <div class="panel">\n        <h3>Hinweis zu Intervallen</h3>',
+              '      <div class="panel" id="settingsInfoPanel">\n        <h3>Wartungsinformationen</h3>',
+              'info panel id')
+
+          replace_once(
+              '''<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="dashboard"><i>⌂</i>Übersicht</button>
+  <button class="nav-btn" data-page="history"><i>◷</i>Historie</button>
+  <button class="nav-btn" data-page="settings"><i>⚙</i>Einstellungen</button>
+</nav>
+
+<div class="modal-backdrop" id="serviceModal">''',
+              '''<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="dashboard"><i>⌂</i>Übersicht</button>
+  <button class="nav-btn" data-page="history"><i>◷</i>Historie</button>
+</nav>
+
+<div class="modal-backdrop" id="settingsMenuModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3>Einstellungen</h3><button class="close" data-close="settingsMenuModal">×</button></div>
+    <div class="settings-menu-list">
+      <button class="settings-menu-item" data-settings-target="settingsVehiclePanel"><span class="menu-icon">🚗</span><span><b>Fahrzeugdaten</b><small>Kennzeichen, Kilometer, FIN, HU und Wartungsplan</small></span><span class="chevron">›</span></button>
+      <button class="settings-menu-item" data-settings-target="settingsMaintenancePanel"><span class="menu-icon">🔧</span><span><b>Wartungspunkte</b><small>Eigene zusätzliche Arbeiten verwalten</small></span><span class="chevron">›</span></button>
+      <button class="settings-menu-item" data-settings-target="settingsAppearancePanel"><span class="menu-icon">◐</span><span><b>Darstellung</b><small>System, hell oder dunkel</small></span><span class="chevron">›</span></button>
+      <button class="settings-menu-item" data-settings-target="settingsDataPanel"><span class="menu-icon">💾</span><span><b>Daten & Sicherung</b><small>Sicherung exportieren, importieren oder Daten zurücksetzen</small></span><span class="chevron">›</span></button>
+      <button class="settings-menu-item" data-settings-target="settingsInfoPanel"><span class="menu-icon">ℹ</span><span><b>Wartungsinformationen</b><small>Hinweise zu Intervallen und Wartungsplänen</small></span><span class="chevron">›</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="serviceModal">''',
+              'settings menu and bottom nav')
+
+          replace_once(
+              '''function showPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+  window.scrollTo(0,0);
+  if(name==="settings")renderSettings();
+}''',
+              '''function showPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+  window.scrollTo(0,0);
+  if(name==="settings")renderSettings();
+}
+function openSettingsSection(targetId){
+  closeModal("settingsMenuModal");
+  showPage("settings");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const target=document.getElementById(targetId);
+    if(target) target.scrollIntoView({behavior:"smooth",block:"start"});
+  }));
+}''',
+              'settings navigation helper')
+
+          replace_once(
+              'document.getElementById("quickTheme").onclick=cycleTheme;\ndocument.getElementById("editVehicleBtn").onclick=()=>showPage("settings");',
+              'document.getElementById("settingsMenuBtn").onclick=()=>openModal("settingsMenuModal");\ndocument.getElementById("editVehicleBtn").onclick=()=>openSettingsSection("settingsVehiclePanel");\ndocument.getElementById("settingsBackBtn").onclick=()=>showPage("dashboard");\ndocument.querySelectorAll("[data-settings-target]").forEach(b=>b.onclick=()=>openSettingsSection(b.dataset.settingsTarget));',
+              'settings event handlers')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify UI and JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>(.*?)</script>', html, flags=re.S)
+          if len(scripts) != 1:
+              raise SystemExit(f'expected one inline script, found {len(scripts)}')
+          Path('/tmp/carservice.js').write_text(scripts[0], encoding='utf-8')
+          required = ['settingsMenuBtn','settingsMenuModal','settingsVehiclePanel','settingsMaintenancePanel','settingsAppearancePanel','settingsDataPanel','settingsInfoPanel','settingsBackBtn']
+          for item in required:
+              if f'id="{item}"' not in html:
+                  raise SystemExit(f'missing {item}')
+          if 'data-page="settings"' in html:
+              raise SystemExit('settings still present in bottom navigation')
+          if 'id="quickTheme"' in html:
+              raise SystemExit('old quick theme button still present')
+          PY
+          node --check /tmp/carservice.js
+
+      - name: Commit settings navigation
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/assets/index.html
+          git diff --cached --check
+          git commit -m 'Move settings into top-right menu'
+          git push
