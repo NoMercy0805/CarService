@@ -1,0 +1,221 @@
+name: Rebuild Peugeot service list
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/rebuild-service-list.yml'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild service logic and remove service icons
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('app/src/main/assets/index.html')
+          s = path.read_text()
+
+          # Remove the service icon CSS and simplify next-service rows.
+          s = s.replace(
+            '.next-service-item{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--rule)}',
+            '.next-service-item{padding:10px 2px;border-bottom:1px solid var(--rule)}'
+          )
+          s, n = re.subn(r'\n\.service-task-title\{.*?(?=\n@media)', '\n', s, flags=re.S)
+          assert n == 1, f'icon css block matches: {n}'
+
+          # Replace the generic checklist with manufacturer-aligned, vehicle-specific systematic work.
+          systematic = '''const SERVICE_SYSTEMATIC_ITEMS = {
+  "508": [
+    "Motoröl wechseln",
+    "Ölfilter ersetzen",
+    "Sichtbare Schläuche, Leitungen und Anschlüsse auf Zustand prüfen",
+    "Abgasanlage prüfen",
+    "Antriebswellen-/Gleichlaufgelenke auf Schäden und Undichtigkeiten prüfen",
+    "Lenkung auf Schäden und Spiel prüfen",
+    "Spurstangen-/Kugelgelenke auf Schäden und Spiel prüfen",
+    "Bremsflüssigkeitsstand prüfen und ggf. ergänzen",
+    "Bremsleitungen/-schläuche und Kupplungsanschlüsse auf Schäden und Undichtigkeiten prüfen",
+    "Reifenprofil und Reifenzustand inkl. Reserverad prüfen",
+    "Fahrwerk/Aufhängung auf Schäden und Verschleiß prüfen",
+    "Reifendruck prüfen und korrigieren",
+    "Scheibenwischer und Waschanlage prüfen",
+    "Serviceanzeige zurücksetzen"
+  ],
+  "2008": [
+    "Motoröl wechseln",
+    "Ölfilter ersetzen",
+    "Motor auf Ölundichtigkeiten prüfen",
+    "Abgasanlage prüfen",
+    "Kühlsystem auf Undichtigkeiten, Füllstand und Frostschutzkonzentration prüfen",
+    "Antriebswellen-/Gleichlaufgelenke auf Schäden und Undichtigkeiten prüfen",
+    "Lenkung auf Schäden und Spiel prüfen",
+    "Spurstangen-/Kugelgelenke auf Schäden und Spiel prüfen",
+    "Bremsflüssigkeitsstand prüfen und ggf. ergänzen",
+    "Bremsleitungen/-schläuche und Kupplungsanschlüsse auf Schäden und Undichtigkeiten prüfen",
+    "Reifenprofil und Reifenzustand inkl. Reserverad prüfen",
+    "Fahrwerk/Aufhängung auf Schäden und Verschleiß prüfen",
+    "Reifendruck prüfen und korrigieren",
+    "Außenbeleuchtung prüfen",
+    "Scheibenwischer und Waschanlage prüfen",
+    "Serviceanzeige zurücksetzen"
+  ]
+};'''
+          s, n = re.subn(r'const SERVICE_BASE_ITEMS = \[.*?\];\nconst SERVICE_INSPECTION_ITEMS = \[.*?\];', systematic, s, count=1, flags=re.S)
+          assert n == 1, f'systematic arrays matches: {n}'
+
+          # Remove all inline/concept service icon code.
+          s, n = re.subn(r'\nconst SERVICE_ICON_SVGS = \{.*?\nfunction serviceIcon\(id\)\{.*?\n\}\n\nconst BASE_RULES = \{', '\nconst BASE_RULES = {', s, count=1, flags=re.S)
+          assert n == 1, f'icon js block matches: {n}'
+
+          # Rebuild the 508 schedules from the checked maintenance sources.
+          profiles = '''  "508_early": [
+    r("service","Motoröl + Ölfilter / Inspektion","",30000,24,{note:"Peugeot 508 2.0 HDiF · normal · bis 30.06.2012"}),
+    r("fuel","Kraftstofffilter (Dieselfilter) wechseln","",30000,0),
+    r("air","Luftfilter wechseln","",60000,0),
+    r("cabin","Innenraum-/Pollenfilter wechseln","",60000,24),
+    r("brakefluid","Bremsflüssigkeit wechseln","",0,24),
+    r("coolantph","Kühlmittel prüfen","",30000,24,{firstKm:120000,firstMonths:48}),
+    r("fapadd","FAP-Additivstand prüfen","",30000,0,{firstKm:90000}),
+    r("dpf","Partikelfilter/FAP auf Beladung prüfen","",30000,0,{firstKm:180000}),
+    r("timing","Zahnriemen + Wasserpumpe wechseln","",240000,120,{important:true}),
+    r("brakes","Bremsen prüfen","",0,0,{manual:true}),
+    r("tires","Reifen / Profiltiefe / Luftdruck","",0,0,{manual:true}),
+    r("battery","Batterie prüfen","",0,0,{manual:true}),
+    r("hu","HU / AU (TÜV)","",0,24,{hu:true})
+  ],
+  "508_late": [
+    r("service","Motoröl + Ölfilter / Inspektion","",30000,12,{note:"Peugeot 508 2.0 HDiF · normal · ab 01.07.2012"}),
+    r("fuel","Kraftstofffilter (Dieselfilter) wechseln","",30000,0),
+    r("air","Luftfilter wechseln","",60000,48),
+    r("cabin","Innenraum-/Pollenfilter wechseln","",60000,24),
+    r("brakefluid","Bremsflüssigkeit wechseln","",0,24),
+    r("coolantph","Kühlmittel prüfen","",30000,12,{firstKm:120000,firstMonths:48}),
+    r("fapadd","FAP-Additivstand prüfen","",30000,0,{firstKm:90000}),
+    r("dpf","Partikelfilter/FAP auf Beladung prüfen","",30000,0,{firstKm:180000}),
+    r("timing","Zahnriemen + Wasserpumpe wechseln","",180000,120,{important:true}),
+    r("brakes","Bremsen prüfen","",0,0,{manual:true}),
+    r("tires","Reifen / Profiltiefe / Luftdruck","",0,0,{manual:true}),
+    r("battery","Batterie prüfen","",0,0,{manual:true}),
+    r("hu","HU / AU (TÜV)","",0,24,{hu:true})
+  ],
+  "2008_normal": ['''
+          s, n = re.subn(r'  "508_early": \[.*?\n  \],\n  "508_late": \[.*?\n  \],\n  "2008_normal": \[', profiles, s, count=1, flags=re.S)
+          assert n == 1, f'508 profile block matches: {n}'
+
+          # Clarify the 2008 task names without changing its verified intervals.
+          replacements = {
+            'r("air","Luftfilter","🌬️",50000,48)': 'r("air","Luftfilter wechseln","",50000,48)',
+            'r("air","Luftfilter","🌬️",30000,48)': 'r("air","Luftfilter wechseln","",30000,48)',
+            'r("cabin","Innenraum-/Pollenfilter","🍃",25000,24)': 'r("cabin","Innenraum-/Pollenfilter wechseln","",25000,24)',
+            'r("cabin","Innenraum-/Pollenfilter","🍃",15000,12)': 'r("cabin","Innenraum-/Pollenfilter wechseln","",15000,12)',
+            'r("brakefluid","Bremsflüssigkeit","💧",0,24)': 'r("brakefluid","Bremsflüssigkeit wechseln","",0,24)',
+            'r("timing","Zahnriemen + Wasserpumpe","⚙️",175000,120,{important:true})': 'r("timing","Zahnriemen + Wasserpumpe wechseln","",175000,120,{important:true})',
+            'r("timing","Zahnriemen + Wasserpumpe","⚙️",165000,120,{important:true})': 'r("timing","Zahnriemen + Wasserpumpe wechseln","",165000,120,{important:true})',
+            'r("auxbelt","Nebenaggregateriemen","➰",175000,120)': 'r("auxbelt","Nebenaggregateriemen-Kit wechseln","",175000,120)',
+            'r("auxbelt","Nebenaggregateriemen","➰",165000,120)': 'r("auxbelt","Nebenaggregateriemen-Kit wechseln","",165000,120)'
+          }
+          for old, new in replacements.items():
+            if old in s:
+              s = s.replace(old, new)
+
+          # Simplify Peugeot-Service to one due checklist.
+          old_html = '''        <div class="check-section"><h4>Grundservice</h4><div id="serviceBaseList"></div></div>
+        <div class="check-section"><h4>Sicht- und Funktionskontrollen</h4><div id="serviceInspectionList"></div></div>
+        <div class="check-section"><h4>Bei diesem Service fällige Zusatzarbeiten</h4><div id="serviceExtraList"></div></div>'''
+          new_html = '''        <div class="check-section"><h4>Bei diesem Service fällig</h4><div id="serviceDueList"></div></div>'''
+          assert old_html in s
+          s = s.replace(old_html, new_html, 1)
+
+          new_checklist = r'''function serviceChecklistRows(items){
+  return items.map((item,i)=>`<label class="check-row"><input type="checkbox" ${item.taskId?`data-service-task="${esc(item.taskId)}"`:`data-service-systematic="${i}"`}><span><b>${esc(item.name)}</b>${item.detail?`<small>${esc(item.detail)}</small>`:""}</span></label>`).join("");
+}
+function openServiceChecklist(){
+  const v=vehicle();
+  const {serviceInfo,extras}=servicePlan(v);
+  const systematic=(SERVICE_SYSTEMATIC_ITEMS[v.id]||[]).map(name=>({name}));
+  const extraItems=extras.map(({rule,info})=>({
+    name:rule.name,
+    taskId:rule.id,
+    detail:info&&info.detail?info.detail:"Zusatzarbeit beim nächsten Service"
+  }));
+  const items=serviceInfo?[...systematic,...extraItems]:[];
+  document.getElementById("serviceDueList").innerHTML=items.length
+    ?serviceChecklistRows(items)
+    :`<div class="small-note">Service noch nicht berechenbar. Bitte Kilometerstand und Fahrzeugdaten ergänzen.</div>`;
+  showPage("service");
+}
+function openServiceConfirm'''
+          s, n = re.subn(r'function checklistRows\(items,kind\)\{.*?\n\}\nfunction openServiceChecklist\(\)\{.*?\n\}\nfunction openServiceConfirm', new_checklist, s, count=1, flags=re.S)
+          assert n == 1, f'checklist function matches: {n}'
+
+          old_checked = '''  const checkedBase=[...document.querySelectorAll('#page-service [data-service-kind]:checked')].map(el=>{
+    const arr=el.dataset.serviceKind==="base"?SERVICE_BASE_ITEMS:SERVICE_INSPECTION_ITEMS;
+    return arr[Number(el.dataset.serviceIndex)];
+  }).filter(Boolean);
+  const checkedExtras=[...document.querySelectorAll('#page-service [data-service-task]:checked')].map(el=>el.dataset.serviceTask);
+  const notes=[];
+  if(checkedBase.length) notes.push(`Checkliste: ${checkedBase.join("; ")}`);'''
+          new_checked = '''  const systematic=SERVICE_SYSTEMATIC_ITEMS[v.id]||[];
+  const checkedSystematic=[...document.querySelectorAll('#page-service [data-service-systematic]:checked')].map(el=>systematic[Number(el.dataset.serviceSystematic)]).filter(Boolean);
+  const checkedExtras=[...document.querySelectorAll('#page-service [data-service-task]:checked')].map(el=>el.dataset.serviceTask);
+  const notes=[];
+  if(checkedSystematic.length) notes.push(`Checkliste: ${checkedSystematic.join("; ")}`);'''
+          assert old_checked in s
+          s = s.replace(old_checked, new_checked, 1)
+
+          # Remove service icons from dashboard and history.
+          s = s.replace(
+            '?items.map(item=>`<div class="next-service-item">${serviceIcon(item.id)}<span><b>${esc(item.name)}</b><small>${esc(item.note)}</small></span></div>`).join("")',
+            '?items.map(item=>`<div class="next-service-item"><b>${esc(item.name)}</b><small>${esc(item.note)}</small></div>`).join("")'
+          )
+          s = s.replace('    const iconId=rule?rule.id:(rec.manual?"manual":rec.taskId);\n', '')
+          s = s.replace(
+            '<h4 class="service-task-title">${serviceIcon(iconId)}<span>${rule?esc(rule.name):esc(rec.taskName||"Wartung")}</span></h4>',
+            '<h4>${rule?esc(rule.name):esc(rec.taskName||"Wartung")}</h4>'
+          )
+
+          # Guardrails: no service icon system, no old generic checklist.
+          for forbidden in ['serviceIcon(', 'SERVICE_ICON_SVGS', 'CONCEPT_ICON_IDS', 'concept-sprite.webp', 'SERVICE_BASE_ITEMS', 'SERVICE_INSPECTION_ITEMS', 'data-service-kind', 'serviceBaseList', 'serviceInspectionList', 'serviceExtraList']:
+            assert forbidden not in s, forbidden
+          for required in ['SERVICE_SYSTEMATIC_ITEMS', 'serviceDueList', 'FAP-Additivstand prüfen', 'Partikelfilter/FAP auf Beladung prüfen', 'Kraftstofffilter (Dieselfilter) wechseln']:
+            assert required in s, required
+
+          path.write_text(s)
+          PY
+
+          rm -f app/src/main/assets/service-icons/concept-sprite.webp
+
+      - name: Verify frontend
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html=Path('app/src/main/assets/index.html').read_text()
+          js=html.split('<script>',1)[1].rsplit('</script>',1)[0]
+          Path('/tmp/carservice.js').write_text(js)
+          PY
+          node --check /tmp/carservice.js
+          test ! -e app/src/main/assets/service-icons/concept-sprite.webp
+
+      - name: Commit rebuild
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f .github/workflows/rebuild-service-list.yml
+          git add -A
+          git commit -m 'Rebuild Peugeot service checklist from maintenance schedules'
+          git push
+
+      - name: Start signed build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build.yml --ref main
