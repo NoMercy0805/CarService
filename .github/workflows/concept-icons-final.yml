@@ -1,0 +1,100 @@
+name: Apply exact concept icons
+
+'on':
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - name: Patch concept icons
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text(encoding='utf-8')
+          css='''
+          .service-task-icon.concept{width:46px;height:46px;flex:0 0 46px;border-radius:12px;background-color:#fff!important;background-image:url("service-icons/concept-sprite.webp")!important;background-size:300% 300%!important;background-repeat:no-repeat!important;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden}
+          .service-task-icon.concept.service{background-position:0% 0%!important}
+          .service-task-icon.concept.oil{background-position:50% 0%!important}
+          .service-task-icon.concept.fuel{background-position:100% 0%!important}
+          .service-task-icon.concept.air{background-position:0% 50%!important}
+          .service-task-icon.concept.cabin{background-position:50% 50%!important}
+          .service-task-icon.concept.brakefluid{background-position:100% 50%!important}
+          .service-task-icon.concept.timing,.service-task-icon.concept.auxbelt{background-position:0% 100%!important}
+          .service-task-icon.concept.battery{background-position:50% 100%!important}
+          .service-task-icon.concept.hu{background-position:100% 100%!important}
+          .next-service-item{grid-template-columns:48px 1fr}
+          .record .service-task-icon.concept,.check-row .service-task-icon.concept{width:40px;height:40px;flex-basis:40px}
+          '''
+          marker='@media(max-width:380px)'
+          if '.service-task-icon.concept{' not in s:
+              assert marker in s
+              s=s.replace(marker,css+'\n'+marker,1)
+
+          old='''function serviceIcon(id){
+            const key=(id==="coolantph"?"coolant":id);
+            const svg=SERVICE_ICON_SVGS[key]||SERVICE_ICON_SVGS.manual;
+            return `<span class="service-task-icon ${esc(key)}">${svg}</span>`;
+          }'''
+          new='''const CONCEPT_ICON_IDS=new Set(["service","oil","fuel","air","cabin","brakefluid","timing","auxbelt","battery","hu"]);
+          function serviceIcon(id){
+            const key=(id==="coolantph"?"coolant":id);
+            if(CONCEPT_ICON_IDS.has(key)) return `<span class="service-task-icon concept ${esc(key)}" aria-hidden="true"></span>`;
+            const svg=SERVICE_ICON_SVGS[key]||SERVICE_ICON_SVGS.manual;
+            return `<span class="service-task-icon ${esc(key)}">${svg}</span>`;
+          }'''
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old2='''function checklistRows(items,kind){
+            return items.map((name,i)=>`<label class="check-row"><input type="checkbox" data-service-kind="${kind}" data-service-index="${i}"><span><b>${esc(name)}</b></span></label>`).join("");
+          }'''
+          new2='''const SERVICE_CHECKLIST_ICON_IDS = {
+            base:["oil","oil","service","service","fuel","service"],
+            inspection:[null,null,null,null,null,null,null,"battery"]
+          };
+          function checklistRows(items,kind){
+            const ids=SERVICE_CHECKLIST_ICON_IDS[kind]||[];
+            return items.map((name,i)=>{
+              const iconId=ids[i];
+              return `<label class="check-row"><input type="checkbox" data-service-kind="${kind}" data-service-index="${i}"><span><b class="${iconId?"service-task-title":""}">${iconId?serviceIcon(iconId):""}<span>${esc(name)}</span></b></span></label>`;
+            }).join("");
+          }'''
+          assert old2 in s
+          s=s.replace(old2,new2,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify frontend
+        run: |
+          python - <<'PY'
+          import pathlib,re
+          s=pathlib.Path('app/src/main/assets/index.html').read_text()
+          assert 'CONCEPT_ICON_IDS' in s
+          assert 'service-icons/concept-sprite.webp' in s
+          m=re.search(r'<script>(.*)</script>',s,re.S)
+          assert m
+          pathlib.Path('/tmp/app.js').write_text(m.group(1))
+          PY
+          node --check /tmp/app.js
+          test -s app/src/main/assets/service-icons/concept-sprite.webp
+      - name: Commit final icon update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/concept-icons-final.yml
+          git add app/src/main/assets/index.html app/src/main/assets/service-icons/concept-sprite.webp
+          git commit -m 'Use exact concept artwork for service icons'
+          git push
+      - name: Start signed build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build.yml --ref main
