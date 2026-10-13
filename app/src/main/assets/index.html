@@ -73,6 +73,7 @@ button{border:0}
 .handle{width:42px;height:5px;border-radius:5px;background:var(--rule);margin:2px auto 14px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.modal-head h3{margin:0;font-size:19px}.close{width:34px;height:34px;border-radius:50%;background:var(--paper);color:var(--ink)}
 .theme-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.theme-pills button{padding:10px;border-radius:12px;background:var(--paper);color:var(--ink)}.theme-pills button.active{background:var(--primary);color:#fff}
 .small-note{font-size:11px;color:var(--muted);line-height:1.5}
+.maintenance-details{margin:0 0 16px}.maintenance-details>summary{list-style:none;cursor:pointer;background:var(--surface2);box-shadow:var(--shadow);border-radius:16px;padding:14px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px}.maintenance-details>summary::-webkit-details-marker{display:none}.maintenance-details>summary b{display:block;font-size:15px}.maintenance-details>summary small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.maintenance-details[open]>summary{margin-bottom:12px}.maintenance-details .section-head{margin-top:0}.profile-explain{background:var(--primary-soft);color:var(--ink);border-radius:13px;padding:11px 12px;margin-top:8px;font-size:11px;line-height:1.5}
 @media(max-width:380px){.summary{grid-template-columns:1fr 1fr 1fr}.km-value{font-size:28px}.vehicle-tab{min-width:195px}}
 </style>
 </head>
@@ -111,15 +112,18 @@ button{border:0}
         <span class="badge unknown" id="nextDueBadge">Offen</span>
       </div>
 
-      <div class="section-head"><h3>Wartungsplan</h3><button id="openLogBtn">Erledigt eintragen</button></div>
-      <div class="chips" id="filterChips">
-        <button class="chip active" data-filter="all">Alle</button>
-        <button class="chip" data-filter="due">Fällig</button>
-        <button class="chip" data-filter="soon">Bald</button>
-        <button class="chip" data-filter="ok">Okay</button>
-        <button class="chip" data-filter="unknown">Offen</button>
-      </div>
-      <div class="task-list" id="taskList"></div>
+      <details class="maintenance-details" id="maintenanceDetails">
+        <summary><span><b>Wartungsplan</b><small>Alle Wartungspunkte und Intervalle</small></span><span>⌄</span></summary>
+        <div class="section-head"><h3>Alle Wartungen</h3><button id="openLogBtn">Erledigt eintragen</button></div>
+        <div class="chips" id="filterChips">
+          <button class="chip active" data-filter="all">Alle</button>
+          <button class="chip" data-filter="due">Fällig</button>
+          <button class="chip" data-filter="soon">Bald</button>
+          <button class="chip" data-filter="ok">Okay</button>
+          <button class="chip" data-filter="unknown">Offen</button>
+        </div>
+        <div class="task-list" id="taskList"></div>
+      </details>
     </section>
 
     <section class="page" id="page-history">
@@ -137,7 +141,7 @@ button{border:0}
         <div class="field"><label>FIN / VIN</label><input id="settingsVin" class="input" type="text" maxlength="17" autocapitalize="characters" autocomplete="off" placeholder="17-stellige Fahrzeug-Ident-Nr."><div class="help">Optional. Wird nur lokal auf diesem Gerät gespeichert.</div></div>
         <div class="field"><label>Erstzulassung</label><input id="settingsFirstReg" class="input" type="date"></div>
         <div class="field"><label>Nächste HU / TÜV</label><input id="settingsHuDue" class="input" type="date"></div>
-        <div class="field" id="profileField"><label>Wartungsprofil</label><select id="settingsProfile" class="input"></select><div class="help" id="profileHelp"></div></div>
+        <div class="field" id="profileField"><label id="profileLabel">Wartungsplan</label><select id="settingsProfile" class="input"></select><div class="help" id="profileHelp"></div><div class="profile-explain" id="profileExplain"></div></div>
         <button class="primary-btn" id="saveVehicleSettings">Fahrzeugdaten speichern</button>
       </div>
 
@@ -167,7 +171,7 @@ button{border:0}
 
       <div class="panel">
         <h3>Hinweis zu Intervallen</h3>
-        <p class="small-note">Die App ist eine Erinnerungs- und Dokumentationshilfe. Maßgeblich bleiben der fahrzeugspezifische Peugeot-Wartungsplan, VIN/Produktionsdatum, Betriebsbedingungen und Werkstatthinweise. Beim Peugeot 508 aus 2012 muss das passende Wartungsprofil ausgewählt werden.</p>
+        <p class="small-note">Die App ist eine Erinnerungs- und Dokumentationshilfe. Beim Peugeot 508 von 2012 entscheidet der Produktionszeitraum bzw. die OPR/DAM-Nummer über den Wartungsplan. Die Erstzulassung allein ist dafür nicht zuverlässig.</p>
       </div>
     </section>
   </main>
@@ -231,10 +235,10 @@ button{border:0}
 const STORAGE_KEY = "carservice_v1";
 
 const PROFILE_LABELS = {
-  "508_early": "508: frühes 2012-Profil (bis ca. 06/2012)",
-  "508_late": "508: spätes 2012-Profil (ab ca. 07/2012)",
-  "2008_normal": "2008: normale Nutzung",
-  "2008_severe": "2008: erschwerte Nutzung"
+  "508_early": "Produktion bis 30.06.2012",
+  "508_late": "Produktion ab 01.07.2012",
+  "2008_normal": "Normale Nutzung",
+  "2008_severe": "Erschwerte Nutzung"
 };
 
 const BASE_RULES = {
@@ -419,7 +423,7 @@ function renderTabs(){
 function renderDashboard(){
   const v=vehicle(), rules=rulesFor(v);
   document.getElementById("heroName").textContent=v.name;
-  document.getElementById("heroSub").innerHTML=`${esc(v.subtitle)} · ${esc(PROFILE_LABELS[v.profile])}<div class="vehicle-id">HSN/TSN ${esc(v.hsn)}/${esc(v.tsn)}${v.licensePlate?` · Kennzeichen ${esc(v.licensePlate)}`:""}${v.firstReg?` · EZ ${fmtDate(v.firstReg)}`:""}</div>`;
+  document.getElementById("heroSub").innerHTML=`${esc(v.subtitle)}<div class="vehicle-id">${v.licensePlate?`Kennzeichen ${esc(v.licensePlate)} · `:""}HSN/TSN ${esc(v.hsn)}/${esc(v.tsn)}${v.huDue?` · HU ${fmtDate(v.huDue)}`:""}</div>`;
   document.getElementById("heroKm").textContent=v.mileage?fmtKm(v.mileage)+" km":"noch nicht eingetragen";
   const notice=document.getElementById("setupNotice");
   const missing=[];
@@ -500,9 +504,15 @@ function renderSettings(){
   const profile=document.getElementById("settingsProfile");
   const options=v.id==="508"?["508_early","508_late"]:["2008_normal","2008_severe"];
   profile.innerHTML=options.map(p=>`<option value="${p}" ${p===v.profile?"selected":""}>${PROFILE_LABELS[p]}</option>`).join("");
+  document.getElementById("profileLabel").textContent=v.id==="508"?"Produktionszeitraum / Wartungsplan":"Nutzungsprofil";
   document.getElementById("profileHelp").textContent=v.id==="508"
-    ?"Bei 2012er 508 hängt der Wartungsplan vom Produktionsdatum ab. Das Profil sollte nach VIN/ORGA bzw. Serviceunterlagen gewählt werden."
+    ?"Beim 508 zählt das Produktionsdatum bzw. die OPR/DAM-Nummer – nicht die Erstzulassung."
     :"Erschwerte Nutzung umfasst u. a. häufige Kurzstrecken, viel Stadtverkehr und staubige Einsatzbedingungen.";
+  document.getElementById("profileExplain").innerHTML=v.id==="508"
+    ?(v.profile==="508_early"
+      ?"<b>Bis 30.06.2012 / OPR bis 13018:</b> Inspektion 30.000 km / 24 Monate · Zahnriemen 240.000 km / 10 Jahre."
+      :"<b>Ab 01.07.2012 / OPR ab 13019:</b> Inspektion 30.000 km / 12 Monate · Zahnriemen 180.000 km / 10 Jahre.")
+    :"<b>Normal:</b> 25.000 km / 12 Monate · <b>Erschwert:</b> 15.000 km / 12 Monate.";
   const custom=document.getElementById("customTaskList");
   custom.innerHTML=(v.customTasks||[]).map(t=>`<div class="record" style="margin-top:9px"><div><h4>🔧 ${esc(t.name)}</h4><p>${t.km?fmtKm(t.km)+" km":""}${t.km&&t.months?" / ":""}${t.months?t.months+" Monate":(!t.km?"manuell":"")}</p></div><button class="close" data-delete-custom="${t.id}">×</button></div>`).join("");
   custom.querySelectorAll("[data-delete-custom]").forEach(b=>b.onclick=()=>{if(confirm("Wartungspunkt löschen?")){v.customTasks=v.customTasks.filter(t=>t.id!==b.dataset.deleteCustom);save();renderAll();}});

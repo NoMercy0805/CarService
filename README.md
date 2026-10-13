@@ -19,7 +19,7 @@ Die feste Zuordnung der Fahrzeugtypen zu den erlaubten Wartungsprofilen ist zus�
 - Fahrzeugdaten mit HSN/TSN, Kennzeichen, FIN/VIN, Erstzulassung und HU-Termin
 - Kompakte Startseitenkarte **Als Nächstes fällig**
 - Wartungsprofile für normale bzw. erschwerte Nutzung beim 2008
-- Zwei auswählbare 2012er Wartungsprofile beim 508
+- Zwei Wartungspläne nach 508-Produktionszeitraum (bis 30.06.2012 / ab 01.07.2012)
 - Eigene Wartungspunkte mit km- und/oder Monatsintervall
 - Hell-, Dunkel- und Systemdarstellung
 - lokale Datenspeicherung ohne Server oder Konto
@@ -33,7 +33,7 @@ Quelle: https://www.forum-peugeot.com/wp-content/uploads/2016/06/planentretien20
 
 ## Peugeot 508 SW 2.0 HDi 163 — 3003/AOK
 
-HSN/TSN bestätigen den Fahrzeugtyp Peugeot 508 SW 2.0 HDi mit 120 kW. Bei Fahrzeugen aus 2012 kann der Wartungsplan trotzdem vom Produktionsdatum abhängen. Deshalb bietet die App ein frühes und ein spätes 2012-Profil. Das richtige Profil sollte anhand von Produktionsdatum/ORGA, Serviceheft oder Peugeot-Wartungsplan bestätigt werden. Die HSN/TSN allein unterscheidet diese beiden 2012-Varianten nicht.
+HSN/TSN bestätigen den Fahrzeugtyp Peugeot 508 SW 2.0 HDi mit 120 kW. Bei Fahrzeugen aus 2012 kann der Wartungsplan trotzdem vom Produktionsdatum abhängen. Deshalb unterscheidet die App zwischen Produktion bis 30.06.2012 (OPR/DAM bis 13018) und Produktion ab 01.07.2012 (OPR/DAM ab 13019). Das richtige Profil sollte anhand von Produktionsdatum/ORGA, Serviceheft oder Peugeot-Wartungsplan bestätigt werden. Die HSN/TSN allein unterscheidet diese beiden 2012-Varianten nicht.
 
 ## Profil-Zuordnung
 
