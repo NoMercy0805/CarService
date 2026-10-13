@@ -1,0 +1,58 @@
+name: Fix vehicle plate line
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/fix-vehicle-plate-line.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Put license plate on its own line
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('app/src/main/assets/index.html')
+          s = p.read_text()
+
+          old = '''box.innerHTML=state.vehicles.map(v=>`<button class="vehicle-tab ${v.id===state.selectedVehicle?"active":""}" data-vehicle="${v.id}"><strong>${esc(v.name)}${v.licensePlate?` · ${esc(v.licensePlate)}`:""}</strong><span>${esc(v.subtitle)} · ${esc(v.hsn)}/${esc(v.tsn)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`).join("");'''
+          new = '''box.innerHTML=state.vehicles.map(v=>`<button class="vehicle-tab ${v.id===state.selectedVehicle?"active":""}" data-vehicle="${v.id}"><strong>${esc(v.name)}</strong>${v.licensePlate?`<small class="vehicle-plate">${esc(v.licensePlate)}</small>`:""}<span>${esc(v.subtitle)} · ${esc(v.hsn)}/${esc(v.tsn)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`).join("");'''
+          assert old in s, 'renderTabs source not found'
+          s = s.replace(old, new, 1)
+
+          marker = '.vehicle-tab strong{display:block;font-size:14px;line-height:1.2;white-space:normal}'
+          plate_css = '.vehicle-plate{display:block;margin-top:4px;font-size:12px;font-weight:750;line-height:1.2;white-space:nowrap;color:var(--ink)}'
+          assert marker in s, 'vehicle tab heading css not found'
+          s = s.replace(marker, marker + plate_css, 1)
+
+          assert 'class="vehicle-plate"' in s
+          assert '${esc(v.name)}${v.licensePlate?' not in s
+          p.write_text(s)
+          PY
+
+      - name: Verify frontend
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html=Path('app/src/main/assets/index.html').read_text()
+          js=html.split('<script>',1)[1].rsplit('</script>',1)[0]
+          Path('/tmp/carservice.js').write_text(js)
+          PY
+          node --check /tmp/carservice.js
+
+      - name: Commit update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f .github/workflows/fix-vehicle-plate-line.yml
+          git add app/src/main/assets/index.html
+          git commit -m 'Show vehicle license plate on separate line'
+          git push
