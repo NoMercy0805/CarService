@@ -359,7 +359,6 @@ const SERVICE_BASE_ITEMS = [
   "Ölfilter ersetzen",
   "Flüssigkeitsstände prüfen und ggf. auffüllen",
   "Elektronische Diagnose / Fehlerspeicher prüfen",
-  "Dieselfilter entwässern (falls vorgesehen)",
   "Serviceanzeige zurücksetzen"
 ];
 const SERVICE_INSPECTION_ITEMS = [
@@ -403,7 +402,7 @@ function serviceIcon(id){
 const BASE_RULES = {
   "508_early": [
     r("service","Motoröl + Ölfilter / Inspektion","🛢️",30000,24,{note:"Grundservice"}),
-    r("fuel","Dieselfilter","⛽",30000,0),
+    r("fuel","Kraftstofffilter (Dieselfilter) wechseln","⛽",30000,0),
     r("air","Luftfilter","🌬️",60000,0),
     r("cabin","Innenraum-/Pollenfilter","🍃",60000,24),
     r("brakefluid","Bremsflüssigkeit","💧",0,24),
@@ -419,7 +418,7 @@ const BASE_RULES = {
   ],
   "508_late": [
     r("service","Motoröl + Ölfilter / Inspektion","🛢️",30000,12,{note:"Grundservice"}),
-    r("fuel","Dieselfilter","⛽",30000,0),
+    r("fuel","Kraftstofffilter (Dieselfilter) wechseln","⛽",30000,0),
     r("air","Luftfilter","🌬️",60000,48),
     r("cabin","Innenraum-/Pollenfilter","🍃",60000,24),
     r("brakefluid","Bremsflüssigkeit","💧",0,24),
@@ -435,7 +434,7 @@ const BASE_RULES = {
   ],
   "2008_normal": [
     r("service","Motoröl + Ölfilter / Inspektion","🛢️",25000,12,{note:"Peugeot: normale Nutzung"}),
-    r("fuel","Dieselfilter","⛽",50000,48),
+    r("fuel","Kraftstofffilter (Dieselfilter) wechseln","⛽",50000,48),
     r("air","Luftfilter","🌬️",50000,48),
     r("cabin","Innenraum-/Pollenfilter","🍃",25000,24),
     r("brakefluid","Bremsflüssigkeit","💧",0,24),
@@ -444,7 +443,7 @@ const BASE_RULES = {
     r("dpf","Partikelfilter auf Beladung prüfen","▦",25000,0,{firstKm:150000}),
     r("timing","Zahnriemen + Wasserpumpe","⚙️",175000,120,{important:true}),
     r("auxbelt","Nebenaggregateriemen","➰",175000,120),
-    r("adblue","AdBlue auffüllen / kontrollieren","💧",25000,12),
+    r("adblue","AdBlue-Füllstand kontrollieren / bei Bedarf auffüllen","💧",25000,12),
     r("brakes","Bremsen prüfen","◉",0,0,{manual:true}),
     r("tires","Reifen / Profiltiefe / Luftdruck","◌",0,0,{manual:true}),
     r("battery","Batterie prüfen","🔋",0,0,{manual:true}),
@@ -452,7 +451,7 @@ const BASE_RULES = {
   ],
   "2008_severe": [
     r("service","Motoröl + Ölfilter / Inspektion","🛢️",15000,12,{note:"Peugeot: erschwerte Nutzung"}),
-    r("fuel","Dieselfilter","⛽",30000,48),
+    r("fuel","Kraftstofffilter (Dieselfilter) wechseln","⛽",30000,48),
     r("air","Luftfilter","🌬️",30000,48),
     r("cabin","Innenraum-/Pollenfilter","🍃",15000,12),
     r("brakefluid","Bremsflüssigkeit","💧",0,24),
@@ -461,7 +460,7 @@ const BASE_RULES = {
     r("dpf","Partikelfilter auf Beladung prüfen","▦",15000,0,{firstKm:150000}),
     r("timing","Zahnriemen + Wasserpumpe","⚙️",165000,120,{important:true}),
     r("auxbelt","Nebenaggregateriemen","➰",165000,120),
-    r("adblue","AdBlue auffüllen / kontrollieren","💧",15000,12),
+    r("adblue","AdBlue-Füllstand kontrollieren / bei Bedarf auffüllen","💧",15000,12),
     r("brakes","Bremsen prüfen","◉",0,0,{manual:true}),
     r("tires","Reifen / Profiltiefe / Luftdruck","◌",0,0,{manual:true}),
     r("battery","Batterie prüfen","🔋",0,0,{manual:true}),
@@ -504,7 +503,10 @@ function loadState(){
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
 function vehicle(){return state.vehicles.find(v=>v.id===state.selectedVehicle)||state.vehicles[0];}
 function rulesFor(v){
-  const base=(BASE_RULES[v.profile]||[]).map(x=>({...x}));
+  const allowedProfiles=v.id==="508"?["508_early","508_late"]:["2008_normal","2008_severe"];
+  const fallbackProfile=v.id==="508"?"508_late":"2008_normal";
+  const profile=allowedProfiles.includes(v.profile)?v.profile:fallbackProfile;
+  const base=(BASE_RULES[profile]||[]).map(x=>({...x}));
   const custom=(v.customTasks||[]).map(x=>({id:x.id,name:x.name,icon:"🔧",km:Number(x.km)||0,months:Number(x.months)||0,custom:true,manual:!(Number(x.km)||Number(x.months))}));
   return [...base,...custom];
 }
