@@ -1,0 +1,22 @@
+{
+  "vehicles": {
+    "508": {
+      "hsn": "3003",
+      "tsn": "AOK",
+      "model": "Peugeot 508 SW 2.0 HDi",
+      "powerKw": 120,
+      "powerPs": 163,
+      "profiles": ["508_early", "508_late"],
+      "note": "HSN/TSN identifies the vehicle type, but not whether the early or late 2012 maintenance profile applies. Production date/ORGA or Peugeot service documentation is still required."
+    },
+    "2008": {
+      "hsn": "3003",
+      "tsn": "AUH",
+      "model": "Peugeot 2008 1.6 BlueHDi",
+      "powerKw": 88,
+      "powerPs": 120,
+      "profiles": ["2008_normal", "2008_severe"],
+      "note": "Normal vs. severe profile depends on operating conditions."
+    }
+  }
+}
