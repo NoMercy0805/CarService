@@ -1,0 +1,35 @@
+name: Remove maintenance header action
+
+'on':
+  push:
+    paths:
+      - '.github/workflows/remove-openlog.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Remove completed-entry header button
+        shell: bash
+        run: |
+          python3 -c 'from pathlib import Path; p=Path("app/src/main/assets/index.html"); s=p.read_text(); old="<div class=\"section-head\"><h3>Alle Wartungen</h3><button id=\"openLogBtn\">Erledigt eintragen</button></div>"; new="<div class=\"section-head\"><h3>Alle Wartungen</h3></div>"; assert old in s; s=s.replace(old,new,1); handler="document.getElementById(\"openLogBtn\").onclick=()=>openEntry();\n"; assert handler in s; s=s.replace(handler,"",1); p.write_text(s)'
+          ! grep -q 'openLogBtn' app/src/main/assets/index.html
+          ! grep -q 'Erledigt eintragen' app/src/main/assets/index.html
+          rm -f .github/workflows/apk-export.yml
+          rm -f .github/workflows/remove-openlog.yml
+
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Remove completed-entry button from maintenance header'
+          git push origin HEAD:main
