@@ -1,0 +1,129 @@
+name: Upgrade CarService vehicle UI
+
+on:
+  push:
+    paths:
+      - '.github/workflows/upgrade-ui.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch vehicle data and dashboard
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/src/main/assets/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly one match, found {count}')
+              text = text.replace(old, new, 1)
+
+          # Dashboard card styling.
+          replace_once(
+              '.stat b{font-size:23px;display:block}.stat span{font-size:11px;color:var(--muted)}.stat.due b{color:var(--red)}.stat.soon b{color:var(--orange)}.stat.ok b{color:var(--green)}\n',
+              '.stat b{font-size:23px;display:block}.stat span{font-size:11px;color:var(--muted)}.stat.due b{color:var(--red)}.stat.soon b{color:var(--orange)}.stat.ok b{color:var(--green)}\n.next-card{background:var(--surface2);box-shadow:var(--shadow);border-radius:18px;padding:15px 16px;margin:0 0 16px;display:grid;grid-template-columns:42px 1fr auto;gap:11px;align-items:center}.next-card .next-icon{width:42px;height:42px;border-radius:13px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:20px}.next-card h3{margin:0 0 4px;font-size:15px}.next-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.vehicle-id{margin-top:8px;font-size:11px;color:var(--hero-sub);line-height:1.45}.readonly-id{display:grid;grid-template-columns:1fr 1fr;gap:10px}.id-box{border:1px solid var(--rule);background:var(--paper);border-radius:12px;padding:10px 12px}.id-box small{display:block;color:var(--muted);font-size:10px;margin-bottom:3px}.id-box b{font-size:14px;letter-spacing:.4px}\n',
+              'dashboard CSS')
+
+          # Add the next-due card below summary.
+          replace_once(
+              '      </div>\n\n      <div class="section-head"><h3>Wartungsplan</h3><button id="openLogBtn">Erledigt eintragen</button></div>',
+              '      </div>\n\n      <div class="next-card" id="nextDueCard">\n        <div class="next-icon" id="nextDueIcon">◷</div>\n        <div><h3 id="nextDueTitle">Als Nächstes fällig</h3><p id="nextDueText">Wird berechnet …</p></div>\n        <span class="badge unknown" id="nextDueBadge">Offen</span>\n      </div>\n\n      <div class="section-head"><h3>Wartungsplan</h3><button id="openLogBtn">Erledigt eintragen</button></div>',
+              'next due card')
+
+          # Add vehicle identity fields to settings.
+          replace_once(
+              '        <div class="field"><label>Fahrzeug</label><select id="settingsVehicle" class="input"></select></div>\n        <div class="field"><label>Aktueller Kilometerstand</label><input id="settingsMileage" class="input" type="number" inputmode="numeric" min="0"></div>\n        <div class="field"><label>Erstzulassung</label><input id="settingsFirstReg" class="input" type="date"></div>',
+              '        <div class="field"><label>Fahrzeug</label><select id="settingsVehicle" class="input"></select></div>\n        <div class="field"><label>HSN / TSN</label><div class="readonly-id"><div class="id-box"><small>HSN</small><b id="settingsHsn">–</b></div><div class="id-box"><small>TSN</small><b id="settingsTsn">–</b></div></div></div>\n        <div class="row2"><div class="field"><label>Kennzeichen</label><input id="settingsPlate" class="input" type="text" maxlength="12" autocapitalize="characters" placeholder="z. B. HN-AB 123"></div><div class="field"><label>Aktueller Kilometerstand</label><input id="settingsMileage" class="input" type="number" inputmode="numeric" min="0"></div></div>\n        <div class="field"><label>FIN / VIN</label><input id="settingsVin" class="input" type="text" maxlength="17" autocapitalize="characters" autocomplete="off" placeholder="17-stellige Fahrzeug-Ident-Nr."><div class="help">Optional. Wird nur lokal auf diesem Gerät gespeichert.</div></div>\n        <div class="field"><label>Erstzulassung</label><input id="settingsFirstReg" class="input" type="date"></div>',
+              'vehicle settings fields')
+
+          # Persist fixed IDs and optional plate/VIN while remaining compatible with old localStorage data.
+          replace_once(
+              '      {id:"508",name:"Peugeot 508 SW",subtitle:"2.0 HDi · 163 PS · 2012",mileage:0,firstReg:"",huDue:"",profile:"508_late",records:[],customTasks:[]},\n      {id:"2008",name:"Peugeot 2008",subtitle:"1.6 BlueHDi · 120 PS · 2016",mileage:0,firstReg:"",huDue:"",profile:"2008_normal",records:[],customTasks:[]}',
+              '      {id:"508",name:"Peugeot 508 SW",subtitle:"2.0 HDi · 163 PS · 2012",hsn:"3003",tsn:"AOK",licensePlate:"",vin:"",mileage:0,firstReg:"",huDue:"",profile:"508_late",records:[],customTasks:[]},\n      {id:"2008",name:"Peugeot 2008",subtitle:"1.6 BlueHDi · 120 PS · 2016",hsn:"3003",tsn:"AUH",licensePlate:"",vin:"",mileage:0,firstReg:"",huDue:"",profile:"2008_normal",records:[],customTasks:[]}',
+              'default vehicle IDs')
+
+          # Show plate in vehicle tabs when available.
+          replace_once(
+              '  box.innerHTML=state.vehicles.map(v=>`<button class="vehicle-tab ${v.id===state.selectedVehicle?"active":""}" data-vehicle="${v.id}"><strong>${esc(v.name)}</strong><span>${esc(v.subtitle)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`).join("");',
+              '  box.innerHTML=state.vehicles.map(v=>`<button class="vehicle-tab ${v.id===state.selectedVehicle?"active":""}" data-vehicle="${v.id}"><strong>${esc(v.name)}${v.licensePlate?` · ${esc(v.licensePlate)}`:""}</strong><span>${esc(v.subtitle)} · ${esc(v.hsn)}/${esc(v.tsn)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`).join("");',
+              'vehicle tabs')
+
+          # Add IDs / plate to hero and calculate next due item.
+          replace_once(
+              '  document.getElementById("heroSub").textContent=v.subtitle+" · "+PROFILE_LABELS[v.profile];\n  document.getElementById("heroKm").textContent=v.mileage?fmtKm(v.mileage)+" km":"noch nicht eingetragen";',
+              '  document.getElementById("heroSub").innerHTML=`${esc(v.subtitle)} · ${esc(PROFILE_LABELS[v.profile])}<div class="vehicle-id">HSN/TSN ${esc(v.hsn)}/${esc(v.tsn)}${v.licensePlate?` · Kennzeichen ${esc(v.licensePlate)}`:""}${v.firstReg?` · EZ ${fmtDate(v.firstReg)}`:""}</div>`;\n  document.getElementById("heroKm").textContent=v.mileage?fmtKm(v.mileage)+" km":"noch nicht eingetragen";',
+              'hero metadata')
+
+          replace_once(
+              '  enriched.forEach(x=>{if(counts[x.info.status]!==undefined)counts[x.info.status]++;});\n  document.getElementById("countDue").textContent=counts.due;',
+              '  enriched.forEach(x=>{if(counts[x.info.status]!==undefined)counts[x.info.status]++;});\n  const nextRank={due:0,soon:1,ok:2};\n  const nextCandidates=enriched.filter(x=>nextRank[x.info.status]!==undefined).sort((a,b)=>{\n    const sr=nextRank[a.info.status]-nextRank[b.info.status];\n    if(sr) return sr;\n    const as=Math.min(a.info.dayLeft??999999,(a.info.kmLeft??999999)/100);\n    const bs=Math.min(b.info.dayLeft??999999,(b.info.kmLeft??999999)/100);\n    return as-bs;\n  });\n  const next=nextCandidates[0]||null;\n  const nextTitle=document.getElementById("nextDueTitle"),nextText=document.getElementById("nextDueText"),nextBadge=document.getElementById("nextDueBadge"),nextIcon=document.getElementById("nextDueIcon");\n  if(next){\n    nextTitle.textContent=next.rule.name;\n    nextText.textContent=(next.info.detail||"Nächste Wartung")+(shortRemaining(next.info)?` · ${shortRemaining(next.info)}`:"");\n    nextBadge.textContent=next.info.label;\n    nextBadge.className=`badge ${next.info.status}`;\n    nextIcon.textContent=next.rule.icon;\n    document.getElementById("nextDueCard").onclick=()=>openEntry(next.rule.id);\n  }else{\n    nextTitle.textContent="Als Nächstes fällig";nextText.textContent="Noch keine Fälligkeit berechenbar – Kilometerstand und Termine ergänzen.";nextBadge.textContent="Offen";nextBadge.className="badge unknown";nextIcon.textContent="◷";document.getElementById("nextDueCard").onclick=null;\n  }\n  document.getElementById("countDue").textContent=counts.due;',
+              'next due calculation')
+
+          # Use local calendar date instead of UTC date around midnight.
+          replace_once(
+              'function today(){return new Date().toISOString().slice(0,10);}',
+              'function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}',
+              'local today')
+
+          # Render identity fields.
+          replace_once(
+              '  document.getElementById("settingsMileage").value=v.mileage||"";\n  document.getElementById("settingsFirstReg").value=v.firstReg||"";',
+              '  document.getElementById("settingsHsn").textContent=v.hsn||"–";\n  document.getElementById("settingsTsn").textContent=v.tsn||"–";\n  document.getElementById("settingsPlate").value=v.licensePlate||"";\n  document.getElementById("settingsVin").value=v.vin||"";\n  document.getElementById("settingsMileage").value=v.mileage||"";\n  document.getElementById("settingsFirstReg").value=v.firstReg||"";',
+              'render identity fields')
+
+          # Save optional identity fields; HSN/TSN remain immutable defaults.
+          replace_once(
+              '  v.mileage=Math.max(0,Number(document.getElementById("settingsMileage").value||0));\n  v.firstReg=document.getElementById("settingsFirstReg").value||"";',
+              '  v.licensePlate=document.getElementById("settingsPlate").value.trim().toUpperCase();\n  v.vin=document.getElementById("settingsVin").value.trim().toUpperCase();\n  v.mileage=Math.max(0,Number(document.getElementById("settingsMileage").value||0));\n  v.firstReg=document.getElementById("settingsFirstReg").value||"";',
+              'save identity fields')
+
+          path.write_text(text, encoding='utf-8')
+
+          readme = Path('README.md')
+          r = readme.read_text(encoding='utf-8')
+          marker = '- Schnelländerung des Kilometerstands\n'
+          addition = '- Fahrzeugdaten mit HSN/TSN, Kennzeichen, FIN/VIN, Erstzulassung und HU-Termin\n- Kompakte Startseitenkarte **Als Nächstes fällig**\n'
+          if addition not in r:
+              if marker not in r:
+                  raise SystemExit('README marker not found')
+              r = r.replace(marker, marker + addition, 1)
+              readme.write_text(r, encoding='utf-8')
+          PY
+
+      - name: Verify JavaScript syntax and required IDs
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>(.*?)</script>', html, flags=re.S)
+          if len(scripts) != 1:
+              raise SystemExit(f'expected one inline script, found {len(scripts)}')
+          Path('/tmp/carservice.js').write_text(scripts[0], encoding='utf-8')
+          for required in ['settingsHsn','settingsTsn','settingsPlate','settingsVin','nextDueCard']:
+              if f'id="{required}"' not in html:
+                  raise SystemExit(f'missing required UI id: {required}')
+          PY
+          node --check /tmp/carservice.js
+
+      - name: Commit UI upgrade
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/assets/index.html README.md
+          git diff --cached --check
+          git commit -m 'Add vehicle details and next due overview'
+          git push
