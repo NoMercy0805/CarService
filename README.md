@@ -18,12 +18,21 @@ Die feste Zuordnung der Fahrzeugtypen zu den erlaubten Wartungsprofilen ist zus�
 - Schnelländerung des Kilometerstands
 - Fahrzeugdaten mit HSN/TSN, Kennzeichen, FIN/VIN, Erstzulassung und HU-Termin
 - Kompakte Startseitenkarte **Als Nächstes fällig**
+- Peugeot-orientierte **Service-Checkliste** mit Grundservice, Sicht-/Funktionskontrollen und automatisch fälligen Zusatzarbeiten
 - Wartungsprofile für normale bzw. erschwerte Nutzung beim 2008
 - Zwei Wartungspläne nach 508-Produktionszeitraum (bis 30.06.2012 / ab 01.07.2012)
 - Eigene Wartungspunkte mit km- und/oder Monatsintervall
 - Hell-, Dunkel- und Systemdarstellung
 - lokale Datenspeicherung ohne Server oder Konto
 - Backup und Wiederherstellung über JSON-Text
+
+## Service-Checkliste
+
+Die Service-Checkliste orientiert sich am veröffentlichten Peugeot-Serviceumfang: Fahrzeugprüfung, Flüssigkeitskontrolle/-ergänzung, Motoröl- und Ölfilterwechsel, Diagnose sowie Sicherheits-/Umweltkontrollen. Fällige Zusatzarbeiten werden aus dem jeweiligen Wartungsplan automatisch ergänzt. Die exakte VIN-spezifische Arbeitsliste kann in Peugeot Service Box abweichen.
+
+Quellen:
+- https://www.peugeot.co.uk/owners/assistance-and-warranty/service-contracts-and-warranty-extensions.html
+- https://public.servicebox.peugeot.com/aides/DOC_OI/AP/documents/de_DE/AIDE/9941/plan_entretien_apoi.html?id=sous_menu2%7C2_12
 
 ## Peugeot 2008 BlueHDi 120 — 3003/AUH
 

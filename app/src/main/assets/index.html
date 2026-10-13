@@ -74,6 +74,7 @@ button{border:0}
 .theme-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.theme-pills button{padding:10px;border-radius:12px;background:var(--paper);color:var(--ink)}.theme-pills button.active{background:var(--primary);color:#fff}
 .small-note{font-size:11px;color:var(--muted);line-height:1.5}
 .maintenance-details{margin:0 0 16px}.maintenance-details>summary{list-style:none;cursor:pointer;background:var(--surface2);box-shadow:var(--shadow);border-radius:16px;padding:14px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px}.maintenance-details>summary::-webkit-details-marker{display:none}.maintenance-details>summary b{display:block;font-size:15px}.maintenance-details>summary small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.maintenance-details[open]>summary{margin-bottom:12px}.maintenance-details .section-head{margin-top:0}.profile-explain{background:var(--primary-soft);color:var(--ink);border-radius:13px;padding:11px 12px;margin-top:8px;font-size:11px;line-height:1.5}
+.service-card{background:var(--surface2);box-shadow:var(--shadow);border-radius:18px;padding:15px 16px;margin:0 0 16px;display:grid;grid-template-columns:42px 1fr auto;gap:11px;align-items:center;cursor:pointer}.service-card .service-icon{width:42px;height:42px;border-radius:13px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:20px}.service-card h3{margin:0 0 4px;font-size:15px}.service-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.service-card .service-extra{font-size:11px;color:var(--primary);margin-top:5px}.check-section{margin:14px 0}.check-section h4{margin:0 0 8px;font-size:13px}.check-row{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;padding:10px 2px;border-bottom:1px solid var(--rule)}.check-row:last-child{border-bottom:0}.check-row input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--primary)}.check-row b{font-size:13px}.check-row small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}.service-note{background:var(--primary-soft);border-radius:13px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--ink)}
 @media(max-width:380px){.summary{grid-template-columns:1fr 1fr 1fr}.km-value{font-size:28px}.vehicle-tab{min-width:195px}}
 </style>
 </head>
@@ -110,6 +111,12 @@ button{border:0}
         <div class="next-icon" id="nextDueIcon">◷</div>
         <div><h3 id="nextDueTitle">Als Nächstes fällig</h3><p id="nextDueText">Wird berechnet …</p></div>
         <span class="badge unknown" id="nextDueBadge">Offen</span>
+      </div>
+
+      <div class="service-card" id="serviceCard">
+        <div class="service-icon">🔧</div>
+        <div><h3>Peugeot-Service</h3><p id="serviceCardText">Service wird berechnet …</p><div class="service-extra" id="serviceCardExtra"></div></div>
+        <span class="badge unknown" id="serviceCardBadge">Offen</span>
       </div>
 
       <details class="maintenance-details" id="maintenanceDetails">
@@ -185,6 +192,25 @@ button{border:0}
   <button class="nav-btn" data-page="settings"><i>⚙</i>Einstellungen</button>
 </nav>
 
+<div class="modal-backdrop" id="serviceModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3>Peugeot-Service</h3><button class="close" data-close="serviceModal">×</button></div>
+    <div class="service-note" id="serviceDueSummary"></div>
+    <div class="check-section"><h4>Grundservice</h4><div id="serviceBaseList"></div></div>
+    <div class="check-section"><h4>Typische Sicht- und Funktionskontrollen</h4><div id="serviceInspectionList"></div></div>
+    <div class="check-section"><h4>Zusatzarbeiten bei diesem Service</h4><div id="serviceExtraList"></div></div>
+    <div class="row2">
+      <div class="field"><label>Datum</label><input id="serviceDate" class="input" type="date"></div>
+      <div class="field"><label>Kilometerstand</label><input id="serviceMileage" class="input" type="number" inputmode="numeric" min="0"></div>
+    </div>
+    <div class="field"><label>Kosten (€) – optional</label><input id="serviceCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>
+    <div class="field"><label>Notiz – optional</label><textarea id="serviceNote" class="input" rows="3" placeholder="z. B. Werkstatt, Öl-Spezifikation, Besonderheiten …"></textarea></div>
+    <button class="primary-btn" id="saveServiceBtn">Service als erledigt speichern</button>
+    <p class="small-note">Die Checkliste orientiert sich am Peugeot-Serviceumfang. Maßgeblich bleibt der VIN-spezifische Wartungsplan in Peugeot Service Box.</p>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="entryModal">
   <div class="modal">
     <div class="handle"></div>
@@ -240,6 +266,25 @@ const PROFILE_LABELS = {
   "2008_normal": "Normale Nutzung",
   "2008_severe": "Erschwerte Nutzung"
 };
+
+const SERVICE_BASE_ITEMS = [
+  "Motoröl wechseln",
+  "Ölfilter ersetzen",
+  "Fahrzeug-Gesamtprüfung",
+  "Flüssigkeitsstände prüfen und ggf. auffüllen",
+  "Diagnose / Fehlerspeicher prüfen",
+  "Sicherheits- und Umweltkontrollen"
+];
+const SERVICE_INSPECTION_ITEMS = [
+  "Bremsen prüfen",
+  "Reifen: Zustand, Profiltiefe und Luftdruck",
+  "Beleuchtung, Hupe und elektrische Funktionen",
+  "Wischer und Waschanlage",
+  "Batterie und Anschlüsse",
+  "Lenkung, Fahrwerk und Manschetten",
+  "Nebenaggregateriemen sichtprüfen",
+  "Undichtigkeiten, Unterboden und Abgasanlage"
+];
 
 const BASE_RULES = {
   "508_early": [
@@ -407,6 +452,78 @@ function fmtDate(s){if(!s)return "–";const [y,m,d]=s.split("-");return `${d}.$
 function fmtMoney(n){return Number(n||0).toLocaleString("de-DE",{style:"currency",currency:"EUR"});}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
 
+function servicePlan(v){
+  const rules=rulesFor(v);
+  const serviceRule=rules.find(r=>r.id==="service");
+  const serviceInfo=serviceRule?dueInfo(v,serviceRule):null;
+  const extras=rules.filter(rule=>{
+    if(rule.id==="service"||rule.id==="hu"||rule.custom||rule.manual) return false;
+    const info=dueInfo(v,rule);
+    if(info.status==="due"||info.status==="soon") return true;
+    if(serviceInfo&&serviceInfo.dueKm!==null&&serviceInfo.dueKm!==undefined&&info.dueKm!==null&&info.dueKm!==undefined&&Number(info.dueKm)<=Number(serviceInfo.dueKm)) return true;
+    if(serviceInfo&&serviceInfo.dueDate&&info.dueDate&&info.dueDate<=serviceInfo.dueDate) return true;
+    return false;
+  }).map(rule=>({rule,info:dueInfo(v,rule)}));
+  return {serviceRule,serviceInfo,extras};
+}
+function renderServiceSummary(v){
+  const {serviceInfo,extras}=servicePlan(v);
+  const text=document.getElementById("serviceCardText"),extra=document.getElementById("serviceCardExtra"),badge=document.getElementById("serviceCardBadge"),card=document.getElementById("serviceCard");
+  if(!serviceInfo){
+    text.textContent="Kein Serviceintervall vorhanden.";extra.textContent="";badge.textContent="Offen";badge.className="badge unknown";card.onclick=openServiceChecklist;return;
+  }
+  text.textContent=serviceInfo.detail||"Serviceintervall";
+  extra.textContent=extras.length?`${extras.length} Zusatzarbeit${extras.length===1?"":"en"} eingeplant`:"Keine zusätzlichen Wechselarbeiten zu diesem Termin";
+  badge.textContent=serviceInfo.label;
+  badge.className=`badge ${serviceInfo.status}`;
+  card.onclick=openServiceChecklist;
+}
+function checklistRows(items,kind){
+  return items.map((name,i)=>`<label class="check-row"><input type="checkbox" data-service-kind="${kind}" data-service-index="${i}"><span><b>${esc(name)}</b></span></label>`).join("");
+}
+function openServiceChecklist(){
+  const v=vehicle();
+  const {serviceInfo,extras}=servicePlan(v);
+  const pieces=[];
+  if(serviceInfo&&serviceInfo.dueKm!==null&&serviceInfo.dueKm!==undefined) pieces.push(`${fmtKm(serviceInfo.dueKm)} km`);
+  if(serviceInfo&&serviceInfo.dueDate) pieces.push(fmtDate(serviceInfo.dueDate));
+  document.getElementById("serviceDueSummary").innerHTML=`<b>${esc(v.name)}</b><br>${pieces.length?`Nächster Service: ${pieces.join(" oder ")}`:"Für die genaue Berechnung bitte Kilometerstand und Erstzulassung ergänzen."}`;
+  document.getElementById("serviceBaseList").innerHTML=checklistRows(SERVICE_BASE_ITEMS,"base");
+  document.getElementById("serviceInspectionList").innerHTML=checklistRows(SERVICE_INSPECTION_ITEMS,"inspection");
+  const box=document.getElementById("serviceExtraList");
+  box.innerHTML=extras.length?extras.map(({rule,info})=>`<label class="check-row"><input type="checkbox" data-service-task="${esc(rule.id)}" checked><span><b>${rule.icon} ${esc(rule.name)}</b><small>${esc(info.detail||info.label||"")}</small></span></label>`).join(""):`<div class="small-note">Für diesen Service sind nach den hinterlegten Intervallen keine weiteren Austausch-/Prüfarbeiten eingeplant.</div>`;
+  document.getElementById("serviceDate").value=today();
+  document.getElementById("serviceMileage").value=v.mileage||"";
+  document.getElementById("serviceCost").value="";
+  document.getElementById("serviceNote").value="";
+  openModal("serviceModal");
+}
+function saveServiceChecklist(){
+  const v=vehicle(),rules=rulesFor(v);
+  const date=document.getElementById("serviceDate").value;
+  const mileage=Number(document.getElementById("serviceMileage").value||0);
+  const cost=Number(document.getElementById("serviceCost").value||0);
+  const note=document.getElementById("serviceNote").value.trim();
+  if(!date){alert("Bitte ein Datum eintragen.");return;}
+  if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}
+  const checkedBase=[...document.querySelectorAll('#serviceModal [data-service-kind]:checked')].map(el=>{
+    const arr=el.dataset.serviceKind==="base"?SERVICE_BASE_ITEMS:SERVICE_INSPECTION_ITEMS;
+    return arr[Number(el.dataset.serviceIndex)];
+  }).filter(Boolean);
+  const checkedExtras=[...document.querySelectorAll('#serviceModal [data-service-task]:checked')].map(el=>el.dataset.serviceTask);
+  const notes=[];
+  if(checkedBase.length) notes.push(`Checkliste: ${checkedBase.join("; ")}`);
+  if(note) notes.push(note);
+  v.records.push({id:"rec_"+Date.now(),taskId:"service",taskName:"Motoröl + Ölfilter / Inspektion",date,mileage,cost,note:notes.join(" · ")});
+  checkedExtras.forEach((taskId,i)=>{
+    const rule=rules.find(r=>r.id===taskId);
+    if(!rule) return;
+    v.records.push({id:`rec_${Date.now()}_${i}`,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
+  });
+  if(mileage>Number(v.mileage||0)) v.mileage=mileage;
+  save();closeModal("serviceModal");renderAll();alert("Service und ausgewählte Zusatzarbeiten gespeichert.");
+}
+
 function renderAll(){
   applyTheme();
   renderTabs();
@@ -450,10 +567,11 @@ function renderDashboard(){
     nextBadge.textContent=next.info.label;
     nextBadge.className=`badge ${next.info.status}`;
     nextIcon.textContent=next.rule.icon;
-    document.getElementById("nextDueCard").onclick=()=>openEntry(next.rule.id);
+    document.getElementById("nextDueCard").onclick=()=>next.rule.id==="service"?openServiceChecklist():openEntry(next.rule.id);
   }else{
     nextTitle.textContent="Als Nächstes fällig";nextText.textContent="Noch keine Fälligkeit berechenbar – Kilometerstand und Termine ergänzen.";nextBadge.textContent="Offen";nextBadge.className="badge unknown";nextIcon.textContent="◷";document.getElementById("nextDueCard").onclick=null;
   }
+  renderServiceSummary(v);
   document.getElementById("countDue").textContent=counts.due;
   document.getElementById("countSoon").textContent=counts.soon;
   document.getElementById("countOk").textContent=counts.ok;
@@ -608,6 +726,7 @@ document.getElementById("editVehicleBtn").onclick=()=>showPage("settings");
 document.getElementById("quickKmBtn").onclick=()=>{document.getElementById("quickMileage").value=vehicle().mileage||"";openModal("kmModal");};
 document.getElementById("saveQuickKm").onclick=()=>{const n=Number(document.getElementById("quickMileage").value||0);if(n<0)return;vehicle().mileage=n;save();closeModal("kmModal");renderAll();};
 document.getElementById("saveEntryBtn").onclick=saveEntry;
+document.getElementById("saveServiceBtn").onclick=saveServiceChecklist;
 document.getElementById("filterChips").onclick=e=>{const b=e.target.closest("[data-filter]");if(!b)return;state.filter=b.dataset.filter;save();renderDashboard();};
 document.getElementById("settingsVehicle").onchange=e=>{state.selectedVehicle=e.target.value;save();renderAll();};
 document.getElementById("saveVehicleSettings").onclick=saveVehicleSettings;
