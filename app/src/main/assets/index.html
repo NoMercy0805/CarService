@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1268FF">
+<title>CarService</title>
+<style>
+:root{
+  --paper:#F2F2F5;--surface:rgba(255,255,255,.80);--surface2:rgba(255,255,255,.94);
+  --ink:#191A1C;--muted:#6E7074;--rule:#E2E3E8;--primary:#1268FF;--primary-soft:#E3EDFF;
+  --green:#00A971;--green-soft:#DCF5EA;--orange:#E68700;--orange-soft:#FFF0D3;
+  --red:#E3422A;--red-soft:#FDE8E3;--purple:#7A4AA0;--purple-soft:#EEE3F8;
+  --radius:16px;--shadow:0 8px 26px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.55);
+  --hero:linear-gradient(145deg,#CFE0FF,#B8D2FF);--hero-text:#0D3C8C;--hero-sub:#3A66AD;
+}
+html[data-theme="dark"]{
+  --paper:#0F1013;--surface:rgba(28,29,34,.82);--surface2:rgba(34,35,41,.96);
+  --ink:#F2F2F4;--muted:#A9ABB2;--rule:#33343B;--primary:#5B9CFF;--primary-soft:#1B2A44;
+  --green:#2ED991;--green-soft:#1B3A2C;--orange:#FFB03F;--orange-soft:#3B2E16;
+  --red:#FF6B55;--red-soft:#3A2420;--purple:#C9A0E8;--purple-soft:#332048;
+  --shadow:0 8px 26px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.10);
+  --hero:linear-gradient(145deg,#1B2A4A,#14203A);--hero-text:#A9C7F2;--hero-sub:#B8C4D9;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+body{padding-bottom:92px}
+button,input,select,textarea{font:inherit}
+button{border:0}
+#app{max-width:560px;margin:0 auto;min-height:100vh;padding:env(safe-area-inset-top) 16px 0}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 4px 14px}
+.brand h1{margin:0;font-size:28px;letter-spacing:-.7px}.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.icon-btn{width:42px;height:42px;border-radius:14px;background:var(--surface2);box-shadow:var(--shadow);color:var(--ink);display:grid;place-items:center;font-size:19px}
+.vehicle-tabs{display:flex;gap:10px;overflow:auto;padding:2px 2px 12px;scrollbar-width:none}.vehicle-tabs::-webkit-scrollbar{display:none}
+.vehicle-tab{min-width:220px;text-align:left;padding:14px 15px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink);border:1px solid transparent}
+.vehicle-tab.active{border-color:var(--primary);background:var(--primary-soft)}
+.vehicle-tab strong{display:block;font-size:15px}.vehicle-tab span{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.page{display:none}.page.active{display:block}
+.hero{background:var(--hero);color:var(--hero-text);border-radius:22px;padding:20px;margin:2px 0 14px;box-shadow:var(--shadow)}
+.hero-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.hero h2{font-size:22px;margin:0}.hero .sub{font-size:13px;color:var(--hero-sub);margin-top:5px}
+.km-row{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-top:20px}.km-block small{display:block;font-size:11px;color:var(--hero-sub);margin-bottom:3px}.km-value{font-size:32px;font-weight:750;letter-spacing:-1px}
+.hero button{background:rgba(255,255,255,.42);color:var(--hero-text);border-radius:12px;padding:10px 12px;font-weight:650}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:0 0 16px}
+.stat{background:var(--surface2);box-shadow:var(--shadow);border-radius:15px;padding:13px 11px;text-align:center}
+.stat b{font-size:23px;display:block}.stat span{font-size:11px;color:var(--muted)}.stat.due b{color:var(--red)}.stat.soon b{color:var(--orange)}.stat.ok b{color:var(--green)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px}.section-head h3{font-size:17px;margin:0}.section-head button{background:none;color:var(--primary);font-weight:650}
+.chips{display:flex;gap:8px;overflow:auto;padding:0 0 12px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{padding:8px 12px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.04)}
+.chip.active{background:var(--primary);color:white}
+.task-list{display:flex;flex-direction:column;gap:9px}
+.task{background:var(--surface2);box-shadow:var(--shadow);border-radius:16px;padding:14px;display:grid;grid-template-columns:38px 1fr auto;gap:11px;align-items:center}
+.task .dot{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:18px;font-weight:800}
+.dot.due{background:var(--red-soft);color:var(--red)}.dot.soon{background:var(--orange-soft);color:var(--orange)}.dot.ok{background:var(--green-soft);color:var(--green)}.dot.unknown,.dot.manual{background:var(--primary-soft);color:var(--primary)}
+.task h4{margin:0 0 4px;font-size:14px}.task .meta{font-size:12px;color:var(--muted);line-height:1.4}
+.task .right{text-align:right;max-width:118px}.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:700}
+.badge.due{color:var(--red);background:var(--red-soft)}.badge.soon{color:var(--orange);background:var(--orange-soft)}.badge.ok{color:var(--green);background:var(--green-soft)}.badge.unknown,.badge.manual{color:var(--primary);background:var(--primary-soft)}
+.due-text{font-size:11px;color:var(--muted);margin-top:5px}
+.notice{background:var(--orange-soft);color:var(--ink);border-radius:15px;padding:13px 14px;margin-bottom:12px;font-size:12px;line-height:1.45}
+.history-list{display:flex;flex-direction:column;gap:9px}.history-empty,.empty{background:var(--surface2);border-radius:16px;padding:28px 18px;text-align:center;color:var(--muted);box-shadow:var(--shadow)}
+.record{background:var(--surface2);border-radius:16px;padding:14px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr auto;gap:12px}
+.record h4{margin:0 0 4px;font-size:14px}.record p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}.record .cost{font-weight:750;color:var(--ink)}
+.panel{background:var(--surface2);box-shadow:var(--shadow);border-radius:18px;padding:16px;margin-bottom:12px}
+.panel h3{margin:0 0 13px;font-size:16px}.field{margin-bottom:12px}.field:last-child{margin-bottom:0}.field label{display:block;font-size:11px;color:var(--muted);margin:0 0 6px}
+.input,select,textarea{width:100%;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:12px;padding:11px 12px;outline:none}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.help{font-size:11px;color:var(--muted);line-height:1.45;margin-top:6px}
+.primary-btn,.secondary-btn,.danger-btn{width:100%;padding:12px 14px;border-radius:13px;font-weight:700;margin-top:8px}.primary-btn{background:var(--primary);color:white}.secondary-btn{background:var(--primary-soft);color:var(--primary)}.danger-btn{background:var(--red-soft);color:var(--red)}
+.bottom-nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);padding:9px 20px calc(9px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-top:1px solid var(--rule);z-index:30}
+.nav-btn{background:none;color:var(--muted);padding:7px 4px 4px;font-size:10px}.nav-btn i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}.nav-btn.active{color:var(--primary);font-weight:700}
+.fab{position:fixed;right:max(20px,calc((100vw - 560px)/2 + 20px));bottom:88px;width:58px;height:58px;border-radius:50%;background:var(--primary);color:#fff;font-size:31px;line-height:1;box-shadow:0 10px 30px rgba(18,104,255,.35);z-index:35}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:flex-end;justify-content:center;z-index:80}.modal-backdrop.open{display:flex}
+.modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--surface2);border-radius:24px 24px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -16px 50px rgba(0,0,0,.25)}
+.handle{width:42px;height:5px;border-radius:5px;background:var(--rule);margin:2px auto 14px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.modal-head h3{margin:0;font-size:19px}.close{width:34px;height:34px;border-radius:50%;background:var(--paper);color:var(--ink)}
+.theme-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.theme-pills button{padding:10px;border-radius:12px;background:var(--paper);color:var(--ink)}.theme-pills button.active{background:var(--primary);color:#fff}
+.small-note{font-size:11px;color:var(--muted);line-height:1.5}
+@media(max-width:380px){.summary{grid-template-columns:1fr 1fr 1fr}.km-value{font-size:28px}.vehicle-tab{min-width:195px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><h1>CarService</h1><p>Wartung · HU/TÜV · Historie</p></div>
+    <button class="icon-btn" id="quickTheme" title="Darstellung">◐</button>
+  </header>
+
+  <div class="vehicle-tabs" id="vehicleTabs"></div>
+
+  <main>
+    <section class="page active" id="page-dashboard">
+      <div id="setupNotice"></div>
+      <div class="hero">
+        <div class="hero-top">
+          <div><h2 id="heroName"></h2><div class="sub" id="heroSub"></div></div>
+          <button id="editVehicleBtn">Bearbeiten</button>
+        </div>
+        <div class="km-row">
+          <div class="km-block"><small>Aktueller Kilometerstand</small><div class="km-value" id="heroKm">–</div></div>
+          <button id="quickKmBtn">km ändern</button>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="stat due"><b id="countDue">0</b><span>fällig</span></div>
+        <div class="stat soon"><b id="countSoon">0</b><span>bald</span></div>
+        <div class="stat ok"><b id="countOk">0</b><span>okay</span></div>
+      </div>
+
+      <div class="section-head"><h3>Wartungsplan</h3><button id="openLogBtn">Erledigt eintragen</button></div>
+      <div class="chips" id="filterChips">
+        <button class="chip active" data-filter="all">Alle</button>
+        <button class="chip" data-filter="due">Fällig</button>
+        <button class="chip" data-filter="soon">Bald</button>
+        <button class="chip" data-filter="ok">Okay</button>
+        <button class="chip" data-filter="unknown">Offen</button>
+      </div>
+      <div class="task-list" id="taskList"></div>
+    </section>
+
+    <section class="page" id="page-history">
+      <div class="section-head"><h3>Service-Historie</h3><button id="historyAddBtn">+ Eintrag</button></div>
+      <div class="panel" id="historySummary"></div>
+      <div class="history-list" id="historyList"></div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <div class="panel">
+        <h3>Fahrzeugdaten</h3>
+        <div class="field"><label>Fahrzeug</label><select id="settingsVehicle" class="input"></select></div>
+        <div class="field"><label>Aktueller Kilometerstand</label><input id="settingsMileage" class="input" type="number" inputmode="numeric" min="0"></div>
+        <div class="field"><label>Erstzulassung</label><input id="settingsFirstReg" class="input" type="date"></div>
+        <div class="field"><label>Nächste HU / TÜV</label><input id="settingsHuDue" class="input" type="date"></div>
+        <div class="field" id="profileField"><label>Wartungsprofil</label><select id="settingsProfile" class="input"></select><div class="help" id="profileHelp"></div></div>
+        <button class="primary-btn" id="saveVehicleSettings">Fahrzeugdaten speichern</button>
+      </div>
+
+      <div class="panel">
+        <h3>Eigene Wartungspunkte</h3>
+        <p class="small-note">Für Reparaturen oder Arbeiten, die du zusätzlich verfolgen möchtest, z. B. Batterie, Getriebeöl oder Klimaservice.</p>
+        <button class="secondary-btn" id="addCustomTaskBtn">+ Wartungspunkt anlegen</button>
+        <div id="customTaskList"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Darstellung</h3>
+        <div class="theme-pills">
+          <button data-theme-choice="system">System</button>
+          <button data-theme-choice="light">Hell</button>
+          <button data-theme-choice="dark">Dunkel</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Daten</h3>
+        <p class="small-note">Alle Daten liegen ausschließlich lokal auf diesem Gerät. Beim Löschen der App gehen sie ohne Sicherung verloren.</p>
+        <button class="secondary-btn" id="copyBackupBtn">Sicherung als Text kopieren</button>
+        <button class="secondary-btn" id="importBackupBtn">Sicherung einfügen</button>
+        <button class="danger-btn" id="resetBtn">Alle App-Daten zurücksetzen</button>
+      </div>
+
+      <div class="panel">
+        <h3>Hinweis zu Intervallen</h3>
+        <p class="small-note">Die App ist eine Erinnerungs- und Dokumentationshilfe. Maßgeblich bleiben der fahrzeugspezifische Peugeot-Wartungsplan, VIN/Produktionsdatum, Betriebsbedingungen und Werkstatthinweise. Beim Peugeot 508 aus 2012 muss das passende Wartungsprofil ausgewählt werden.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<button class="fab" id="fab">+</button>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="dashboard"><i>⌂</i>Übersicht</button>
+  <button class="nav-btn" data-page="history"><i>◷</i>Historie</button>
+  <button class="nav-btn" data-page="settings"><i>⚙</i>Einstellungen</button>
+</nav>
+
+<div class="modal-backdrop" id="entryModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3>Wartung eintragen</h3><button class="close" data-close="entryModal">×</button></div>
+    <div class="field"><label>Wartung / Arbeit</label><select id="entryTask" class="input"></select></div>
+    <div class="row2">
+      <div class="field"><label>Datum</label><input id="entryDate" class="input" type="date"></div>
+      <div class="field"><label>Kilometerstand</label><input id="entryMileage" class="input" type="number" inputmode="numeric" min="0"></div>
+    </div>
+    <div class="field"><label>Kosten (€) – optional</label><input id="entryCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>
+    <div class="field"><label>Notiz – optional</label><textarea id="entryNote" class="input" rows="3" placeholder="z. B. Teile, Werkstatt, Öl-Spezifikation …"></textarea></div>
+    <button class="primary-btn" id="saveEntryBtn">Speichern</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="kmModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3>Kilometerstand</h3><button class="close" data-close="kmModal">×</button></div>
+    <div class="field"><label>Aktueller Kilometerstand</label><input id="quickMileage" class="input" type="number" inputmode="numeric" min="0"></div>
+    <button class="primary-btn" id="saveQuickKm">Speichern</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="customModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3>Wartungspunkt anlegen</h3><button class="close" data-close="customModal">×</button></div>
+    <div class="field"><label>Name</label><input id="customName" class="input" placeholder="z. B. Getriebeöl"></div>
+    <div class="row2">
+      <div class="field"><label>Intervall km (optional)</label><input id="customKm" class="input" type="number" min="0"></div>
+      <div class="field"><label>Intervall Monate (optional)</label><input id="customMonths" class="input" type="number" min="0"></div>
+    </div>
+    <button class="primary-btn" id="saveCustomTask">Anlegen</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="backupModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3 id="backupTitle">Sicherung</h3><button class="close" data-close="backupModal">×</button></div>
+    <div class="field"><label id="backupLabel">JSON</label><textarea id="backupText" class="input" rows="12"></textarea></div>
+    <button class="primary-btn" id="backupActionBtn">Kopieren</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "carservice_v1";
+
+const PROFILE_LABELS = {
+  "508_early": "508: frühes 2012-Profil (bis ca. 06/2012)",
+  "508_late": "508: spätes 2012-Profil (ab ca. 07/2012)",
+  "2008_normal": "2008: normale Nutzung",
+  "2008_severe": "2008: erschwerte Nutzung"
+};
+
+const BASE_RULES = {
+  "508_early": [
+    r("service","Motoröl + Ölfilter / Inspektion","🛢️",30000,24,{note:"Grundservice"}),
+    r("fuel","Dieselfilter","⛽",30000,0),
+    r("air","Luftfilter","🌬️",60000,0),
+    r("cabin","Innenraum-/Pollenfilter","🍃",60000,24),
+    r("brakefluid","Bremsflüssigkeit","💧",0,24),
+    r("timing","Zahnriemen + Wasserpumpe","⚙️",240000,120,{important:true}),
+    r("auxbelt","Nebenaggregateriemen","➰",240000,120,{note:"Richtwert; mit Fahrzeugplan/VIN abgleichen"}),
+    r("fapadd","FAP-Additivstand prüfen","♨️",0,0,{manual:true,note:"Fahrzeugspezifisch nach VIN / Diagnose prüfen"}),
+    r("dpf","Partikelfilter / FAP prüfen","▦",0,0,{manual:true,note:"Beladung/Regeneration per Diagnose prüfen"}),
+    r("coolant","Kühlmittel / Frostschutz prüfen","❄️",0,0,{manual:true}),
+    r("brakes","Bremsen prüfen","◉",0,0,{manual:true}),
+    r("tires","Reifen / Profiltiefe / Luftdruck","◌",0,0,{manual:true}),
+    r("battery","Batterie prüfen","🔋",0,0,{manual:true}),
+    r("hu","HU / AU (TÜV)","✓",0,24,{hu:true})
+  ],
+  "508_late": [
+    r("service","Motoröl + Ölfilter / Inspektion","🛢️",30000,12,{note:"Grundservice"}),
+    r("fuel","Dieselfilter","⛽",30000,0),
+    r("air","Luftfilter","🌬️",60000,48),
+    r("cabin","Innenraum-/Pollenfilter","🍃",60000,24),
+    r("brakefluid","Bremsflüssigkeit","💧",0,24),
+    r("timing","Zahnriemen + Wasserpumpe","⚙️",180000,120,{important:true}),
+    r("auxbelt","Nebenaggregateriemen","➰",180000,120,{note:"Richtwert; mit Fahrzeugplan/VIN abgleichen"}),
+    r("fapadd","FAP-Additivstand prüfen","♨️",0,0,{manual:true,note:"Fahrzeugspezifisch nach VIN / Diagnose prüfen"}),
+    r("dpf","Partikelfilter / FAP prüfen","▦",0,0,{manual:true,note:"Beladung/Regeneration per Diagnose prüfen"}),
+    r("coolant","Kühlmittel / Frostschutz prüfen","❄️",0,0,{manual:true}),
+    r("brakes","Bremsen prüfen","◉",0,0,{manual:true}),
+    r("tires","Reifen / Profiltiefe / Luftdruck","◌",0,0,{manual:true}),
+    r("battery","Batterie prüfen","🔋",0,0,{manual:true}),
+    r("hu","HU / AU (TÜV)","✓",0,24,{hu:true})
+  ],
+  "2008_normal": [
+    r("service","Motoröl + Ölfilter / Inspektion","🛢️",25000,12,{note:"Peugeot: normale Nutzung"}),
+    r("fuel","Dieselfilter","⛽",50000,48),
+    r("air","Luftfilter","🌬️",50000,48),
+    r("cabin","Innenraum-/Pollenfilter","🍃",25000,24),
+    r("brakefluid","Bremsflüssigkeit","💧",0,24),
+    r("coolantph","Kühlmittel-pH prüfen","❄️",25000,12,{firstKm:125000,firstMonths:48}),
+    r("fapadd","FAP-Additivstand prüfen","♨️",25000,0,{firstKm:100000}),
+    r("dpf","Partikelfilter auf Beladung prüfen","▦",25000,0,{firstKm:150000}),
+    r("timing","Zahnriemen + Wasserpumpe","⚙️",175000,120,{important:true}),
+    r("auxbelt","Nebenaggregateriemen","➰",175000,120),
+    r("adblue","AdBlue auffüllen / kontrollieren","💧",25000,12),
+    r("brakes","Bremsen prüfen","◉",0,0,{manual:true}),
+    r("tires","Reifen / Profiltiefe / Luftdruck","◌",0,0,{manual:true}),
+    r("battery","Batterie prüfen","🔋",0,0,{manual:true}),
+    r("hu","HU / AU (TÜV)","✓",0,24,{hu:true})
+  ],
+  "2008_severe": [
+    r("service","Motoröl + Ölfilter / Inspektion","🛢️",15000,12,{note:"Peugeot: erschwerte Nutzung"}),
+    r("fuel","Dieselfilter","⛽",30000,48),
+    r("air","Luftfilter","🌬️",30000,48),
+    r("cabin","Innenraum-/Pollenfilter","🍃",15000,12),
+    r("brakefluid","Bremsflüssigkeit","💧",0,24),
+    r("coolantph","Kühlmittel-pH prüfen","❄️",15000,12,{firstKm:120000,firstMonths:48}),
+    r("fapadd","FAP-Additivstand prüfen","♨️",15000,0,{firstKm:90000}),
+    r("dpf","Partikelfilter auf Beladung prüfen","▦",15000,0,{firstKm:150000}),
+    r("timing","Zahnriemen + Wasserpumpe","⚙️",165000,120,{important:true}),
+    r("auxbelt","Nebenaggregateriemen","➰",165000,120),
+    r("adblue","AdBlue auffüllen / kontrollieren","💧",15000,12),
+    r("brakes","Bremsen prüfen","◉",0,0,{manual:true}),
+    r("tires","Reifen / Profiltiefe / Luftdruck","◌",0,0,{manual:true}),
+    r("battery","Batterie prüfen","🔋",0,0,{manual:true}),
+    r("hu","HU / AU (TÜV)","✓",0,24,{hu:true})
+  ]
+};
+
+function r(id,name,icon,km,months,opt={}){return {id,name,icon,km,months,...opt};}
+
+function defaultState(){
+  return {
+    selectedVehicle:"508",
+    filter:"all",
+    theme:"system",
+    vehicles:[
+      {id:"508",name:"Peugeot 508 SW",subtitle:"2.0 HDi · 163 PS · 2012",mileage:0,firstReg:"",huDue:"",profile:"508_late",records:[],customTasks:[]},
+      {id:"2008",name:"Peugeot 2008",subtitle:"1.6 BlueHDi · 120 PS · 2016",mileage:0,firstReg:"",huDue:"",profile:"2008_normal",records:[],customTasks:[]}
+    ]
+  };
+}
+
+let state = loadState();
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const parsed=JSON.parse(raw);
+    const base=defaultState();
+    base.selectedVehicle=parsed.selectedVehicle||base.selectedVehicle;
+    base.filter=parsed.filter||"all";
+    base.theme=parsed.theme||"system";
+    base.vehicles=base.vehicles.map(v=>{
+      const old=(parsed.vehicles||[]).find(x=>x.id===v.id);
+      return old?{...v,...old,records:Array.isArray(old.records)?old.records:[],customTasks:Array.isArray(old.customTasks)?old.customTasks:[]}:v;
+    });
+    return base;
+  }catch(e){return defaultState();}
+}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+function vehicle(){return state.vehicles.find(v=>v.id===state.selectedVehicle)||state.vehicles[0];}
+function rulesFor(v){
+  const base=(BASE_RULES[v.profile]||[]).map(x=>({...x}));
+  const custom=(v.customTasks||[]).map(x=>({id:x.id,name:x.name,icon:"🔧",km:Number(x.km)||0,months:Number(x.months)||0,custom:true,manual:!(Number(x.km)||Number(x.months))}));
+  return [...base,...custom];
+}
+function lastRecord(v,taskId){
+  return (v.records||[]).filter(x=>x.taskId===taskId).sort((a,b)=>((b.date||"").localeCompare(a.date||"")) || ((b.mileage||0)-(a.mileage||0)))[0]||null;
+}
+function addMonths(dateStr,months){
+  if(!dateStr||!months) return null;
+  const d=new Date(dateStr+"T12:00:00");
+  if(isNaN(d)) return null;
+  const day=d.getDate();
+  d.setMonth(d.getMonth()+Number(months));
+  if(d.getDate()<day) d.setDate(0);
+  return d.toISOString().slice(0,10);
+}
+function daysBetween(today,due){
+  const a=new Date(today+"T12:00:00"),b=new Date(due+"T12:00:00");
+  return Math.ceil((b-a)/86400000);
+}
+function dueInfo(v,rule){
+  if(rule.hu){
+    const due=v.huDue||null;
+    if(!due) return {status:"unknown",label:"Termin fehlt",detail:"HU-Termin eintragen",dueDate:null,dueKm:null};
+    const days=daysBetween(today(),due);
+    const status=days<0?"due":days<=60?"soon":"ok";
+    return {status,label:days<0?`${Math.abs(days)} Tage überfällig`:days===0?"heute fällig":`${days} Tage`,detail:`fällig ${fmtDate(due)}`,dueDate:due,dueKm:null};
+  }
+  if(rule.manual) return {status:"manual",label:"Kontrolle",detail:rule.note||"bei Bedarf / Sichtprüfung",dueDate:null,dueKm:null};
+  const last=lastRecord(v,rule.id);
+  let dueKm=null,dueDate=null;
+  if(last){
+    if(rule.km) dueKm=Number(last.mileage||0)+Number(rule.km);
+    if(rule.months) dueDate=addMonths(last.date,rule.months);
+  } else {
+    if(rule.firstKm) dueKm=Number(rule.firstKm);
+    else if(rule.km) dueKm=Number(rule.km);
+    const firstMonths=rule.firstMonths||rule.months;
+    if(firstMonths&&v.firstReg) dueDate=addMonths(v.firstReg,firstMonths);
+  }
+  if(!dueKm&&!dueDate) return {status:"unknown",label:"Offen",detail:"noch kein Intervall",dueDate,dueKm};
+  const kmLeft=dueKm!==null?dueKm-Number(v.mileage||0):null;
+  const dayLeft=dueDate?daysBetween(today(),dueDate):null;
+  const due=(kmLeft!==null&&kmLeft<=0)||(dayLeft!==null&&dayLeft<=0);
+  const soon=!due&&((kmLeft!==null&&kmLeft<=Math.max(1500,(rule.km||0)*0.10))||(dayLeft!==null&&dayLeft<=60));
+  let status=due?"due":soon?"soon":"ok";
+  let pieces=[];
+  if(dueKm!==null) pieces.push(`${fmtKm(dueKm)} km`);
+  if(dueDate) pieces.push(fmtDate(dueDate));
+  if(!last && !v.firstReg && dueDate===null && rule.months) status="unknown";
+  if(!Number(v.mileage||0) && dueKm!==null && !last) status="unknown";
+  let label=status==="due"?"Fällig":status==="soon"?"Bald":status==="ok"?"Okay":"Offen";
+  let detail=pieces.length?`nächster Termin: ${pieces.join(" oder ")}`:"";
+  if(last) detail=`zuletzt ${fmtDate(last.date)} · ${fmtKm(last.mileage)} km`+(pieces.length?` · nächster: ${pieces.join(" / ")}`:"");
+  return {status,label,detail,dueDate,dueKm,kmLeft,dayLeft};
+}
+function today(){return new Date().toISOString().slice(0,10);}
+function fmtKm(n){return Number(n||0).toLocaleString("de-DE");}
+function fmtDate(s){if(!s)return "–";const [y,m,d]=s.split("-");return `${d}.${m}.${y}`;}
+function fmtMoney(n){return Number(n||0).toLocaleString("de-DE",{style:"currency",currency:"EUR"});}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+
+function renderAll(){
+  applyTheme();
+  renderTabs();
+  renderDashboard();
+  renderHistory();
+  renderSettings();
+  syncNav();
+}
+function renderTabs(){
+  const box=document.getElementById("vehicleTabs");
+  box.innerHTML=state.vehicles.map(v=>`<button class="vehicle-tab ${v.id===state.selectedVehicle?"active":""}" data-vehicle="${v.id}"><strong>${esc(v.name)}</strong><span>${esc(v.subtitle)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`).join("");
+  box.querySelectorAll("[data-vehicle]").forEach(b=>b.onclick=()=>{state.selectedVehicle=b.dataset.vehicle;save();renderAll();});
+}
+function renderDashboard(){
+  const v=vehicle(), rules=rulesFor(v);
+  document.getElementById("heroName").textContent=v.name;
+  document.getElementById("heroSub").textContent=v.subtitle+" · "+PROFILE_LABELS[v.profile];
+  document.getElementById("heroKm").textContent=v.mileage?fmtKm(v.mileage)+" km":"noch nicht eingetragen";
+  const notice=document.getElementById("setupNotice");
+  const missing=[];
+  if(!v.mileage) missing.push("Kilometerstand");
+  if(!v.firstReg) missing.push("Erstzulassung");
+  if(!v.huDue) missing.push("HU-Termin");
+  notice.innerHTML=missing.length?`<div class="notice"><b>Noch unvollständig:</b> ${missing.join(", ")}. Für genaue Fälligkeiten bitte unter Fahrzeugdaten ergänzen.</div>`:"";
+  const enriched=rules.map(rule=>({rule,info:dueInfo(v,rule)}));
+  const counts={due:0,soon:0,ok:0};
+  enriched.forEach(x=>{if(counts[x.info.status]!==undefined)counts[x.info.status]++;});
+  document.getElementById("countDue").textContent=counts.due;
+  document.getElementById("countSoon").textContent=counts.soon;
+  document.getElementById("countOk").textContent=counts.ok;
+  const rank={due:0,soon:1,unknown:2,manual:3,ok:4};
+  let filtered=enriched.filter(x=>state.filter==="all" || (state.filter==="unknown"?(x.info.status==="unknown"||x.info.status==="manual"):x.info.status===state.filter));
+  filtered.sort((a,b)=>(rank[a.info.status]-rank[b.info.status])||a.rule.name.localeCompare(b.rule.name,"de"));
+  document.getElementById("taskList").innerHTML=filtered.length?filtered.map(({rule,info})=>`
+    <div class="task" data-task="${esc(rule.id)}">
+      <div class="dot ${info.status}">${rule.icon}</div>
+      <div><h4>${esc(rule.name)}${rule.important?" · wichtig":""}</h4><div class="meta">${esc(info.detail||rule.note||"")}</div></div>
+      <div class="right"><span class="badge ${info.status}">${esc(info.label)}</span><div class="due-text">${shortRemaining(info)}</div></div>
+    </div>`).join(""):`<div class="empty">Keine Einträge in diesem Filter.</div>`;
+  document.querySelectorAll(".task[data-task]").forEach(el=>el.onclick=()=>openEntry(el.dataset.task));
+  document.querySelectorAll("#filterChips .chip").forEach(c=>c.classList.toggle("active",c.dataset.filter===state.filter));
+}
+function shortRemaining(info){
+  if(info.status==="manual"||info.status==="unknown") return "";
+  if(info.status==="due"){
+    const xs=[];if(info.kmLeft!==undefined&&info.kmLeft!==null&&info.kmLeft<=0)xs.push(`${fmtKm(Math.abs(info.kmLeft))} km drüber`);
+    if(info.dayLeft!==undefined&&info.dayLeft!==null&&info.dayLeft<=0)xs.push(`${Math.abs(info.dayLeft)} T. drüber`);
+    return xs[0]||"jetzt";
+  }
+  const xs=[];if(info.kmLeft!==undefined&&info.kmLeft!==null)xs.push(`noch ${fmtKm(info.kmLeft)} km`);if(info.dayLeft!==undefined&&info.dayLeft!==null)xs.push(`noch ${info.dayLeft} T.`);
+  return xs[0]||"";
+}
+function renderHistory(){
+  const v=vehicle();
+  const records=[...(v.records||[])].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const total=records.reduce((s,r)=>s+Number(r.cost||0),0);
+  document.getElementById("historySummary").innerHTML=`<h3>${esc(v.name)}</h3><div class="row2"><div><div class="small-note">Einträge</div><b>${records.length}</b></div><div><div class="small-note">Dokumentierte Kosten</div><b>${fmtMoney(total)}</b></div></div>`;
+  const rules=rulesFor(v);
+  document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
+    const rule=rules.find(r=>r.id===rec.taskId);
+    return `<div class="record"><div><h4>${rule?rule.icon+" "+esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} · ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div></div>`;
+  }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
+}
+function renderSettings(){
+  const v=vehicle();
+  const sv=document.getElementById("settingsVehicle");
+  sv.innerHTML=state.vehicles.map(x=>`<option value="${x.id}" ${x.id===v.id?"selected":""}>${esc(x.name)}</option>`).join("");
+  document.getElementById("settingsMileage").value=v.mileage||"";
+  document.getElementById("settingsFirstReg").value=v.firstReg||"";
+  document.getElementById("settingsHuDue").value=v.huDue||"";
+  const profile=document.getElementById("settingsProfile");
+  const options=v.id==="508"?["508_early","508_late"]:["2008_normal","2008_severe"];
+  profile.innerHTML=options.map(p=>`<option value="${p}" ${p===v.profile?"selected":""}>${PROFILE_LABELS[p]}</option>`).join("");
+  document.getElementById("profileHelp").textContent=v.id==="508"
+    ?"Bei 2012er 508 hängt der Wartungsplan vom Produktionsdatum ab. Das Profil sollte nach VIN/ORGA bzw. Serviceunterlagen gewählt werden."
+    :"Erschwerte Nutzung umfasst u. a. häufige Kurzstrecken, viel Stadtverkehr und staubige Einsatzbedingungen.";
+  const custom=document.getElementById("customTaskList");
+  custom.innerHTML=(v.customTasks||[]).map(t=>`<div class="record" style="margin-top:9px"><div><h4>🔧 ${esc(t.name)}</h4><p>${t.km?fmtKm(t.km)+" km":""}${t.km&&t.months?" / ":""}${t.months?t.months+" Monate":(!t.km?"manuell":"")}</p></div><button class="close" data-delete-custom="${t.id}">×</button></div>`).join("");
+  custom.querySelectorAll("[data-delete-custom]").forEach(b=>b.onclick=()=>{if(confirm("Wartungspunkt löschen?")){v.customTasks=v.customTasks.filter(t=>t.id!==b.dataset.deleteCustom);save();renderAll();}});
+  document.querySelectorAll("[data-theme-choice]").forEach(b=>b.classList.toggle("active",b.dataset.themeChoice===state.theme));
+}
+function syncNav(){
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",document.getElementById("page-"+b.dataset.page).classList.contains("active")));
+}
+function showPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+  window.scrollTo(0,0);
+  if(name==="settings")renderSettings();
+}
+function openModal(id){document.getElementById(id).classList.add("open");}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
+function openEntry(taskId){
+  const v=vehicle(),rules=rulesFor(v),sel=document.getElementById("entryTask");
+  sel.innerHTML=rules.map(r=>`<option value="${r.id}" ${r.id===taskId?"selected":""}>${r.icon} ${esc(r.name)}</option>`).join("");
+  document.getElementById("entryDate").value=today();
+  document.getElementById("entryMileage").value=v.mileage||"";
+  document.getElementById("entryCost").value="";
+  document.getElementById("entryNote").value="";
+  openModal("entryModal");
+}
+function saveEntry(){
+  const v=vehicle();
+  const taskId=document.getElementById("entryTask").value;
+  const rule=rulesFor(v).find(r=>r.id===taskId);
+  const date=document.getElementById("entryDate").value;
+  const mileage=Number(document.getElementById("entryMileage").value||0);
+  const cost=Number(document.getElementById("entryCost").value||0);
+  const note=document.getElementById("entryNote").value.trim();
+  if(!date){alert("Bitte ein Datum eintragen.");return;}
+  if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}
+  v.records.push({id:"rec_"+Date.now(),taskId,taskName:rule?rule.name:"Wartung",date,mileage,cost,note});
+  if(mileage>Number(v.mileage||0)) v.mileage=mileage;
+  if(rule&&rule.hu) v.huDue=addMonths(date,24);
+  save();closeModal("entryModal");renderAll();
+}
+function saveVehicleSettings(){
+  const v=vehicle();
+  v.mileage=Math.max(0,Number(document.getElementById("settingsMileage").value||0));
+  v.firstReg=document.getElementById("settingsFirstReg").value||"";
+  v.huDue=document.getElementById("settingsHuDue").value||"";
+  v.profile=document.getElementById("settingsProfile").value;
+  save();renderAll();alert("Fahrzeugdaten gespeichert.");
+}
+function applyTheme(){
+  let dark=false;
+  if(state.theme==="dark")dark=true;
+  else if(state.theme==="system")dark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme=dark?"dark":"light";
+}
+function cycleTheme(){
+  state.theme=state.theme==="system"?"light":state.theme==="light"?"dark":"system";save();renderAll();
+}
+function openBackup(mode){
+  const title=document.getElementById("backupTitle"),label=document.getElementById("backupLabel"),txt=document.getElementById("backupText"),btn=document.getElementById("backupActionBtn");
+  if(mode==="export"){
+    title.textContent="Sicherung erstellen";label.textContent="Sicherungsdaten";txt.value=JSON.stringify(state,null,2);btn.textContent="In Zwischenablage kopieren";btn.dataset.mode="export";
+  }else{
+    title.textContent="Sicherung importieren";label.textContent="Sicherungsdaten hier einfügen";txt.value="";btn.textContent="Sicherung übernehmen";btn.dataset.mode="import";
+  }
+  openModal("backupModal");
+}
+async function backupAction(){
+  const mode=document.getElementById("backupActionBtn").dataset.mode;
+  const txt=document.getElementById("backupText");
+  if(mode==="export"){
+    txt.select();
+    try{await navigator.clipboard.writeText(txt.value);alert("Sicherung kopiert.");}catch(e){document.execCommand("copy");alert("Sicherung kopiert.");}
+  }else{
+    try{
+      const parsed=JSON.parse(txt.value);
+      if(!parsed||!Array.isArray(parsed.vehicles))throw new Error("Ungültige Sicherung");
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(parsed));state=loadState();closeModal("backupModal");renderAll();alert("Sicherung übernommen.");
+    }catch(e){alert("Die Sicherung konnte nicht gelesen werden.");}
+  }
+}
+
+document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id);}));
+document.getElementById("fab").onclick=()=>openEntry();
+document.getElementById("openLogBtn").onclick=()=>openEntry();
+document.getElementById("historyAddBtn").onclick=()=>openEntry();
+document.getElementById("quickTheme").onclick=cycleTheme;
+document.getElementById("editVehicleBtn").onclick=()=>showPage("settings");
+document.getElementById("quickKmBtn").onclick=()=>{document.getElementById("quickMileage").value=vehicle().mileage||"";openModal("kmModal");};
+document.getElementById("saveQuickKm").onclick=()=>{const n=Number(document.getElementById("quickMileage").value||0);if(n<0)return;vehicle().mileage=n;save();closeModal("kmModal");renderAll();};
+document.getElementById("saveEntryBtn").onclick=saveEntry;
+document.getElementById("filterChips").onclick=e=>{const b=e.target.closest("[data-filter]");if(!b)return;state.filter=b.dataset.filter;save();renderDashboard();};
+document.getElementById("settingsVehicle").onchange=e=>{state.selectedVehicle=e.target.value;save();renderAll();};
+document.getElementById("saveVehicleSettings").onclick=saveVehicleSettings;
+document.getElementById("addCustomTaskBtn").onclick=()=>{document.getElementById("customName").value="";document.getElementById("customKm").value="";document.getElementById("customMonths").value="";openModal("customModal");};
+document.getElementById("saveCustomTask").onclick=()=>{const name=document.getElementById("customName").value.trim();if(!name){alert("Bitte einen Namen eingeben.");return;}vehicle().customTasks.push({id:"custom_"+Date.now(),name,km:Number(document.getElementById("customKm").value||0),months:Number(document.getElementById("customMonths").value||0)});save();closeModal("customModal");renderAll();};
+document.querySelectorAll("[data-theme-choice]").forEach(b=>b.onclick=()=>{state.theme=b.dataset.themeChoice;save();renderAll();});
+document.getElementById("copyBackupBtn").onclick=()=>openBackup("export");
+document.getElementById("importBackupBtn").onclick=()=>openBackup("import");
+document.getElementById("backupActionBtn").onclick=backupAction;
+document.getElementById("resetBtn").onclick=()=>{if(confirm("Wirklich alle CarService-Daten löschen?")){localStorage.removeItem(STORAGE_KEY);state=defaultState();save();renderAll();}};
+if(window.matchMedia){window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(state.theme==="system")applyTheme();});}
+
+renderAll();
+</script>
+</body>
+</html>
