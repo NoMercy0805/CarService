@@ -59,7 +59,7 @@ button{border:0}
 .notice{background:var(--orange-soft);color:var(--ink);border-radius:15px;padding:13px 14px;margin-bottom:12px;font-size:12px;line-height:1.45}
 .history-list{display:flex;flex-direction:column;gap:9px}.history-empty,.empty{background:var(--surface2);border-radius:16px;padding:28px 18px;text-align:center;color:var(--muted);box-shadow:var(--shadow)}
 .record{background:var(--surface2);border-radius:16px;padding:14px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr auto;gap:12px}
-.record h4{margin:0 0 4px;font-size:14px}.record p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}.record .cost{font-weight:750;color:var(--ink)}
+.record h4{margin:0 0 4px;font-size:14px}.record p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}.record .cost{font-weight:750;color:var(--ink)}.record-actions{display:flex;align-items:center;gap:9px}.history-delete-btn{width:34px;height:34px;border-radius:11px;background:var(--red-soft);color:var(--red);display:grid;place-items:center;font-size:15px;cursor:pointer}
 .panel{background:var(--surface2);box-shadow:var(--shadow);border-radius:18px;padding:16px;margin-bottom:12px}
 .panel h3{margin:0 0 13px;font-size:16px}.field{margin-bottom:12px}.field:last-child{margin-bottom:0}.field label{display:block;font-size:11px;color:var(--muted);margin:0 0 6px}
 .input,select,textarea{width:100%;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:12px;padding:11px 12px;outline:none}
@@ -556,11 +556,12 @@ function saveServiceChecklist(){
   const notes=[];
   if(checkedBase.length) notes.push(`Checkliste: ${checkedBase.join("; ")}`);
   if(note) notes.push(note);
-  v.records.push({id:"rec_"+Date.now(),taskId:"service",taskName:"Motoröl + Ölfilter / Inspektion",date,mileage,cost,note:notes.join(" · ")});
+  const serviceGroup=`service_${Date.now()}`;
+  v.records.push({id:serviceGroup,serviceGroup,taskId:"service",taskName:"Motor\u00f6l + \u00d6lfilter / Inspektion",date,mileage,cost,note:notes.join(" \u00b7 ")});
   checkedExtras.forEach((taskId,i)=>{
     const rule=rules.find(r=>r.id===taskId);
     if(!rule) return;
-    v.records.push({id:`rec_${Date.now()}_${i}`,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
+    v.records.push({id:`${serviceGroup}_${i}`,serviceGroup,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
   });
   if(mileage>Number(v.mileage||0)) v.mileage=mileage;
   save();closeModal("serviceModal");renderAll();alert("Service und ausgewählte Zusatzarbeiten gespeichert.");
@@ -621,13 +622,37 @@ function renderNextServicePlan(v){
 function renderHistory(){
   const v=vehicle();
   const records=[...(v.records||[])].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  const total=records.reduce((s,r)=>s+Number(r.cost||0),0);
-  document.getElementById("historySummary").innerHTML=`<h3>${esc(v.name)}</h3><div class="row2"><div><div class="small-note">Einträge</div><b>${records.length}</b></div><div><div class="small-note">Dokumentierte Kosten</div><b>${fmtMoney(total)}</b></div></div>`;
+  const total=records.reduce((sum,r)=>sum+Number(r.cost||0),0);
+  document.getElementById("historySummary").innerHTML=`<h3>${esc(v.name)}</h3><div class="row2"><div><div class="small-note">Eintr\u00e4ge</div><b>${records.length}</b></div><div><div class="small-note">Dokumentierte Kosten</div><b>${fmtMoney(total)}</b></div></div>`;
   const rules=rulesFor(v);
   document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
     const rule=rules.find(r=>r.id===rec.taskId);
-    return `<div class="record"><div><h4>${rule?rule.icon+" "+esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} · ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div></div>`;
+    return `<div class="record"><div><h4>${rule?rule.icon+" "+esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} \u00b7 ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;
   }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
+  document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});
+}
+function deleteHistoryRecord(recordId){
+  const v=vehicle();
+  const rec=(v.records||[]).find(r=>r.id===recordId);
+  if(!rec)return;
+  const serviceRelated=rec.taskId==="service";
+  const question=serviceRelated
+    ?"Diesen Service wirklich l\u00f6schen? Zugeh\u00f6rige Zusatzarbeiten dieses Servicevorgangs werden ebenfalls entfernt."
+    :"Diesen Historien-Eintrag wirklich l\u00f6schen?";
+  if(!confirm(question))return;
+  if(serviceRelated){
+    const group=rec.serviceGroup||null;
+    v.records=(v.records||[]).filter(r=>{
+      if(r.id===rec.id)return false;
+      if(group&&r.serviceGroup===group)return false;
+      if(!group&&r.date===rec.date&&Number(r.mileage||0)===Number(rec.mileage||0)&&r.note==="Im Rahmen des Service erledigt")return false;
+      return true;
+    });
+  }else{
+    v.records=(v.records||[]).filter(r=>r.id!==rec.id);
+  }
+  save();
+  renderAll();
 }
 function renderSettings(){
   const v=vehicle();
