@@ -293,6 +293,19 @@ button{border:0}
   </div>
 </div>
 
+
+<div class="modal-backdrop" id="deleteHistoryModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3>Eintrag l\u00f6schen?</h3><button class="close" id="closeDeleteHistoryBtn" aria-label="Schlie\u00dfen">&times;</button></div>
+    <p class="small-note" id="deleteHistoryText">Soll dieser Historien-Eintrag wirklich gel\u00f6scht werden?</p>
+    <div class="row2">
+      <button class="secondary-btn" id="cancelDeleteHistoryBtn">Abbrechen</button>
+      <button class="danger-btn" id="confirmDeleteHistoryBtn">L\u00f6schen</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const STORAGE_KEY = "carservice_v1";
 
@@ -631,16 +644,27 @@ function renderHistory(){
   }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
   document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});
 }
+let pendingHistoryDeleteId=null;
 function deleteHistoryRecord(recordId){
   const v=vehicle();
   const rec=(v.records||[]).find(r=>r.id===recordId);
   if(!rec)return;
-  const serviceRelated=rec.taskId==="service";
-  const question=serviceRelated
+  pendingHistoryDeleteId=recordId;
+  document.getElementById("deleteHistoryText").textContent=rec.taskId==="service"
     ?"Diesen Service wirklich l\u00f6schen? Zugeh\u00f6rige Zusatzarbeiten dieses Servicevorgangs werden ebenfalls entfernt."
     :"Diesen Historien-Eintrag wirklich l\u00f6schen?";
-  if(!confirm(question))return;
-  if(serviceRelated){
+  openModal("deleteHistoryModal");
+}
+function closeHistoryDeleteConfirm(){
+  pendingHistoryDeleteId=null;
+  closeModal("deleteHistoryModal");
+}
+function confirmHistoryDelete(){
+  const recordId=pendingHistoryDeleteId;
+  const v=vehicle();
+  const rec=(v.records||[]).find(r=>r.id===recordId);
+  if(!recordId||!rec){closeHistoryDeleteConfirm();return;}
+  if(rec.taskId==="service"){
     const group=rec.serviceGroup||null;
     v.records=(v.records||[]).filter(r=>{
       if(r.id===rec.id)return false;
@@ -651,7 +675,9 @@ function deleteHistoryRecord(recordId){
   }else{
     v.records=(v.records||[]).filter(r=>r.id!==rec.id);
   }
+  pendingHistoryDeleteId=null;
   save();
+  closeModal("deleteHistoryModal");
   renderAll();
 }
 function renderSettings(){
@@ -793,6 +819,10 @@ async function backupAction(){
 document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
 document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id);}));
+document.getElementById("cancelDeleteHistoryBtn").onclick=closeHistoryDeleteConfirm;
+document.getElementById("closeDeleteHistoryBtn").onclick=closeHistoryDeleteConfirm;
+document.getElementById("confirmDeleteHistoryBtn").onclick=confirmHistoryDelete;
+document.getElementById("deleteHistoryModal").addEventListener("click",e=>{if(e.target===e.currentTarget)closeHistoryDeleteConfirm();});
 document.getElementById("historyAddBtn").onclick=()=>openEntry();
 document.getElementById("historyMenuBtn").onclick=()=>showPage("history");
 document.getElementById("settingsMenuBtn").onclick=openSettings;
