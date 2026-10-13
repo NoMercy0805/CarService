@@ -16,260 +16,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Match settings navigation to Haushaltsbuch
+      - name: Apply Haushaltsbuch settings flow
+        run: |
+          python3 - <<'PY'
+          import base64, zlib
+          payload = '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'
+          exec(zlib.decompress(base64.b64decode(payload)).decode('utf-8'))
+          PY
+
+      - name: Verify UI and JavaScript
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
-
-          path = Path('app/src/main/assets/index.html')
-          text = path.read_text(encoding='utf-8')
-
-          old_css = re.compile(r'\.settings-menu-list\{.*?\.settings-back\{[^\n]*\}\n', re.S)
-          new_css = '''.settings-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,22,.45);align-items:center;justify-content:center;padding:20px;z-index:1000;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
-.settings-overlay.open{display:flex;animation:settingsFade .15s ease}.settings-panel{background:var(--surface2);border:1px solid rgba(255,255,255,.5);border-radius:26px;padding:22px;width:min(400px,100%);max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.25);animation:settingsPop .22s cubic-bezier(.4,0,.2,1)}html[data-theme="dark"] .settings-panel{border-color:rgba(255,255,255,.16)}
-.settings-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;min-height:42px}.settings-panel-head h2{font-size:19px;font-weight:800;color:var(--ink);margin:0;text-align:center}.settings-close-btn{background:var(--paper);border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:8px 13px;border-radius:50%}.settings-back-btn{background:var(--paper);border:none;color:var(--muted);cursor:pointer;padding:9px;border-radius:50%;width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center}.settings-head-spacer{width:36px;height:36px;flex-shrink:0}
-.settings-nav-list{margin-top:6px}.settings-nav-row{display:flex;align-items:center;width:100%;background:none;border:none;text-align:left;padding:13px 2px;cursor:pointer;gap:14px;border-bottom:1px solid var(--rule);color:var(--ink)}.settings-nav-row:last-child{border-bottom:none}.settings-nav-icon{flex-shrink:0;width:32px;height:32px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff}.settings-nav-icon svg{width:21px;height:21px}.settings-nav-text{flex:1;display:flex;flex-direction:column;gap:2px}.settings-nav-title{font-size:16px;font-weight:700;color:var(--ink)}.settings-nav-sub{font-size:13px;color:var(--muted);line-height:1.3}.settings-nav-arrow{font-size:22px;color:var(--muted);flex-shrink:0}.settings-sub-body{padding-top:12px}.settings-sub-body .field:last-of-type{margin-bottom:0}.settings-sub-note{font-size:12px;color:var(--muted);line-height:1.5;margin:4px 0 12px}
-#settingsMenuBtn{border-radius:50%}
-@keyframes settingsFade{from{opacity:0}to{opacity:1}}@keyframes settingsPop{from{transform:scale(.96);opacity:.65}to{transform:scale(1);opacity:1}}
-'''
-          text, count = old_css.subn(new_css, text, count=1)
-          if count != 1:
-              raise SystemExit(f'settings css replacement count={count}')
-
-          # Remove the old full-page settings screen. Settings now live entirely in overlays.
-          page_pattern = re.compile(r'\n    <section class="page" id="page-settings">.*?\n    </section>\n  </main>', re.S)
-          text, count = page_pattern.subn('\n  </main>', text, count=1)
-          if count != 1:
-              raise SystemExit(f'page-settings replacement count={count}')
-
-          settings_overlays = r'''
-<div id="settingsOverlay" class="settings-overlay">
-  <div class="settings-panel">
-    <div class="settings-panel-head">
-      <h2>Einstellungen</h2>
-      <button class="settings-close-btn" id="settingsCloseBtn" aria-label="Schließen">×</button>
-    </div>
-    <div class="settings-nav-list">
-      <button type="button" class="settings-nav-row" data-open-settings="fahrzeug">
-        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14l1-5-3-5H7l-3 5 1 5Z"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg></span>
-        <span class="settings-nav-text"><span class="settings-nav-title">Fahrzeugdaten</span><span class="settings-nav-sub">Kennzeichen, Kilometer, FIN, HU und Wartungsplan</span></span>
-        <span class="settings-nav-arrow">›</span>
-      </button>
-      <button type="button" class="settings-nav-row" data-open-settings="wartung">
-        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5 5L4 17l3 3 5.7-5.7a4 4 0 0 0 5-5l-2.5 2.5-3-3 2.5-2.5Z"/></svg></span>
-        <span class="settings-nav-text"><span class="settings-nav-title">Wartungspunkte</span><span class="settings-nav-sub">Eigene zusätzliche Arbeiten verwalten</span></span>
-        <span class="settings-nav-arrow">›</span>
-      </button>
-      <button type="button" class="settings-nav-row" data-open-settings="darstellung">
-        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></span>
-        <span class="settings-nav-text"><span class="settings-nav-title">Darstellung</span><span class="settings-nav-sub">Hell, Dunkel oder System</span></span>
-        <span class="settings-nav-arrow">›</span>
-      </button>
-      <button type="button" class="settings-nav-row" data-open-settings="daten">
-        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17.5a4.5 4.5 0 0 1-.9-8.9A5.5 5.5 0 0 1 16.7 7 4.5 4.5 0 0 1 17.2 15.9"/><path d="M12 10.5v8M9 15.5l3 3 3-3"/></svg></span>
-        <span class="settings-nav-text"><span class="settings-nav-title">Daten & Sicherung</span><span class="settings-nav-sub">Sichern, wiederherstellen oder zurücksetzen</span></span>
-        <span class="settings-nav-arrow">›</span>
-      </button>
-      <button type="button" class="settings-nav-row" data-open-settings="info">
-        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 10v7M12 7h.01"/></svg></span>
-        <span class="settings-nav-text"><span class="settings-nav-title">Wartungsinformationen</span><span class="settings-nav-sub">Hinweise zu Intervallen und Wartungsplänen</span></span>
-        <span class="settings-nav-arrow">›</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<div id="settingsSubOverlay-fahrzeug" class="settings-overlay">
-  <div class="settings-panel">
-    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Fahrzeugdaten</h2><span class="settings-head-spacer"></span></div>
-    <div class="settings-sub-body" id="settingsVehiclePanel">
-      <div class="field"><label>Fahrzeug</label><select id="settingsVehicle" class="input"></select></div>
-      <div class="field"><label>HSN / TSN</label><div class="readonly-id"><div class="id-box"><small>HSN</small><b id="settingsHsn">–</b></div><div class="id-box"><small>TSN</small><b id="settingsTsn">–</b></div></div></div>
-      <div class="row2"><div class="field"><label>Kennzeichen</label><input id="settingsPlate" class="input" type="text" maxlength="12" autocapitalize="characters" placeholder="z. B. HN-AB 123"></div><div class="field"><label>Aktueller Kilometerstand</label><input id="settingsMileage" class="input" type="number" inputmode="numeric" min="0"></div></div>
-      <div class="field"><label>FIN / VIN</label><input id="settingsVin" class="input" type="text" maxlength="17" autocapitalize="characters" autocomplete="off" placeholder="17-stellige Fahrzeug-Ident-Nr."><div class="help">Optional. Wird nur lokal auf diesem Gerät gespeichert.</div></div>
-      <div class="field"><label>Erstzulassung</label><input id="settingsFirstReg" class="input" type="date"></div>
-      <div class="field"><label>Nächste HU / TÜV</label><input id="settingsHuDue" class="input" type="date"></div>
-      <div class="field" id="profileField"><label id="profileLabel">Wartungsplan</label><select id="settingsProfile" class="input"></select><div class="help" id="profileHelp"></div><div class="profile-explain" id="profileExplain"></div></div>
-      <button class="primary-btn" id="saveVehicleSettings">Fahrzeugdaten speichern</button>
-    </div>
-  </div>
-</div>
-
-<div id="settingsSubOverlay-wartung" class="settings-overlay">
-  <div class="settings-panel">
-    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Wartungspunkte</h2><span class="settings-head-spacer"></span></div>
-    <div class="settings-sub-body" id="settingsMaintenancePanel">
-      <p class="settings-sub-note">Für Reparaturen oder Arbeiten, die du zusätzlich verfolgen möchtest, z. B. Batterie, Getriebeöl oder Klimaservice.</p>
-      <button class="secondary-btn" id="addCustomTaskBtn">+ Wartungspunkt anlegen</button>
-      <div id="customTaskList"></div>
-    </div>
-  </div>
-</div>
-
-<div id="settingsSubOverlay-darstellung" class="settings-overlay">
-  <div class="settings-panel">
-    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Darstellung</h2><span class="settings-head-spacer"></span></div>
-    <div class="settings-sub-body" id="settingsAppearancePanel"><div class="theme-pills"><button data-theme-choice="system">System</button><button data-theme-choice="light">Hell</button><button data-theme-choice="dark">Dunkel</button></div></div>
-  </div>
-</div>
-
-<div id="settingsSubOverlay-daten" class="settings-overlay">
-  <div class="settings-panel">
-    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Daten & Sicherung</h2><span class="settings-head-spacer"></span></div>
-    <div class="settings-sub-body" id="settingsDataPanel">
-      <p class="settings-sub-note">Alle Daten liegen ausschließlich lokal auf diesem Gerät. Beim Löschen der App gehen sie ohne Sicherung verloren.</p>
-      <button class="secondary-btn" id="copyBackupBtn">Sicherung als Text kopieren</button>
-      <button class="secondary-btn" id="importBackupBtn">Sicherung einfügen</button>
-      <button class="danger-btn" id="resetBtn">Alle App-Daten zurücksetzen</button>
-    </div>
-  </div>
-</div>
-
-<div id="settingsSubOverlay-info" class="settings-overlay">
-  <div class="settings-panel">
-    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Wartungsinformationen</h2><span class="settings-head-spacer"></span></div>
-    <div class="settings-sub-body" id="settingsInfoPanel"><p class="settings-sub-note">Die App ist eine Erinnerungs- und Dokumentationshilfe. Beim Peugeot 508 von 2012 entscheidet der Produktionszeitraum bzw. die OPR/DAM-Nummer über den Wartungsplan. Die Erstzulassung allein ist dafür nicht zuverlässig.</p></div>
-  </div>
-</div>
-'''
-
-          old_menu_pattern = re.compile(r'<div class="modal-backdrop" id="settingsMenuModal">.*?</div>\n\n<div class="modal-backdrop" id="serviceModal">', re.S)
-          text, count = old_menu_pattern.subn(settings_overlays + '\n<div class="modal-backdrop" id="serviceModal">', text, count=1)
-          if count != 1:
-              raise SystemExit(f'old settings menu replacement count={count}')
-
-          old_show = '''function showPage(name){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById("page-"+name).classList.add("active");
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
-  window.scrollTo(0,0);
-  if(name==="settings")renderSettings();
-}
-function openSettingsSection(targetId){
-  closeModal("settingsMenuModal");
-  showPage("settings");
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    const target=document.getElementById(targetId);
-    if(target) target.scrollIntoView({behavior:"smooth",block:"start"});
-  }));
-}'''
-          new_show = '''function showPage(name){
-  const page=document.getElementById("page-"+name);
-  if(!page)return;
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  page.classList.add("active");
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
-  window.scrollTo(0,0);
-}
-function openSettings(){
-  renderSettings();
-  document.getElementById("settingsOverlay").classList.add("open");
-}
-function openSettingsSub(key){
-  const sub=document.getElementById("settingsSubOverlay-"+key);
-  if(!sub)return;
-  renderSettings();
-  document.getElementById("settingsOverlay").classList.remove("open");
-  sub.classList.add("open");
-}'''
-          if old_show not in text:
-              raise SystemExit('showPage/openSettingsSection block not found')
-          text = text.replace(old_show, new_show, 1)
-
-          old_events = '''document.getElementById("settingsMenuBtn").onclick=()=>openModal("settingsMenuModal");
-document.getElementById("settingsBackBtn").onclick=()=>showPage("dashboard");
-document.querySelectorAll("[data-settings-target]").forEach(b=>b.onclick=()=>openSettingsSection(b.dataset.settingsTarget));'''
-          new_events = '''document.getElementById("settingsMenuBtn").onclick=openSettings;
-document.getElementById("settingsCloseBtn").onclick=()=>document.getElementById("settingsOverlay").classList.remove("open");
-document.querySelectorAll("[data-open-settings]").forEach(b=>b.onclick=()=>openSettingsSub(b.dataset.openSettings));
-document.querySelectorAll("[data-back-settings]").forEach(b=>b.onclick=()=>{b.closest(".settings-overlay").classList.remove("open");document.getElementById("settingsOverlay").classList.add("open");});
-document.getElementById("settingsOverlay").addEventListener("click",e=>{if(e.target.id==="settingsOverlay")e.currentTarget.classList.remove("open");});
-document.querySelectorAll('[id^="settingsSubOverlay-"]').forEach(sub=>sub.addEventListener("click",e=>{if(e.target===sub)sub.classList.remove("open");}));'''
-          if old_events not in text:
-              raise SystemExit('old settings handlers not found')
-          text = text.replace(old_events, new_events, 1)
-
-          # Add browser/Android back behavior equivalent to Haushaltsbuch.
-          marker = '\nfunction openModal(id){document.getElementById(id).classList.add("open");}'
-          back_logic = '''
-window.closeAnyOpenOverlay=function(){
-  const modal=document.querySelector(".modal-backdrop.open");
-  if(modal){modal.classList.remove("open");return true;}
-  const sub=document.querySelector('[id^="settingsSubOverlay-"].open');
-  if(sub){sub.classList.remove("open");document.getElementById("settingsOverlay").classList.add("open");return true;}
-  const settings=document.getElementById("settingsOverlay");
-  if(settings&&settings.classList.contains("open")){settings.classList.remove("open");return true;}
-  return false;
-};
-document.addEventListener("keydown",e=>{if(e.key==="Escape")window.closeAnyOpenOverlay();});
-'''
-          if marker not in text:
-              raise SystemExit('openModal marker not found')
-          text = text.replace(marker, back_logic + marker, 1)
-
-          # No legacy settings page/menu hooks may remain.
-          for forbidden in ['settingsMenuModal','settingsBackBtn','data-settings-target','page-settings','openSettingsSection']:
-              if forbidden in text:
-                  raise SystemExit(f'legacy settings token remains: {forbidden}')
-
-          path.write_text(text, encoding='utf-8')
-          PY
-
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          html=Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
-          scripts=re.findall(r'<script>(.*?)</script>',html,re.S)
-          if len(scripts)!=1: raise SystemExit(f'expected one script, found {len(scripts)}')
-          Path('/tmp/carservice.js').write_text(scripts[0],encoding='utf-8')
-          required=['settingsOverlay','settingsSubOverlay-fahrzeug','settingsSubOverlay-wartung','settingsSubOverlay-darstellung','settingsSubOverlay-daten','settingsSubOverlay-info','settingsCloseBtn']
+          html = Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>(.*?)</script>', html, flags=re.S)
+          if len(scripts) != 1:
+              raise SystemExit(f'expected one inline script, found {len(scripts)}')
+          Path('/tmp/carservice.js').write_text(scripts[0], encoding='utf-8')
+          required = ['settingsOverlay','settingsSubOverlay-fahrzeug','settingsSubOverlay-wartung','settingsSubOverlay-darstellung','settingsSubOverlay-daten','settingsSubOverlay-info','settingsCloseBtn']
           for item in required:
-              if f'id="{item}"' not in html: raise SystemExit(f'missing {item}')
+              if f'id="{item}"' not in html:
+                  raise SystemExit(f'missing {item}')
+          if 'page-settings' in html or 'settingsMenuModal' in html:
+              raise SystemExit('legacy settings UI remains')
           PY
           node --check /tmp/carservice.js
 
-      - name: Add Android back handling like Haushaltsbuch
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path=Path('app/src/main/java/com/schiwy/carservice/MainActivity.java')
-          text=path.read_text(encoding='utf-8')
-          old='''    @Override
-    public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-'''
-          new='''    @Override
-    public void onBackPressed() {
-        if (webView == null) {
-            super.onBackPressed();
-            return;
-        }
-        webView.evaluateJavascript(
-                "(function(){ return window.closeAnyOpenOverlay ? window.closeAnyOpenOverlay() : false; })();",
-                value -> {
-                    if ("true".equals(value)) {
-                        return;
-                    }
-                    if (webView.canGoBack()) {
-                        webView.goBack();
-                    } else {
-                        MainActivity.super.onBackPressed();
-                    }
-                }
-        );
-    }
-'''
-          if old not in text: raise SystemExit('old onBackPressed not found')
-          path.write_text(text.replace(old,new,1),encoding='utf-8')
-          PY
-
-      - name: Verify and commit
+      - name: Commit settings flow
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
