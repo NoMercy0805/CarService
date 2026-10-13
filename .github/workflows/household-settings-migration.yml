@@ -1,0 +1,279 @@
+name: CarService Haushaltsbuch settings migration
+
+'on':
+  push:
+    paths:
+      - '.github/workflows/household-settings-migration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Match settings navigation to Haushaltsbuch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('app/src/main/assets/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          old_css = re.compile(r'\.settings-menu-list\{.*?\.settings-back\{[^\n]*\}\n', re.S)
+          new_css = '''.settings-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,22,.45);align-items:center;justify-content:center;padding:20px;z-index:1000;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.settings-overlay.open{display:flex;animation:settingsFade .15s ease}.settings-panel{background:var(--surface2);border:1px solid rgba(255,255,255,.5);border-radius:26px;padding:22px;width:min(400px,100%);max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.25);animation:settingsPop .22s cubic-bezier(.4,0,.2,1)}html[data-theme="dark"] .settings-panel{border-color:rgba(255,255,255,.16)}
+.settings-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;min-height:42px}.settings-panel-head h2{font-size:19px;font-weight:800;color:var(--ink);margin:0;text-align:center}.settings-close-btn{background:var(--paper);border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:8px 13px;border-radius:50%}.settings-back-btn{background:var(--paper);border:none;color:var(--muted);cursor:pointer;padding:9px;border-radius:50%;width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center}.settings-head-spacer{width:36px;height:36px;flex-shrink:0}
+.settings-nav-list{margin-top:6px}.settings-nav-row{display:flex;align-items:center;width:100%;background:none;border:none;text-align:left;padding:13px 2px;cursor:pointer;gap:14px;border-bottom:1px solid var(--rule);color:var(--ink)}.settings-nav-row:last-child{border-bottom:none}.settings-nav-icon{flex-shrink:0;width:32px;height:32px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff}.settings-nav-icon svg{width:21px;height:21px}.settings-nav-text{flex:1;display:flex;flex-direction:column;gap:2px}.settings-nav-title{font-size:16px;font-weight:700;color:var(--ink)}.settings-nav-sub{font-size:13px;color:var(--muted);line-height:1.3}.settings-nav-arrow{font-size:22px;color:var(--muted);flex-shrink:0}.settings-sub-body{padding-top:12px}.settings-sub-body .field:last-of-type{margin-bottom:0}.settings-sub-note{font-size:12px;color:var(--muted);line-height:1.5;margin:4px 0 12px}
+#settingsMenuBtn{border-radius:50%}
+@keyframes settingsFade{from{opacity:0}to{opacity:1}}@keyframes settingsPop{from{transform:scale(.96);opacity:.65}to{transform:scale(1);opacity:1}}
+'''
+          text, count = old_css.subn(new_css, text, count=1)
+          if count != 1:
+              raise SystemExit(f'settings css replacement count={count}')
+
+          # Remove the old full-page settings screen. Settings now live entirely in overlays.
+          page_pattern = re.compile(r'\n    <section class="page" id="page-settings">.*?\n    </section>\n  </main>', re.S)
+          text, count = page_pattern.subn('\n  </main>', text, count=1)
+          if count != 1:
+              raise SystemExit(f'page-settings replacement count={count}')
+
+          settings_overlays = r'''
+<div id="settingsOverlay" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head">
+      <h2>Einstellungen</h2>
+      <button class="settings-close-btn" id="settingsCloseBtn" aria-label="Schließen">×</button>
+    </div>
+    <div class="settings-nav-list">
+      <button type="button" class="settings-nav-row" data-open-settings="fahrzeug">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14l1-5-3-5H7l-3 5 1 5Z"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Fahrzeugdaten</span><span class="settings-nav-sub">Kennzeichen, Kilometer, FIN, HU und Wartungsplan</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+      <button type="button" class="settings-nav-row" data-open-settings="wartung">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5 5L4 17l3 3 5.7-5.7a4 4 0 0 0 5-5l-2.5 2.5-3-3 2.5-2.5Z"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Wartungspunkte</span><span class="settings-nav-sub">Eigene zusätzliche Arbeiten verwalten</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+      <button type="button" class="settings-nav-row" data-open-settings="darstellung">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Darstellung</span><span class="settings-nav-sub">Hell, Dunkel oder System</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+      <button type="button" class="settings-nav-row" data-open-settings="daten">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17.5a4.5 4.5 0 0 1-.9-8.9A5.5 5.5 0 0 1 16.7 7 4.5 4.5 0 0 1 17.2 15.9"/><path d="M12 10.5v8M9 15.5l3 3 3-3"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Daten & Sicherung</span><span class="settings-nav-sub">Sichern, wiederherstellen oder zurücksetzen</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+      <button type="button" class="settings-nav-row" data-open-settings="info">
+        <span class="settings-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 10v7M12 7h.01"/></svg></span>
+        <span class="settings-nav-text"><span class="settings-nav-title">Wartungsinformationen</span><span class="settings-nav-sub">Hinweise zu Intervallen und Wartungsplänen</span></span>
+        <span class="settings-nav-arrow">›</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-fahrzeug" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Fahrzeugdaten</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsVehiclePanel">
+      <div class="field"><label>Fahrzeug</label><select id="settingsVehicle" class="input"></select></div>
+      <div class="field"><label>HSN / TSN</label><div class="readonly-id"><div class="id-box"><small>HSN</small><b id="settingsHsn">–</b></div><div class="id-box"><small>TSN</small><b id="settingsTsn">–</b></div></div></div>
+      <div class="row2"><div class="field"><label>Kennzeichen</label><input id="settingsPlate" class="input" type="text" maxlength="12" autocapitalize="characters" placeholder="z. B. HN-AB 123"></div><div class="field"><label>Aktueller Kilometerstand</label><input id="settingsMileage" class="input" type="number" inputmode="numeric" min="0"></div></div>
+      <div class="field"><label>FIN / VIN</label><input id="settingsVin" class="input" type="text" maxlength="17" autocapitalize="characters" autocomplete="off" placeholder="17-stellige Fahrzeug-Ident-Nr."><div class="help">Optional. Wird nur lokal auf diesem Gerät gespeichert.</div></div>
+      <div class="field"><label>Erstzulassung</label><input id="settingsFirstReg" class="input" type="date"></div>
+      <div class="field"><label>Nächste HU / TÜV</label><input id="settingsHuDue" class="input" type="date"></div>
+      <div class="field" id="profileField"><label id="profileLabel">Wartungsplan</label><select id="settingsProfile" class="input"></select><div class="help" id="profileHelp"></div><div class="profile-explain" id="profileExplain"></div></div>
+      <button class="primary-btn" id="saveVehicleSettings">Fahrzeugdaten speichern</button>
+    </div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-wartung" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Wartungspunkte</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsMaintenancePanel">
+      <p class="settings-sub-note">Für Reparaturen oder Arbeiten, die du zusätzlich verfolgen möchtest, z. B. Batterie, Getriebeöl oder Klimaservice.</p>
+      <button class="secondary-btn" id="addCustomTaskBtn">+ Wartungspunkt anlegen</button>
+      <div id="customTaskList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-darstellung" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Darstellung</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsAppearancePanel"><div class="theme-pills"><button data-theme-choice="system">System</button><button data-theme-choice="light">Hell</button><button data-theme-choice="dark">Dunkel</button></div></div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-daten" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Daten & Sicherung</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsDataPanel">
+      <p class="settings-sub-note">Alle Daten liegen ausschließlich lokal auf diesem Gerät. Beim Löschen der App gehen sie ohne Sicherung verloren.</p>
+      <button class="secondary-btn" id="copyBackupBtn">Sicherung als Text kopieren</button>
+      <button class="secondary-btn" id="importBackupBtn">Sicherung einfügen</button>
+      <button class="danger-btn" id="resetBtn">Alle App-Daten zurücksetzen</button>
+    </div>
+  </div>
+</div>
+
+<div id="settingsSubOverlay-info" class="settings-overlay">
+  <div class="settings-panel">
+    <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Wartungsinformationen</h2><span class="settings-head-spacer"></span></div>
+    <div class="settings-sub-body" id="settingsInfoPanel"><p class="settings-sub-note">Die App ist eine Erinnerungs- und Dokumentationshilfe. Beim Peugeot 508 von 2012 entscheidet der Produktionszeitraum bzw. die OPR/DAM-Nummer über den Wartungsplan. Die Erstzulassung allein ist dafür nicht zuverlässig.</p></div>
+  </div>
+</div>
+'''
+
+          old_menu_pattern = re.compile(r'<div class="modal-backdrop" id="settingsMenuModal">.*?</div>\n\n<div class="modal-backdrop" id="serviceModal">', re.S)
+          text, count = old_menu_pattern.subn(settings_overlays + '\n<div class="modal-backdrop" id="serviceModal">', text, count=1)
+          if count != 1:
+              raise SystemExit(f'old settings menu replacement count={count}')
+
+          old_show = '''function showPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+  window.scrollTo(0,0);
+  if(name==="settings")renderSettings();
+}
+function openSettingsSection(targetId){
+  closeModal("settingsMenuModal");
+  showPage("settings");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const target=document.getElementById(targetId);
+    if(target) target.scrollIntoView({behavior:"smooth",block:"start"});
+  }));
+}'''
+          new_show = '''function showPage(name){
+  const page=document.getElementById("page-"+name);
+  if(!page)return;
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  page.classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+  window.scrollTo(0,0);
+}
+function openSettings(){
+  renderSettings();
+  document.getElementById("settingsOverlay").classList.add("open");
+}
+function openSettingsSub(key){
+  const sub=document.getElementById("settingsSubOverlay-"+key);
+  if(!sub)return;
+  renderSettings();
+  document.getElementById("settingsOverlay").classList.remove("open");
+  sub.classList.add("open");
+}'''
+          if old_show not in text:
+              raise SystemExit('showPage/openSettingsSection block not found')
+          text = text.replace(old_show, new_show, 1)
+
+          old_events = '''document.getElementById("settingsMenuBtn").onclick=()=>openModal("settingsMenuModal");
+document.getElementById("settingsBackBtn").onclick=()=>showPage("dashboard");
+document.querySelectorAll("[data-settings-target]").forEach(b=>b.onclick=()=>openSettingsSection(b.dataset.settingsTarget));'''
+          new_events = '''document.getElementById("settingsMenuBtn").onclick=openSettings;
+document.getElementById("settingsCloseBtn").onclick=()=>document.getElementById("settingsOverlay").classList.remove("open");
+document.querySelectorAll("[data-open-settings]").forEach(b=>b.onclick=()=>openSettingsSub(b.dataset.openSettings));
+document.querySelectorAll("[data-back-settings]").forEach(b=>b.onclick=()=>{b.closest(".settings-overlay").classList.remove("open");document.getElementById("settingsOverlay").classList.add("open");});
+document.getElementById("settingsOverlay").addEventListener("click",e=>{if(e.target.id==="settingsOverlay")e.currentTarget.classList.remove("open");});
+document.querySelectorAll('[id^="settingsSubOverlay-"]').forEach(sub=>sub.addEventListener("click",e=>{if(e.target===sub)sub.classList.remove("open");}));'''
+          if old_events not in text:
+              raise SystemExit('old settings handlers not found')
+          text = text.replace(old_events, new_events, 1)
+
+          # Add browser/Android back behavior equivalent to Haushaltsbuch.
+          marker = '\nfunction openModal(id){document.getElementById(id).classList.add("open");}'
+          back_logic = '''
+window.closeAnyOpenOverlay=function(){
+  const modal=document.querySelector(".modal-backdrop.open");
+  if(modal){modal.classList.remove("open");return true;}
+  const sub=document.querySelector('[id^="settingsSubOverlay-"].open');
+  if(sub){sub.classList.remove("open");document.getElementById("settingsOverlay").classList.add("open");return true;}
+  const settings=document.getElementById("settingsOverlay");
+  if(settings&&settings.classList.contains("open")){settings.classList.remove("open");return true;}
+  return false;
+};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")window.closeAnyOpenOverlay();});
+'''
+          if marker not in text:
+              raise SystemExit('openModal marker not found')
+          text = text.replace(marker, back_logic + marker, 1)
+
+          # No legacy settings page/menu hooks may remain.
+          for forbidden in ['settingsMenuModal','settingsBackBtn','data-settings-target','page-settings','openSettingsSection']:
+              if forbidden in text:
+                  raise SystemExit(f'legacy settings token remains: {forbidden}')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',html,re.S)
+          if len(scripts)!=1: raise SystemExit(f'expected one script, found {len(scripts)}')
+          Path('/tmp/carservice.js').write_text(scripts[0],encoding='utf-8')
+          required=['settingsOverlay','settingsSubOverlay-fahrzeug','settingsSubOverlay-wartung','settingsSubOverlay-darstellung','settingsSubOverlay-daten','settingsSubOverlay-info','settingsCloseBtn']
+          for item in required:
+              if f'id="{item}"' not in html: raise SystemExit(f'missing {item}')
+          PY
+          node --check /tmp/carservice.js
+
+      - name: Add Android back handling like Haushaltsbuch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('app/src/main/java/com/schiwy/carservice/MainActivity.java')
+          text=path.read_text(encoding='utf-8')
+          old='''    @Override
+    public void onBackPressed() {
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+'''
+          new='''    @Override
+    public void onBackPressed() {
+        if (webView == null) {
+            super.onBackPressed();
+            return;
+        }
+        webView.evaluateJavascript(
+                "(function(){ return window.closeAnyOpenOverlay ? window.closeAnyOpenOverlay() : false; })();",
+                value -> {
+                    if ("true".equals(value)) {
+                        return;
+                    }
+                    if (webView.canGoBack()) {
+                        webView.goBack();
+                    } else {
+                        MainActivity.super.onBackPressed();
+                    }
+                }
+        );
+    }
+'''
+          if old not in text: raise SystemExit('old onBackPressed not found')
+          path.write_text(text.replace(old,new,1),encoding='utf-8')
+          PY
+
+      - name: Verify and commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/assets/index.html app/src/main/java/com/schiwy/carservice/MainActivity.java
+          git diff --cached --check
+          git commit -m 'Match settings flow to Haushaltsbuch'
+          git push
