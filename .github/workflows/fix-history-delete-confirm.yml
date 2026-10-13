@@ -2,7 +2,7 @@ name: Fix history delete confirmation
 
 'on':
   push:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: write
@@ -10,92 +10,17 @@ permissions:
 
 jobs:
   migrate:
-    if: github.repository == 'NoMercy0805/CarService'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
-      - name: Patch history deletion
+      - name: Patch app
+        env:
+          PATCH_B64: ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmltcG9ydCByZQoKcCA9IFBhdGgoImFwcC9zcmMvbWFpbi9hc3NldHMvaW5kZXguaHRtbCIpCnMgPSBwLnJlYWRfdGV4dChlbmNvZGluZz0idXRmLTgiKQoKbW9kYWwgPSAnJycKPGRpdiBjbGFzcz0ibW9kYWwtYmFja2Ryb3AiIGlkPSJkZWxldGVIaXN0b3J5TW9kYWwiPgogIDxkaXYgY2xhc3M9Im1vZGFsIj4KICAgIDxkaXYgY2xhc3M9ImhhbmRsZSI+PC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJtb2RhbC1oZWFkIj48aDM+RWludHJhZyBsXFx1MDBmNnNjaGVuPzwvaDM+PGJ1dHRvbiBjbGFzcz0iY2xvc2UiIGlkPSJjbG9zZURlbGV0ZUhpc3RvcnlCdG4iIGFyaWEtbGFiZWw9IlNjaGxpZVxcdTAwZGZlbiI+JnRpbWVzOzwvYnV0dG9uPjwvZGl2PgogICAgPHAgY2xhc3M9InNtYWxsLW5vdGUiIGlkPSJkZWxldGVIaXN0b3J5VGV4dCI+U29sbCBkaWVzZXIgSGlzdG9yaWVuLUVpbnRyYWcgd2lya2xpY2ggZ2VsXFx1MDBmNnNjaHQgd2VyZGVuPzwvcD4KICAgIDxkaXYgY2xhc3M9InJvdzIiPgogICAgICA8YnV0dG9uIGNsYXNzPSJzZWNvbmRhcnktYnRuIiBpZD0iY2FuY2VsRGVsZXRlSGlzdG9yeUJ0biI+QWJicmVjaGVuPC9idXR0b24+CiAgICAgIDxidXR0b24gY2xhc3M9ImRhbmdlci1idG4iIGlkPSJjb25maXJtRGVsZXRlSGlzdG9yeUJ0biI+TFxcdTAwZjZzY2hlbjwvYnV0dG9uPgogICAgPC9kaXY+CiAgPC9kaXY+CjwvZGl2PgoKJycnCmlmICdpZD0iZGVsZXRlSGlzdG9yeU1vZGFsIicgbm90IGluIHM6CiAgICBtYXJrZXIgPSAnPHNjcmlwdD5cbmNvbnN0IFNUT1JBR0VfS0VZID0gImNhcnNlcnZpY2VfdjEiOycKICAgIGFzc2VydCBtYXJrZXIgaW4gcywgInNjcmlwdCBtYXJrZXIgbm90IGZvdW5kIgogICAgcyA9IHMucmVwbGFjZShtYXJrZXIsIG1vZGFsICsgbWFya2VyLCAxKQoKcGF0dGVybiA9IHJlLmNvbXBpbGUocidmdW5jdGlvbiBkZWxldGVIaXN0b3J5UmVjb3JkXChyZWNvcmRJZFwpXHsuKj9cblx9XG5mdW5jdGlvbiByZW5kZXJTZXR0aW5nc1woXClceycsIHJlLlMpCnJlcGxhY2VtZW50ID0gcicnJ2xldCBwZW5kaW5nSGlzdG9yeURlbGV0ZUlkPW51bGw7CmZ1bmN0aW9uIGRlbGV0ZUhpc3RvcnlSZWNvcmQocmVjb3JkSWQpewogIGNvbnN0IHY9dmVoaWNsZSgpOwogIGNvbnN0IHJlYz0odi5yZWNvcmRzfHxbXSkuZmluZChyPT5yLmlkPT09cmVjb3JkSWQpOwogIGlmKCFyZWMpcmV0dXJuOwogIHBlbmRpbmdIaXN0b3J5RGVsZXRlSWQ9cmVjb3JkSWQ7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImRlbGV0ZUhpc3RvcnlUZXh0IikudGV4dENvbnRlbnQ9cmVjLnRhc2tJZD09PSJzZXJ2aWNlIgogICAgPyJEaWVzZW4gU2VydmljZSB3aXJrbGljaCBsXHUwMGY2c2NoZW4/IFp1Z2VoXHUwMGY2cmlnZSBadXNhdHphcmJlaXRlbiBkaWVzZXMgU2VydmljZXZvcmdhbmdzIHdlcmRlbiBlYmVuZmFsbHMgZW50ZmVybnQuIgogICAgOiJEaWVzZW4gSGlzdG9yaWVuLUVpbnRyYWcgd2lya2xpY2ggbFx1MDBmNnNjaGVuPyI7CiAgb3Blbk1vZGFsKCJkZWxldGVIaXN0b3J5TW9kYWwiKTsKfQpmdW5jdGlvbiBjbG9zZUhpc3RvcnlEZWxldGVDb25maXJtKCl7CiAgcGVuZGluZ0hpc3RvcnlEZWxldGVJZD1udWxsOwogIGNsb3NlTW9kYWwoImRlbGV0ZUhpc3RvcnlNb2RhbCIpOwp9CmZ1bmN0aW9uIGNvbmZpcm1IaXN0b3J5RGVsZXRlKCl7CiAgY29uc3QgcmVjb3JkSWQ9cGVuZGluZ0hpc3RvcnlEZWxldGVJZDsKICBjb25zdCB2PXZlaGljbGUoKTsKICBjb25zdCByZWM9KHYucmVjb3Jkc3x8W10pLmZpbmQocj0+ci5pZD09PXJlY29yZElkKTsKICBpZighcmVjb3JkSWR8fCFyZWMpe2Nsb3NlSGlzdG9yeURlbGV0ZUNvbmZpcm0oKTtyZXR1cm47fQogIGlmKHJlYy50YXNrSWQ9PT0ic2VydmljZSIpewogICAgY29uc3QgZ3JvdXA9cmVjLnNlcnZpY2VHcm91cHx8bnVsbDsKICAgIHYucmVjb3Jkcz0odi5yZWNvcmRzfHxbXSkuZmlsdGVyKHI9PnsKICAgICAgaWYoci5pZD09PXJlYy5pZClyZXR1cm4gZmFsc2U7CiAgICAgIGlmKGdyb3VwJiZyLnNlcnZpY2VHcm91cD09PWdyb3VwKXJldHVybiBmYWxzZTsKICAgICAgaWYoIWdyb3VwJiZyLmRhdGU9PT1yZWMuZGF0ZSYmTnVtYmVyKHIubWlsZWFnZXx8MCk9PT1OdW1iZXIocmVjLm1pbGVhZ2V8fDApJiZyLm5vdGU9PT0iSW0gUmFobWVuIGRlcyBTZXJ2aWNlIGVybGVkaWd0IilyZXR1cm4gZmFsc2U7CiAgICAgIHJldHVybiB0cnVlOwogICAgfSk7CiAgfWVsc2V7CiAgICB2LnJlY29yZHM9KHYucmVjb3Jkc3x8W10pLmZpbHRlcihyPT5yLmlkIT09cmVjLmlkKTsKICB9CiAgcGVuZGluZ0hpc3RvcnlEZWxldGVJZD1udWxsOwogIHNhdmUoKTsKICBjbG9zZU1vZGFsKCJkZWxldGVIaXN0b3J5TW9kYWwiKTsKICByZW5kZXJBbGwoKTsKfQpmdW5jdGlvbiByZW5kZXJTZXR0aW5ncygpeycnJwpzLCBuID0gcGF0dGVybi5zdWJuKGxhbWJkYSBtOiByZXBsYWNlbWVudCwgcywgY291bnQ9MSkKYXNzZXJ0IG4gPT0gMSwgImRlbGV0ZUhpc3RvcnlSZWNvcmQgYmxvY2sgbm90IGZvdW5kIgoKaGFuZGxlcl9tYXJrZXIgPSAnZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgiLm1vZGFsLWJhY2tkcm9wIikuZm9yRWFjaChtPT5tLmFkZEV2ZW50TGlzdGVuZXIoImNsaWNrIixlPT57aWYoZS50YXJnZXQ9PT1tKWNsb3NlTW9kYWwobS5pZCk7fSkpOycKaGFuZGxlcnMgPSBoYW5kbGVyX21hcmtlciArICdcbicgKyAnXG4nLmpvaW4oWwonZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoImNhbmNlbERlbGV0ZUhpc3RvcnlCdG4iKS5vbmNsaWNrPWNsb3NlSGlzdG9yeURlbGV0ZUNvbmZpcm07JywKJ2RvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJjbG9zZURlbGV0ZUhpc3RvcnlCdG4iKS5vbmNsaWNrPWNsb3NlSGlzdG9yeURlbGV0ZUNvbmZpcm07JywKJ2RvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJjb25maXJtRGVsZXRlSGlzdG9yeUJ0biIpLm9uY2xpY2s9Y29uZmlybUhpc3RvcnlEZWxldGU7JywKJ2RvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJkZWxldGVIaXN0b3J5TW9kYWwiKS5hZGRFdmVudExpc3RlbmVyKCJjbGljayIsZT0+e2lmKGUudGFyZ2V0PT09ZS5jdXJyZW50VGFyZ2V0KWNsb3NlSGlzdG9yeURlbGV0ZUNvbmZpcm0oKTt9KTsnCl0pCmFzc2VydCBoYW5kbGVyX21hcmtlciBpbiBzLCAibW9kYWwgaGFuZGxlciBtYXJrZXIgbm90IGZvdW5kIgpzID0gcy5yZXBsYWNlKGhhbmRsZXJfbWFya2VyLCBoYW5kbGVycywgMSkKCmFzc2VydCAnaWQ9ImRlbGV0ZUhpc3RvcnlNb2RhbCInIGluIHMKYXNzZXJ0ICdjb25maXJtRGVsZXRlSGlzdG9yeUJ0bicgaW4gcwphc3NlcnQgJ2Z1bmN0aW9uIGNvbmZpcm1IaXN0b3J5RGVsZXRlKCknIGluIHMKYXNzZXJ0ICdpZighY29uZmlybShxdWVzdGlvbikpcmV0dXJuOycgbm90IGluIHMKcC53cml0ZV90ZXh0KHMsIGVuY29kaW5nPSJ1dGYtOCIpCg==
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('app/src/main/assets/index.html')
-          s = p.read_text(encoding='utf-8')
-
-          modal = '''
-<div class="modal-backdrop" id="deleteHistoryModal">
-  <div class="modal">
-    <div class="handle"></div>
-    <div class="modal-head"><h3>Eintrag l\u00f6schen?</h3><button class="close" id="closeDeleteHistoryBtn" aria-label="Schlie\u00dfen">&times;</button></div>
-    <p class="small-note" id="deleteHistoryText">Soll dieser Historien-Eintrag wirklich gel\u00f6scht werden?</p>
-    <div class="row2">
-      <button class="secondary-btn" id="cancelDeleteHistoryBtn">Abbrechen</button>
-      <button class="danger-btn" id="confirmDeleteHistoryBtn">L\u00f6schen</button>
-    </div>
-  </div>
-</div>
-
-'''
-          if 'id="deleteHistoryModal"' not in s:
-              marker = '<script>\nconst STORAGE_KEY = "carservice_v1";'
-              assert marker in s, 'script marker not found'
-              s = s.replace(marker, modal + marker, 1)
-
-          pattern = re.compile(r'''function deleteHistoryRecord\(recordId\)\{.*?\n\}\nfunction renderSettings\(\)\{''', re.S)
-          replacement = r'''let pendingHistoryDeleteId=null;
-function deleteHistoryRecord(recordId){
-  const v=vehicle();
-  const rec=(v.records||[]).find(r=>r.id===recordId);
-  if(!rec)return;
-  pendingHistoryDeleteId=recordId;
-  document.getElementById("deleteHistoryText").textContent=rec.taskId==="service"
-    ?"Diesen Service wirklich l\u00f6schen? Zugeh\u00f6rige Zusatzarbeiten dieses Servicevorgangs werden ebenfalls entfernt."
-    :"Diesen Historien-Eintrag wirklich l\u00f6schen?";
-  openModal("deleteHistoryModal");
-}
-function closeHistoryDeleteConfirm(){
-  pendingHistoryDeleteId=null;
-  closeModal("deleteHistoryModal");
-}
-function confirmHistoryDelete(){
-  const recordId=pendingHistoryDeleteId;
-  const v=vehicle();
-  const rec=(v.records||[]).find(r=>r.id===recordId);
-  if(!recordId||!rec){closeHistoryDeleteConfirm();return;}
-  if(rec.taskId==="service"){
-    const group=rec.serviceGroup||null;
-    v.records=(v.records||[]).filter(r=>{
-      if(r.id===rec.id)return false;
-      if(group&&r.serviceGroup===group)return false;
-      if(!group&&r.date===rec.date&&Number(r.mileage||0)===Number(rec.mileage||0)&&r.note==="Im Rahmen des Service erledigt")return false;
-      return true;
-    });
-  }else{
-    v.records=(v.records||[]).filter(r=>r.id!==rec.id);
-  }
-  pendingHistoryDeleteId=null;
-  save();
-  closeModal("deleteHistoryModal");
-  renderAll();
-}
-function renderSettings(){'''
-          s, n = pattern.subn(lambda m: replacement, s, count=1)
-          assert n == 1, 'deleteHistoryRecord block not found'
-
-          handler_marker = 'document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id);}));'
-          handlers = handler_marker + '''\ndocument.getElementById("cancelDeleteHistoryBtn").onclick=closeHistoryDeleteConfirm;\ndocument.getElementById("closeDeleteHistoryBtn").onclick=closeHistoryDeleteConfirm;\ndocument.getElementById("confirmDeleteHistoryBtn").onclick=confirmHistoryDelete;\ndocument.getElementById("deleteHistoryModal").addEventListener("click",e=>{if(e.target===e.currentTarget)closeHistoryDeleteConfirm();});'''
-          assert handler_marker in s, 'modal handler marker not found'
-          s = s.replace(handler_marker, handlers, 1)
-
-          assert 'id="deleteHistoryModal"' in s
-          assert 'confirmDeleteHistoryBtn' in s
-          assert 'function confirmHistoryDelete()' in s
-          assert 'if(!confirm(question))return;' not in s
-          p.write_text(s, encoding='utf-8')
-          PY
+          printf '%s' "$PATCH_B64" | base64 -d > /tmp/patch.py
+          python3 /tmp/patch.py
       - name: Verify JavaScript
         run: |
           python3 - <<'PY'
@@ -104,7 +29,7 @@ function renderSettings(){'''
           js=s.split('<script>',1)[1].rsplit('</script>',1)[0]
           Path('/tmp/carservice.js').write_text(js,encoding='utf-8')
           assert 'deleteHistoryModal' in s
-          assert 'confirmHistoryDeleteBtn' in s
+          assert 'confirmDeleteHistoryBtn' in s
           assert 'function confirmHistoryDelete()' in s
           assert 'if(!confirm(question))return;' not in s
           PY
