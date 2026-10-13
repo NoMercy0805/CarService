@@ -94,11 +94,9 @@ button{border:0}
       <div class="hero">
         <div class="hero-top">
           <div><h2 id="heroName"></h2><div class="sub" id="heroSub"></div></div>
-          <button id="editVehicleBtn">Bearbeiten</button>
         </div>
         <div class="km-row">
           <div class="km-block"><small>Aktueller Kilometerstand</small><div class="km-value" id="heroKm">–</div></div>
-          <button id="quickKmBtn">km ändern</button>
         </div>
       </div>
 
@@ -238,15 +236,6 @@ button{border:0}
     <div class="field"><label>Kosten (€) – optional</label><input id="entryCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>
     <div class="field"><label>Notiz – optional</label><textarea id="entryNote" class="input" rows="3" placeholder="z. B. Teile, Werkstatt, Öl-Spezifikation …"></textarea></div>
     <button class="primary-btn" id="saveEntryBtn">Speichern</button>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="kmModal">
-  <div class="modal">
-    <div class="handle"></div>
-    <div class="modal-head"><h3>Kilometerstand</h3><button class="close" data-close="kmModal">×</button></div>
-    <div class="field"><label>Aktueller Kilometerstand</label><input id="quickMileage" class="input" type="number" inputmode="numeric" min="0"></div>
-    <button class="primary-btn" id="saveQuickKm">Speichern</button>
   </div>
 </div>
 
@@ -749,11 +738,8 @@ document.getElementById("fab").onclick=()=>openEntry();
 document.getElementById("openLogBtn").onclick=()=>openEntry();
 document.getElementById("historyAddBtn").onclick=()=>openEntry();
 document.getElementById("settingsMenuBtn").onclick=()=>openModal("settingsMenuModal");
-document.getElementById("editVehicleBtn").onclick=()=>openSettingsSection("settingsVehiclePanel");
 document.getElementById("settingsBackBtn").onclick=()=>showPage("dashboard");
 document.querySelectorAll("[data-settings-target]").forEach(b=>b.onclick=()=>openSettingsSection(b.dataset.settingsTarget));
-document.getElementById("quickKmBtn").onclick=()=>{document.getElementById("quickMileage").value=vehicle().mileage||"";openModal("kmModal");};
-document.getElementById("saveQuickKm").onclick=()=>{const n=Number(document.getElementById("quickMileage").value||0);if(n<0)return;vehicle().mileage=n;save();closeModal("kmModal");renderAll();};
 document.getElementById("saveEntryBtn").onclick=saveEntry;
 document.getElementById("saveServiceBtn").onclick=saveServiceChecklist;
 document.getElementById("filterChips").onclick=e=>{const b=e.target.closest("[data-filter]");if(!b)return;state.filter=b.dataset.filter;save();renderDashboard();};
