@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   verify:
-    if: github.event_name == 'pull_request'
+    if: github.repository == 'NoMercy0805/CarService' && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -53,7 +53,7 @@ jobs:
         run: gradle :app:assembleRelease --no-daemon
 
   build-signed:
-    if: github.event_name != 'pull_request'
+    if: github.repository == 'NoMercy0805/CarService' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
