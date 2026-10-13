@@ -1,0 +1,57 @@
+name: Fix diesel and AdBlue maintenance
+
+'on':
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - name: Fix maintenance wording and profile isolation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('  "Dieselfilter entwässern (falls vorgesehen)",\n','')
+          s=s.replace('r("fuel","Dieselfilter",','r("fuel","Kraftstofffilter (Dieselfilter) wechseln",')
+          old='''function rulesFor(v){\n  const base=(BASE_RULES[v.profile]||[]).map(x=>({...x}));\n  const custom=(v.customTasks||[]).map(x=>({id:x.id,name:x.name,icon:"🔧",km:Number(x.km)||0,months:Number(x.months)||0,custom:true,manual:!(Number(x.km)||Number(x.months))}));\n  return [...base,...custom];\n}'''
+          new='''function rulesFor(v){\n  const allowedProfiles=v.id==="508"?["508_early","508_late"]:["2008_normal","2008_severe"];\n  const fallbackProfile=v.id==="508"?"508_late":"2008_normal";\n  const profile=allowedProfiles.includes(v.profile)?v.profile:fallbackProfile;\n  const base=(BASE_RULES[profile]||[]).map(x=>({...x}));\n  const custom=(v.customTasks||[]).map(x=>({id:x.id,name:x.name,icon:"🔧",km:Number(x.km)||0,months:Number(x.months)||0,custom:true,manual:!(Number(x.km)||Number(x.months))}));\n  return [...base,...custom];\n}'''
+          if old not in s:
+              raise SystemExit('rulesFor block not found')
+          s=s.replace(old,new,1)
+          s=s.replace('r("adblue","AdBlue auffüllen / kontrollieren",','r("adblue","AdBlue-Füllstand kontrollieren / bei Bedarf auffüllen",')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify frontend
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          script=s.split('<script>',1)[1].rsplit('</script>',1)[0]
+          Path('/tmp/app.js').write_text(script,encoding='utf-8')
+          PY
+          node --check /tmp/app.js
+          grep -q 'Kraftstofffilter (Dieselfilter) wechseln' app/src/main/assets/index.html
+          ! grep -q 'Dieselfilter entwässern' app/src/main/assets/index.html
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/assets/index.html
+          git commit -m 'Fix 508 AdBlue isolation and diesel filter wording'
+          git rm .github/workflows/fix-diesel-adblue.yml
+          git commit -m 'Remove one-time diesel/AdBlue fix workflow'
+          git push
+      - name: Start signed build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build.yml --ref main
