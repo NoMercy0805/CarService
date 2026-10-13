@@ -1,0 +1,111 @@
+name: Add history delete support
+
+'on':
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  migrate:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - name: Add safe history deletion
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text()
+
+          old='''  v.records.push({id:"rec_"+Date.now(),taskId:"service",taskName:"Motoröl + Ölfilter / Inspektion",date,mileage,cost,note:notes.join(" · ")});
+  checkedExtras.forEach((taskId,i)=>{
+    const rule=rules.find(r=>r.id===taskId);
+    if(!rule) return;
+    v.records.push({id:`rec_${Date.now()}_${i}`,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
+  });'''
+          new='''  const serviceGroup=`service_${Date.now()}`;
+  v.records.push({id:serviceGroup,serviceGroup,taskId:"service",taskName:"Motoröl + Ölfilter / Inspektion",date,mileage,cost,note:notes.join(" · ")});
+  checkedExtras.forEach((taskId,i)=>{
+    const rule=rules.find(r=>r.id===taskId);
+    if(!rule) return;
+    v.records.push({id:`${serviceGroup}_${i}`,serviceGroup,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
+  });'''
+          assert old in s, 'service save block not found'
+          s=s.replace(old,new,1)
+
+          old2='''  document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
+    const rule=rules.find(r=>r.id===rec.taskId);
+    return `<div class="record"><div><h4>${rule?rule.icon+" "+esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} · ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div></div>`;
+  }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
+}'''
+          new2='''  document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
+    const rule=rules.find(r=>r.id===rec.taskId);
+    return `<div class="record"><div><h4>${rule?rule.icon+" "+esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} · ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag löschen" title="Eintrag löschen">🗑</button></div></div>`;
+  }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
+  document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});
+}
+function deleteHistoryRecord(recordId){
+  const v=vehicle();
+  const rec=(v.records||[]).find(r=>r.id===recordId);
+  if(!rec)return;
+  const serviceRelated=rec.taskId==="service";
+  const question=serviceRelated
+    ?"Diesen Service wirklich löschen? Zugehörige Zusatzarbeiten dieses Servicevorgangs werden ebenfalls entfernt."
+    :`Diesen Historien-Eintrag wirklich löschen?`;
+  if(!confirm(question))return;
+  if(serviceRelated){
+    const group=rec.serviceGroup||null;
+    v.records=(v.records||[]).filter(r=>{
+      if(r.id===rec.id)return false;
+      if(group&&r.serviceGroup===group)return false;
+      if(!group&&r.date===rec.date&&Number(r.mileage||0)===Number(rec.mileage||0)&&r.note==="Im Rahmen des Service erledigt")return false;
+      return true;
+    });
+  }else{
+    v.records=(v.records||[]).filter(r=>r.id!==rec.id);
+  }
+  save();renderAll();
+}'''
+          assert old2 in s, 'history render block not found'
+          s=s.replace(old2,new2,1)
+
+          marker='.record .cost{font-weight:750;color:var(--ink)}'
+          replacement=marker+'.record-actions{display:flex;align-items:center;gap:9px}.history-delete-btn{width:34px;height:34px;border-radius:11px;background:var(--red-soft);color:var(--red);display:grid;place-items:center;font-size:15px;cursor:pointer}'
+          assert marker in s, 'record CSS marker not found'
+          s=s.replace(marker,replacement,1)
+
+          assert 'Erledigt eintragen' not in s
+          assert 'openLogBtn' not in s
+          p.write_text(s)
+          PY
+      - name: Verify JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('app/src/main/assets/index.html').read_text()
+          js=s.split('<script>',1)[1].rsplit('</script>',1)[0]
+          Path('/tmp/carservice.js').write_text(js)
+          assert 'data-delete-record' in s
+          assert 'function deleteHistoryRecord' in s
+          assert 'serviceGroup' in s
+          assert 'Erledigt eintragen' not in s
+          assert 'openLogBtn' not in s
+          PY
+          node --check /tmp/carservice.js
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/assets/index.html
+          git commit -m 'Allow deleting incorrect history entries'
+          git push
+      - name: Start signed build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build.yml --ref main
