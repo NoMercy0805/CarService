@@ -1,12 +1,13 @@
-name: Build CarService APK
+name: Verify CarService Build
 
 on:
   push:
     branches: [ main ]
+  pull_request:
   workflow_dispatch:
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,30 +25,10 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Use fixed debug keystore when configured
-        env:
-          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+      - name: Verify Android project builds
+        run: gradle :app:assembleRelease --no-daemon
+
+      - name: Signing information
         run: |
-          if [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
-            mkdir -p ~/.android
-            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > ~/.android/debug.keystore
-            echo "Fixed debug keystore restored."
-          else
-            echo "No DEBUG_KEYSTORE_BASE64 secret configured; Gradle will create a temporary debug key."
-          fi
-
-      - name: Set version code
-        run: sed -i -E "s/versionCode [0-9]+/versionCode ${{ github.run_number }}/" app/build.gradle
-
-      - name: Build installable APK
-        run: gradle :app:assembleDebug --no-daemon
-
-      - name: Rename APK
-        run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/CarService.apk
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: CarService
-          path: app/build/outputs/apk/debug/CarService.apk
-          if-no-files-found: error
+          echo "This repository only validates the source build."
+          echo "Installable CarService APKs are signed with the fixed keystore by the private Haushaltsbuch signing workflow."
