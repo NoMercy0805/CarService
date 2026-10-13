@@ -10,80 +10,17 @@ permissions:
 
 jobs:
   migrate:
-    if: github.repository == 'NoMercy0805/CarService'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
-      - name: Add safe history deletion
+      - name: Patch app
+        env:
+          PATCH_B64: ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnA9UGF0aCgiYXBwL3NyYy9tYWluL2Fzc2V0cy9pbmRleC5odG1sIikKcz1wLnJlYWRfdGV4dCgpCgpvbGQ9JycnICB2LnJlY29yZHMucHVzaCh7aWQ6InJlY18iK0RhdGUubm93KCksdGFza0lkOiJzZXJ2aWNlIix0YXNrTmFtZToiTW90b3LDtmwgKyDDlmzDpGZpbHRlciAvIEluc3Bla3Rpb24iLGRhdGUsbWlsZWFnZSxjb3N0LG5vdGU6bm90ZXMuam9pbigiIMK3ICIpfSk7CiAgY2hlY2tlZEV4dHJhcy5mb3JFYWNoKCh0YXNrSWQsaSk9PnsKICAgIGNvbnN0IHJ1bGU9cnVsZXMuZmluZChyPT5yLmlkPT09dGFza0lkKTsKICAgIGlmKCFydWxlKSByZXR1cm47CiAgICB2LnJlY29yZHMucHVzaCh7aWQ6YHJlY18ke0RhdGUubm93KCl9XyR7aX1gLHRhc2tJZCx0YXNrTmFtZTpydWxlLm5hbWUsZGF0ZSxtaWxlYWdlLGNvc3Q6MCxub3RlOiJJbSBSYWhtZW4gZGVzIFNlcnZpY2UgZXJsZWRpZ3QifSk7CiAgfSk7JycnCm5ldz0nJycgIGNvbnN0IHNlcnZpY2VHcm91cD1gc2VydmljZV8ke0RhdGUubm93KCl9YDsKICB2LnJlY29yZHMucHVzaCh7aWQ6c2VydmljZUdyb3VwLHNlcnZpY2VHcm91cCx0YXNrSWQ6InNlcnZpY2UiLHRhc2tOYW1lOiJNb3RvcsO2bCArIMOWbMO2bGZpbHRlciAvIEluc3Bla3Rpb24iLGRhdGUsbWlsZWFnZSxjb3N0LG5vdGU6bm90ZXMuam9pbigiIMK3ICIpfSk7CiAgY2hlY2tlZEV4dHJhcy5mb3JFYWNoKCh0YXNrSWQsaSk9PnsKICAgIGNvbnN0IHJ1bGU9cnVsZXMuZmluZChyPT5yLmlkPT09dGFza0lkKTsKICAgIGlmKCFydWxlKSByZXR1cm47CiAgICB2LnJlY29yZHMucHVzaCh7aWQ6YCR7c2VydmljZUdyb3VwfV8ke2l9YCxzZXJ2aWNlR3JvdXAsdGFza0lkLHRhc2tOYW1lOnJ1bGUubmFtZSxkYXRlLG1pbGVhZ2UsY29zdDowLG5vdGU6IkltIFJhaG1lbiBkZXMgU2VydmljZSBlcmxlZGlndCJ9KTsKICB9KTsnJycKYXNzZXJ0IG9sZCBpbiBzLCAic2VydmljZSBzYXZlIGJsb2NrIG5vdCBmb3VuZCIKcz1zLnJlcGxhY2Uob2xkLG5ldywxKQoKb2xkMj0nJycgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJoaXN0b3J5TGlzdCIpLmlubmVySFRNTD1yZWNvcmRzLmxlbmd0aD9yZWNvcmRzLm1hcChyZWM9PnsKICAgIGNvbnN0IHJ1bGU9cnVsZXMuZmluZChyPT5yLmlkPT09cmVjLnRhc2tJZCk7CiAgICByZXR1cm4gYDxkaXYgY2xhc3M9InJlY29yZCI+PGRpdj48aDQ+JHtydWxlP3J1bGUuaWNvbisgIiAiK2VzYyhydWxlLm5hbWUpOmVzYyhyZWMudGFza05hbWV8fCJXYXJ0dW5nIil9PC9oND48cD4ke2ZtdERhdGUocmVjLmRhdGUpfSDCtyAke2ZtdEttKHJlYy5taWxlYWdlKX0ga20ke3JlYy5ub3RlP2A8YnI+JHtlc2MocmVjLm5vdGUpfWA6IiJ9PC9wPjwvZGl2PjxkaXYgY2xhc3M9ImNvc3QiPiR7cmVjLmNvc3Q/Zm10TW9uZXkocmVjLmNvc3QpOiIifTwvZGl2PjwvZGl2PmA7CiAgfSkuam9pbigiIik6YDxkaXYgY2xhc3M9Imhpc3RvcnktZW1wdHkiPk5vY2gga2VpbmUgV2FydHVuZ2VuIGVpbmdldHJhZ2VuLjwvZGl2PmA7Cn0nJycKbmV3Mj0nJycgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJoaXN0b3J5TGlzdCIpLmlubmVySFRNTD1yZWNvcmRzLmxlbmd0aD9yZWNvcmRzLm1hcChyZWM9PnsKICAgIGNvbnN0IHJ1bGU9cnVsZXMuZmluZChyPT5yLmlkPT09cmVjLnRhc2tJZCk7CiAgICByZXR1cm4gYDxkaXYgY2xhc3M9InJlY29yZCI+PGRpdj48aDQ+JHtydWxlP3J1bGUuaWNvbisgIiAiK2VzYyhydWxlLm5hbWUpOmVzYyhyZWMudGFza05hbWV8fCJXYXJ0dW5nIil9PC9oND48cD4ke2ZtdERhdGUocmVjLmRhdGUpfSDCtyAke2ZtdEttKHJlYy5taWxlYWdlKX0ga20ke3JlYy5ub3RlP2A8YnI+JHtlc2MocmVjLm5vdGUpfWA6IiJ9PC9wPjwvZGl2PjxkaXYgY2xhc3M9InJlY29yZC1hY3Rpb25zIj48ZGl2IGNsYXNzPSJjb3N0Ij4ke3JlYy5jb3N0P2ZtdE1vbmV5KHJlYy5jb3N0KToiIn08L2Rpdj48YnV0dG9uIGNsYXNzPSJoaXN0b3J5LWRlbGV0ZS1idG4iIGRhdGEtZGVsZXRlLXJlY29yZD0iJHtlc2MocmVjLmlkKX0iIGFyaWEtbGFiZWw9IkVpbnRyYWcgbMO2c2NoZW4iIHRpdGxlPSJFaW50cmFnIGzDtnNjaGVuIj7wn5WRPC9idXR0b24+PC9kaXY+PC9kaXY+YDsKICB9KS5qb2luKCIiKTpgPGRpdiBjbGFzcz0iaGlzdG9yeS1lbXB0eSI+Tm9jaCBrZWluZSBXYXJ0dW5nZW4gZWluZ2V0cmFnZW4uPC9kaXY+YDsKICBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJbZGF0YS1kZWxldGUtcmVjb3JkXSIpLmZvckVhY2goYnRuPT5idG4ub25jbGljaz1lPT57ZS5zdG9wUHJvcGFnYXRpb24oKTtkZWxldGVIaXN0b3J5UmVjb3JkKGJ0bi5kYXRhc2V0LmRlbGV0ZVJlY29yZCk7fSk7Cn0KZnVuY3Rpb24gZGVsZXRlSGlzdG9yeVJlY29yZChyZWNvcmRJZCl7CiAgY29uc3Qgdj12ZWhpY2xlKCk7CiAgY29uc3QgcmVjPSh2LnJlY29yZHN8fFtdKS5maW5kKHI9PnIuaWQ9PT1yZWNvcmRJZCk7CiAgaWYoIXJlYylyZXR1cm47CiAgY29uc3Qgc2VydmljZVJlbGF0ZWQ9cmVjLnRhc2tJZD09PSJzZXJ2aWNlIjsKICBjb25zdCBxdWVzdGlvbj1zZXJ2aWNlUmVsYXRlZAogICAgPyJEaWVzZW4gU2VydmljZSB3aXJrbGljaCBsw7ZzY2hlbj8gWnVnZWhDtnJpZ2UgWnVzYXR6YXJiZWl0ZW4gZGllc2VzIFNlcnZpY2V2b3JnYW5ncyB3ZXJkZW4gZWJlbmZhbGxzIGVudGZlcm50LiIKICAgIDoiRGllc2VuIEhpc3Rvcmllbi1FaW50cmFnIHdpcmtsaWNoIGzDtnNjaGVuPyI7CiAgaWYoIWNvbmZpcm0ocXVlc3Rpb24pKXJldHVybjsKICBpZihzZXJ2aWNlUmVsYXRlZCl7CiAgICBjb25zdCBncm91cD1yZWMuc2VydmljZUdyb3VwfHxudWxsOwogICAgdi5yZWNvcmRzPSh2LnJlY29yZHN8fFtdKS5maWx0ZXIocj0+ewogICAgICBpZihyLmlkPT09cmVjLmlkKXJldHVybiBmYWxzZTsKICAgICAgaWYoZ3JvdXAmJnIuc2VydmljZUdyb3VwPT09Z3JvdXApcmV0dXJuIGZhbHNlOwogICAgICBpZighZ3JvdXAmJnIuZGF0ZT09PXJlYy5kYXRlJiZOdW1iZXIoci5taWxlYWdlfHwwKT09PU51bWJlcihyZWMubWlsZWFnZXx8MCkmJnIubm90ZT09PSJJbSBSYWhtZW4gZGVzIFNlcnZpY2UgZXJsZWRpZ3QiKXJldHVybiBmYWxzZTsKICAgICAgcmV0dXJuIHRydWU7CiAgICB9KTsKICB9ZWxzZXsKICAgIHYucmVjb3Jkcz0odi5yZWNvcmRzfHxbXSkuZmlsdGVyKHI9PnIuaWQhPT1yZWMuaWQpOwogIH0KICBzYXZlKCk7cmVuZGVyQWxsKCk7Cn0nJycKYXNzZXJ0IG9sZDIgaW4gcywgImhpc3RvcnkgcmVuZGVyIGJsb2NrIG5vdCBmb3VuZCIKcz1zLnJlcGxhY2Uob2xkMixuZXcyLDEpCgptYXJrZXI9Jy5yZWNvcmQgLmNvc3R7Zm9udC13ZWlnaHQ6NzUwO2NvbG9yOnZhcigtLWluayl9JwpyZXBsYWNlbWVudD1tYXJrZXIrJy5yZWNvcmQtYWN0aW9uc3tkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo5cHh9Lmhpc3RvcnktZGVsZXRlLWJ0bnt3aWR0aDozNHB4O2hlaWdodDozNHB4O2JvcmRlci1yYWRpdXM6MTFweDtiYWNrZ3JvdW5kOnZhcigtLXJlZC1zb2Z0KTtjb2xvcjp2YXIoLS1yZWQpO2Rpc3BsYXk6Z3JpZDtwbGFjZS1pdGVtczpjZW50ZXI7Zm9udC1zaXplOjE1cHg7Y3Vyc29yOnBvaW50ZXJ9Jwphc3NlcnQgbWFya2VyIGluIHMsICJyZWNvcmQgQ1NTIG1hcmtlciBub3QgZm91bmQiCnM9cy5yZXBsYWNlKG1hcmtlcixyZXBsYWNlbWVudCwxKQoKYXNzZXJ0ICJFcmxlZGlndCBlaW50cmFnZW4iIG5vdCBpbiBzCmFzc2VydCAib3BlbkxvZ0J0biIgbm90IGluIHMKcC53cml0ZV90ZXh0KHMpCg==
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('app/src/main/assets/index.html')
-          s=p.read_text()
-
-          old='''  v.records.push({id:"rec_"+Date.now(),taskId:"service",taskName:"Motoröl + Ölfilter / Inspektion",date,mileage,cost,note:notes.join(" · ")});
-  checkedExtras.forEach((taskId,i)=>{
-    const rule=rules.find(r=>r.id===taskId);
-    if(!rule) return;
-    v.records.push({id:`rec_${Date.now()}_${i}`,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
-  });'''
-          new='''  const serviceGroup=`service_${Date.now()}`;
-  v.records.push({id:serviceGroup,serviceGroup,taskId:"service",taskName:"Motoröl + Ölfilter / Inspektion",date,mileage,cost,note:notes.join(" · ")});
-  checkedExtras.forEach((taskId,i)=>{
-    const rule=rules.find(r=>r.id===taskId);
-    if(!rule) return;
-    v.records.push({id:`${serviceGroup}_${i}`,serviceGroup,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
-  });'''
-          assert old in s, 'service save block not found'
-          s=s.replace(old,new,1)
-
-          old2='''  document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
-    const rule=rules.find(r=>r.id===rec.taskId);
-    return `<div class="record"><div><h4>${rule?rule.icon+" "+esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} · ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div></div>`;
-  }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
-}'''
-          new2='''  document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
-    const rule=rules.find(r=>r.id===rec.taskId);
-    return `<div class="record"><div><h4>${rule?rule.icon+" "+esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} · ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag löschen" title="Eintrag löschen">🗑</button></div></div>`;
-  }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
-  document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});
-}
-function deleteHistoryRecord(recordId){
-  const v=vehicle();
-  const rec=(v.records||[]).find(r=>r.id===recordId);
-  if(!rec)return;
-  const serviceRelated=rec.taskId==="service";
-  const question=serviceRelated
-    ?"Diesen Service wirklich löschen? Zugehörige Zusatzarbeiten dieses Servicevorgangs werden ebenfalls entfernt."
-    :`Diesen Historien-Eintrag wirklich löschen?`;
-  if(!confirm(question))return;
-  if(serviceRelated){
-    const group=rec.serviceGroup||null;
-    v.records=(v.records||[]).filter(r=>{
-      if(r.id===rec.id)return false;
-      if(group&&r.serviceGroup===group)return false;
-      if(!group&&r.date===rec.date&&Number(r.mileage||0)===Number(rec.mileage||0)&&r.note==="Im Rahmen des Service erledigt")return false;
-      return true;
-    });
-  }else{
-    v.records=(v.records||[]).filter(r=>r.id!==rec.id);
-  }
-  save();renderAll();
-}'''
-          assert old2 in s, 'history render block not found'
-          s=s.replace(old2,new2,1)
-
-          marker='.record .cost{font-weight:750;color:var(--ink)}'
-          replacement=marker+'.record-actions{display:flex;align-items:center;gap:9px}.history-delete-btn{width:34px;height:34px;border-radius:11px;background:var(--red-soft);color:var(--red);display:grid;place-items:center;font-size:15px;cursor:pointer}'
-          assert marker in s, 'record CSS marker not found'
-          s=s.replace(marker,replacement,1)
-
-          assert 'Erledigt eintragen' not in s
-          assert 'openLogBtn' not in s
-          p.write_text(s)
-          PY
+          printf '%s' "$PATCH_B64" | base64 -d > /tmp/patch.py
+          python3 /tmp/patch.py
       - name: Verify JavaScript
         run: |
           python3 - <<'PY'
