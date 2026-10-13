@@ -28,7 +28,7 @@ body{padding-bottom:92px}
 button,input,select,textarea{font:inherit}
 button{border:0}
 #app{max-width:560px;margin:0 auto;min-height:100vh;padding:env(safe-area-inset-top) 16px 0}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 4px 14px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 4px 14px}.top-actions{display:flex;gap:8px;align-items:center}
 .brand h1{margin:0;font-size:28px;letter-spacing:-.7px}.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
 .icon-btn{width:42px;height:42px;border-radius:14px;background:var(--surface2);box-shadow:var(--shadow);color:var(--ink);display:grid;place-items:center;font-size:19px}
 .vehicle-tabs{display:flex;gap:10px;overflow:auto;padding:2px 2px 12px;scrollbar-width:none}.vehicle-tabs::-webkit-scrollbar{display:none}
@@ -88,7 +88,10 @@ button{border:0}
 <div id="app">
   <header class="topbar">
     <div class="brand"><h1>CarService</h1><p>Wartung · HU/TÜV · Historie</p></div>
-    <button class="icon-btn" id="settingsMenuBtn" title="Einstellungen" aria-label="Einstellungen">⚙</button>
+    <div class="top-actions">
+      <button class="icon-btn" id="historyMenuBtn" title="Historie" aria-label="Historie">◷</button>
+      <button class="icon-btn" id="settingsMenuBtn" title="Einstellungen" aria-label="Einstellungen">⚙</button>
+    </div>
   </header>
 
   <div class="vehicle-tabs" id="vehicleTabs"></div>
@@ -117,12 +120,6 @@ button{border:0}
         <span class="badge unknown" id="nextDueBadge">Offen</span>
       </div>
 
-      <div class="service-card" id="serviceCard">
-        <div class="service-icon">🔧</div>
-        <div><h3>Peugeot-Service</h3><p id="serviceCardText">Service wird berechnet …</p><div class="service-extra" id="serviceCardExtra"></div></div>
-        <span class="badge unknown" id="serviceCardBadge">Offen</span>
-      </div>
-
       <details class="maintenance-details" id="maintenanceDetails">
         <summary><span><b>Wartungsplan</b><small>Alle Wartungspunkte und Intervalle</small></span><span>⌄</span></summary>
         <div class="section-head"><h3>Alle Wartungen</h3><button id="openLogBtn">Erledigt eintragen</button></div>
@@ -137,6 +134,21 @@ button{border:0}
       </details>
     </section>
 
+    <section class="page" id="page-service">
+      <div class="section-head"><h3>Peugeot-Service</h3><button id="serviceTabOpenBtn">Service eintragen</button></div>
+      <div class="service-card" id="serviceCard">
+        <div class="service-icon">🔧</div>
+        <div><h3>Nächster Peugeot-Service</h3><p id="serviceCardText">Service wird berechnet …</p><div class="service-extra" id="serviceCardExtra"></div></div>
+        <span class="badge unknown" id="serviceCardBadge">Offen</span>
+      </div>
+      <div class="panel">
+        <h3>Serviceumfang</h3>
+        <p class="small-note">Die Checkliste enthält den Grundservice, typische Sicht- und Funktionskontrollen und die für den nächsten Termin fälligen Zusatzarbeiten.</p>
+        <div id="serviceTabExtras" class="small-note"></div>
+        <button class="primary-btn" id="serviceTabChecklistBtn">Service-Checkliste öffnen</button>
+      </div>
+    </section>
+
     <section class="page" id="page-history">
       <div class="section-head"><h3>Service-Historie</h3><button id="historyAddBtn">+ Eintrag</button></div>
       <div class="panel" id="historySummary"></div>
@@ -146,11 +158,10 @@ button{border:0}
   </main>
 </div>
 
-<button class="fab" id="fab">+</button>
 
 <nav class="bottom-nav">
   <button class="nav-btn active" data-page="dashboard"><i>⌂</i>Übersicht</button>
-  <button class="nav-btn" data-page="history"><i>◷</i>Historie</button>
+  <button class="nav-btn" data-page="service"><i>🔧</i>Peugeot-Service</button>
 </nav>
 
 
@@ -519,6 +530,12 @@ function renderServiceSummary(v){
   badge.textContent=serviceInfo.label;
   badge.className=`badge ${serviceInfo.status}`;
   card.onclick=openServiceChecklist;
+  const tabExtras=document.getElementById("serviceTabExtras");
+  if(tabExtras){
+    tabExtras.innerHTML=extras.length
+      ?extras.map(({rule,info})=>`<div style="padding:7px 0;border-bottom:1px solid var(--rule)"><b>${rule.icon} ${esc(rule.name)}</b><br><span>${esc(info.detail||info.label||"")}</span></div>`).join("")
+      :"Für den nächsten Service sind keine zusätzlichen Wechselarbeiten eingeplant.";
+  }
 }
 function checklistRows(items,kind){
   return items.map((name,i)=>`<label class="check-row"><input type="checkbox" data-service-kind="${kind}" data-service-index="${i}"><span><b>${esc(name)}</b></span></label>`).join("");
@@ -707,6 +724,8 @@ window.closeAnyOpenOverlay=function(){
   if(sub){sub.classList.remove("open");document.getElementById("settingsOverlay").classList.add("open");return true;}
   const settings=document.getElementById("settingsOverlay");
   if(settings&&settings.classList.contains("open")){settings.classList.remove("open");return true;}
+  const activePage=document.querySelector(".page.active");
+  if(activePage&&activePage.id!=="page-dashboard"){showPage("dashboard");return true;}
   return false;
 };
 document.addEventListener("keydown",e=>{if(e.key==="Escape")window.closeAnyOpenOverlay();});
@@ -787,9 +806,9 @@ async function backupAction(){
 document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
 document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id);}));
-document.getElementById("fab").onclick=()=>openEntry();
 document.getElementById("openLogBtn").onclick=()=>openEntry();
 document.getElementById("historyAddBtn").onclick=()=>openEntry();
+document.getElementById("historyMenuBtn").onclick=()=>showPage("history");
 document.getElementById("settingsMenuBtn").onclick=openSettings;
 document.getElementById("settingsCloseBtn").onclick=()=>document.getElementById("settingsOverlay").classList.remove("open");
 document.querySelectorAll("[data-open-settings]").forEach(b=>b.onclick=()=>openSettingsSub(b.dataset.openSettings));
@@ -798,6 +817,8 @@ document.getElementById("settingsOverlay").addEventListener("click",e=>{if(e.tar
 document.querySelectorAll('[id^="settingsSubOverlay-"]').forEach(sub=>sub.addEventListener("click",e=>{if(e.target===sub)sub.classList.remove("open");}));
 document.getElementById("saveEntryBtn").onclick=saveEntry;
 document.getElementById("saveServiceBtn").onclick=saveServiceChecklist;
+document.getElementById("serviceTabOpenBtn").onclick=openServiceChecklist;
+document.getElementById("serviceTabChecklistBtn").onclick=openServiceChecklist;
 document.getElementById("filterChips").onclick=e=>{const b=e.target.closest("[data-filter]");if(!b)return;state.filter=b.dataset.filter;save();renderDashboard();};
 document.getElementById("settingsVehicle").onchange=e=>{state.selectedVehicle=e.target.value;save();renderAll();};
 document.getElementById("saveVehicleSettings").onclick=saveVehicleSettings;
