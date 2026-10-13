@@ -73,7 +73,7 @@ button{border:0}
 .handle{width:42px;height:5px;border-radius:5px;background:var(--rule);margin:2px auto 14px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.modal-head h3{margin:0;font-size:19px}.close{width:34px;height:34px;border-radius:50%;background:var(--paper);color:var(--ink)}
 .theme-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.theme-pills button{padding:10px;border-radius:12px;background:var(--paper);color:var(--ink)}.theme-pills button.active{background:var(--primary);color:#fff}
 .small-note{font-size:11px;color:var(--muted);line-height:1.5}
-.next-service-panel{margin-bottom:16px}.next-service-panel .section-head{margin-top:0}.next-service-due{background:var(--primary-soft);color:var(--ink);border-radius:13px;padding:11px 12px;margin-bottom:10px;font-size:12px;line-height:1.45}.next-service-list{display:flex;flex-direction:column;margin:2px 0 8px}.next-service-item{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:start;padding:10px 2px;border-bottom:1px solid var(--rule)}.next-service-item:last-child{border-bottom:0}.next-service-item .mark{width:24px;height:24px;border-radius:8px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:12px;font-weight:800}.next-service-item b{font-size:13px}.next-service-item small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}
+.next-service-panel{margin-bottom:16px}.next-service-panel .section-head{margin-top:0}.next-service-due{background:var(--primary-soft);color:var(--ink);border-radius:13px;padding:11px 12px;margin-bottom:10px;font-size:12px;line-height:1.45}.next-service-list{display:flex;flex-direction:column;margin:2px 0 8px}.next-service-item{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--rule)}.next-service-item:last-child{border-bottom:0}.next-service-item .mark{width:24px;height:24px;border-radius:8px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:12px;font-weight:800}.next-service-item b{font-size:13px}.next-service-item small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}
 .settings-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,22,.45);align-items:center;justify-content:center;padding:20px;z-index:1000;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .settings-overlay.open{display:flex;animation:settingsFade .15s ease}.settings-panel{background:var(--surface2);border:1px solid rgba(255,255,255,.5);border-radius:26px;padding:22px;width:min(400px,100%);max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.25);animation:settingsPop .22s cubic-bezier(.4,0,.2,1)}html[data-theme="dark"] .settings-panel{border-color:rgba(255,255,255,.16)}
 .settings-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;min-height:42px}.settings-panel-head h2{font-size:19px;font-weight:800;color:var(--ink);margin:0;text-align:center}.settings-close-btn{background:var(--paper);border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:8px 13px;border-radius:50%}.settings-back-btn{background:var(--paper);border:none;color:var(--muted);cursor:pointer;padding:9px;border-radius:50%;width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center}.settings-head-spacer{width:36px;height:36px;flex-shrink:0}
@@ -82,6 +82,22 @@ button{border:0}
 @keyframes settingsFade{from{opacity:0}to{opacity:1}}@keyframes settingsPop{from{transform:scale(.96);opacity:.65}to{transform:scale(1);opacity:1}}
 .maintenance-details{margin:0 0 16px}.maintenance-details>summary{list-style:none;cursor:pointer;background:var(--surface2);box-shadow:var(--shadow);border-radius:16px;padding:14px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px}.maintenance-details>summary::-webkit-details-marker{display:none}.maintenance-details>summary b{display:block;font-size:15px}.maintenance-details>summary small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.maintenance-details[open]>summary{margin-bottom:12px}.maintenance-details .section-head{margin-top:0}.profile-explain{background:var(--primary-soft);color:var(--ink);border-radius:13px;padding:11px 12px;margin-top:8px;font-size:11px;line-height:1.5}
 .service-card{background:var(--surface2);box-shadow:var(--shadow);border-radius:18px;padding:15px 16px;margin:0 0 16px;display:grid;grid-template-columns:42px 1fr auto;gap:11px;align-items:center;cursor:pointer}.service-card .service-icon{width:42px;height:42px;border-radius:13px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:20px}.service-card h3{margin:0 0 4px;font-size:15px}.service-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.service-card .service-extra{font-size:11px;color:var(--primary);margin-top:5px}.check-section{margin:14px 0}.check-section h4{margin:0 0 8px;font-size:13px}.check-row{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;padding:10px 2px;border-bottom:1px solid var(--rule)}.check-row:last-child{border-bottom:0}.check-row input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--primary)}.check-row b{font-size:13px}.check-row small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}.service-note{background:var(--primary-soft);border-radius:13px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--ink)}
+
+.service-task-title{display:flex;align-items:center;gap:10px}
+.service-task-title>span:last-child{min-width:0}
+.service-task-icon{width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:var(--primary-soft);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
+.service-task-icon svg{width:26px;height:26px;display:block}
+.service-task-icon .accent{fill:var(--primary);stroke:none}
+.service-task-icon .soft{fill:var(--primary-soft);stroke:none}
+.service-task-icon .ink{fill:currentColor;stroke:none}
+.service-task-icon .line{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.service-task-icon.brakefluid{background:var(--red-soft);color:var(--red)}
+.service-task-icon.battery{background:var(--green-soft);color:var(--green)}
+.service-task-icon.hu{background:var(--green-soft);color:var(--green)}
+.service-task-icon.timing,.service-task-icon.auxbelt{background:var(--orange-soft);color:var(--orange)}
+.service-task-icon.dpf,.service-task-icon.fapadd{background:var(--purple-soft);color:var(--purple)}
+.service-due-pill{display:inline-block;margin-right:5px;padding:2px 6px;border-radius:999px;background:var(--orange-soft);color:var(--orange);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.25px}
+
 @media(max-width:380px){.summary{grid-template-columns:1fr 1fr 1fr}.km-value{font-size:28px}.vehicle-tab{min-width:195px}}
 </style>
 </head>
@@ -343,6 +359,31 @@ const SERVICE_INSPECTION_ITEMS = [
   "Batterie und Anschlüsse sichtprüfen"
 ];
 
+
+const SERVICE_ICON_SVGS = {
+  service:`<svg viewBox="0 0 32 32" aria-hidden="true"><rect class="line" x="7" y="6" width="15" height="20" rx="2.5"/><path class="line" d="M11 11h7M11 15h6M11 19h4"/><path class="line" d="M21 21l5-5m-1.5-2.5a3 3 0 0 0-3.8 3.8l-4.6 4.6 2 2 4.6-4.6a3 3 0 0 0 3.8-3.8l-1.7 1.7-1.8-1.8 1.5-1.9Z"/></svg>`,
+  fuel:`<svg viewBox="0 0 32 32" aria-hidden="true"><path class="line" d="M10 6h12v4H10zM9 10h14v12a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V10Z"/><path class="line" d="M8 15h16M13 27v2M19 27v2"/><path class="accent" d="M16 15.4c-2 2.7-3.1 4.2-3.1 5.7a3.1 3.1 0 0 0 6.2 0c0-1.5-1.1-3-3.1-5.7Z"/></svg>`,
+  air:`<svg viewBox="0 0 32 32" aria-hidden="true"><rect class="line" x="4.5" y="7" width="15" height="18" rx="2"/><path class="line" d="M8 10v12M11 10v12M14 10v12M17 10v12"/><path class="line" d="M22 12c2 0 2-2 4-2s2 2 4 2M22 17c2 0 2-2 4-2s2 2 4 2M22 22c2 0 2-2 4-2s2 2 4 2"/></svg>`,
+  cabin:`<svg viewBox="0 0 32 32" aria-hidden="true"><rect class="line" x="3.5" y="6.5" width="14" height="17" rx="2"/><path class="line" d="M7 9v12M10.5 9v12M14 9v12M20 11c2 0 2-2 4-2M20 16c2 0 2-2 4-2"/><path class="line" d="M22 21a3 3 0 1 1 6 0v4h-6zM20 27h9"/></svg>`,
+  brakefluid:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle class="line" cx="13.5" cy="16" r="8"/><circle class="line" cx="13.5" cy="16" r="3"/><path class="line" d="M5.5 12H3v8h2.5M21.5 12H24v4"/><path class="accent" d="M24.5 15.5c-2.7 3.7-4.2 5.7-4.2 7.8a4.2 4.2 0 0 0 8.4 0c0-2.1-1.5-4.1-4.2-7.8Z"/></svg>`,
+  timing:`<svg viewBox="0 0 32 32" aria-hidden="true"><path class="line" d="M7 10.5c4-4 14-4 18 0l2 10c-4 5-18 5-22 0l2-10Z"/><circle class="line" cx="11" cy="14" r="3"/><circle class="line" cx="21" cy="14" r="3"/><circle class="line" cx="16" cy="21" r="3"/><path class="line" d="M8.3 9.5l2-2M12 7l1-2M19.7 7.5l2-2M23 8l1.5 2"/></svg>`,
+  auxbelt:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle class="line" cx="10" cy="11" r="4"/><circle class="line" cx="22" cy="21" r="5"/><path class="line" d="M7 8c6-4 15-2 18 5M25 24c-6 4-15 2-18-5"/></svg>`,
+  battery:`<svg viewBox="0 0 32 32" aria-hidden="true"><rect class="line" x="5" y="9" width="22" height="16" rx="2.5"/><path class="line" d="M10 9V6h4v3M18 9V6h4v3M9 16h5M11.5 13.5v5M20 16h4"/><path class="line" d="M17 13l-3 6h4l-2 5"/></svg>`,
+  hu:`<svg viewBox="0 0 32 32" aria-hidden="true"><path class="line" d="M8 4.5h12l5 5V27H8zM20 4.5V10h5M12 15h8M12 19h5"/><circle class="accent" cx="23.5" cy="23.5" r="6"/><path d="M20.8 23.4l1.8 1.8 3.6-4" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  dpf:`<svg viewBox="0 0 32 32" aria-hidden="true"><path class="line" d="M4 11h5l3-3h8l3 3h5v10h-5l-3 3h-8l-3-3H4z"/><path class="line" d="M13 11v10M16 11v10M19 11v10"/><circle class="accent" cx="7" cy="8" r="1.2"/><circle class="accent" cx="4" cy="6" r="1"/><circle class="accent" cx="27" cy="24" r="1.2"/></svg>`,
+  fapadd:`<svg viewBox="0 0 32 32" aria-hidden="true"><path class="line" d="M8 6h10l4 4v16H8zM18 6v5h4"/><path class="accent" d="M15 13c-2.4 3.2-3.7 5-3.7 6.8a3.7 3.7 0 0 0 7.4 0c0-1.8-1.3-3.6-3.7-6.8Z"/><path class="line" d="M23 16h5v8h-5"/></svg>`,
+  adblue:`<svg viewBox="0 0 32 32" aria-hidden="true"><path class="line" d="M8 6h11l4 5v15H8zM19 6v6h4"/><path class="accent" d="M15.5 13.5c-2.3 3-3.5 4.8-3.5 6.5a3.5 3.5 0 0 0 7 0c0-1.7-1.2-3.5-3.5-6.5Z"/></svg>`,
+  coolant:`<svg viewBox="0 0 32 32" aria-hidden="true"><path class="line" d="M7 9h15l3 4v12H7zM11 6h8v3"/><path class="line" d="M10 18h12M13 21c1-1 2-1 3 0s2 1 3 0"/><path class="line" d="M26 7v10M24 13h4"/><circle class="accent" cx="26" cy="20.5" r="2.5"/></svg>`,
+  brakes:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle class="line" cx="16" cy="16" r="9"/><circle class="line" cx="16" cy="16" r="3.5"/><path class="line" d="M7 11H4v10h3M25 11h3v10h-3"/><circle class="accent" cx="16" cy="8" r="1"/><circle class="accent" cx="22" cy="12" r="1"/></svg>`,
+  tires:`<svg viewBox="0 0 32 32" aria-hidden="true"><circle class="line" cx="16" cy="16" r="11"/><circle class="line" cx="16" cy="16" r="5"/><path class="line" d="M9 7l3 4M16 5v5M23 7l-3 4M27 16h-5M10 16H5M9 25l3-4M23 25l-3-4"/></svg>`,
+  manual:`<svg viewBox="0 0 32 32" aria-hidden="true"><path class="line" d="M20.5 6.5a6 6 0 0 0-7.4 7.4L5 22l5 5 8.1-8.1a6 6 0 0 0 7.4-7.4L22 15l-5-5 3.5-3.5Z"/></svg>`
+};
+function serviceIcon(id){
+  const key=(id==="coolantph"?"coolant":id);
+  const svg=SERVICE_ICON_SVGS[key]||SERVICE_ICON_SVGS.manual;
+  return `<span class="service-task-icon ${esc(key)}">${svg}</span>`;
+}
+
 const BASE_RULES = {
   "508_early": [
     r("service","Motoröl + Ölfilter / Inspektion","🛢️",30000,24,{note:"Grundservice"}),
@@ -532,7 +573,7 @@ function openServiceChecklist(){
   document.getElementById("serviceBaseList").innerHTML=checklistRows(SERVICE_BASE_ITEMS,"base");
   document.getElementById("serviceInspectionList").innerHTML=checklistRows(SERVICE_INSPECTION_ITEMS,"inspection");
   const box=document.getElementById("serviceExtraList");
-  box.innerHTML=extras.length?extras.map(({rule,info})=>`<label class="check-row"><input type="checkbox" data-service-task="${esc(rule.id)}" checked><span><b>${rule.icon} ${esc(rule.name)}</b><small>${esc(info.detail||info.label||"")}</small></span></label>`).join(""):`<div class="small-note">Für diesen Service sind keine weiteren Zusatzarbeiten fällig.</div>`;
+  box.innerHTML=extras.length?extras.map(({rule,info})=>`<label class="check-row"><input type="checkbox" data-service-task="${esc(rule.id)}"><span><b class="service-task-title">${serviceIcon(rule.id)}<span>${esc(rule.name)}</span></b><small><span class="service-due-pill">fällig</span>${esc(info.detail||info.label||"")}</small></span></label>`).join(""):`<div class="small-note">Für diesen Service sind keine weiteren Zusatzarbeiten fällig.</div>`;
   showPage("service");
 }
 function openServiceConfirm(){
@@ -611,15 +652,16 @@ function renderNextServicePlan(v){
     due.innerHTML=`<b>${lastText}</b>Nächster Service: ${target.length?target.join(" oder "):"nach hinterlegtem Wartungsplan"}.`;
   }
   const extraItems=extras.map(({rule,info})=>({
-    name:`${rule.icon||"🔧"} ${rule.name}`,
+    id:rule.id,
+    name:rule.name,
     note:info&&info.detail?info.detail:"Beim nächsten Service fällig"
   }));
   const items=serviceInfo?[
-    {name:serviceRule?serviceRule.name:"Motoröl + Ölfilter / Inspektion",note:"Beim nächsten Service fällig"},
+    {id:"service",name:serviceRule?serviceRule.name:"Motoröl + Ölfilter / Inspektion",note:"Beim nächsten Service fällig"},
     ...extraItems
   ]:[];
   list.innerHTML=items.length
-    ?items.map(item=>`<div class="next-service-item"><span class="mark">✓</span><span><b>${esc(item.name)}</b><small>${esc(item.note)}</small></span></div>`).join("")
+    ?items.map(item=>`<div class="next-service-item">${serviceIcon(item.id)}<span><b>${esc(item.name)}</b><small>${esc(item.note)}</small></span></div>`).join("")
     :`<div class="small-note">Noch nicht berechenbar. Bitte Kilometerstand und Fahrzeugdaten ergänzen.</div>`;
 }
 function renderHistory(){
@@ -630,7 +672,8 @@ function renderHistory(){
   const rules=rulesFor(v);
   document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
     const rule=rules.find(r=>r.id===rec.taskId);
-    return `<div class="record"><div><h4>${rule?rule.icon+" "+esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} \u00b7 ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;
+    const iconId=rule?rule.id:(rec.manual?"manual":rec.taskId);
+    return `<div class="record"><div><h4 class="service-task-title">${serviceIcon(iconId)}<span>${rule?esc(rule.name):esc(rec.taskName||"Wartung")}</span></h4><p>${fmtDate(rec.date)} \u00b7 ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;
   }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
   document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});
 }
