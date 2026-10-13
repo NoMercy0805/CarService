@@ -1,0 +1,184 @@
+name: Add Peugeot service checklist
+
+on:
+  push:
+    paths:
+      - '.github/workflows/service-checklist.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add service checklist UI and logic
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/src/main/assets/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly one match, found {count}')
+              text = text.replace(old, new, 1)
+
+          replace_once(
+              '.maintenance-details{margin:0 0 16px}.maintenance-details>summary{list-style:none;cursor:pointer;background:var(--surface2);box-shadow:var(--shadow);border-radius:16px;padding:14px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px}.maintenance-details>summary::-webkit-details-marker{display:none}.maintenance-details>summary b{display:block;font-size:15px}.maintenance-details>summary small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.maintenance-details[open]>summary{margin-bottom:12px}.maintenance-details .section-head{margin-top:0}.profile-explain{background:var(--primary-soft);color:var(--ink);border-radius:13px;padding:11px 12px;margin-top:8px;font-size:11px;line-height:1.5}\n',
+              '.maintenance-details{margin:0 0 16px}.maintenance-details>summary{list-style:none;cursor:pointer;background:var(--surface2);box-shadow:var(--shadow);border-radius:16px;padding:14px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px}.maintenance-details>summary::-webkit-details-marker{display:none}.maintenance-details>summary b{display:block;font-size:15px}.maintenance-details>summary small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.maintenance-details[open]>summary{margin-bottom:12px}.maintenance-details .section-head{margin-top:0}.profile-explain{background:var(--primary-soft);color:var(--ink);border-radius:13px;padding:11px 12px;margin-top:8px;font-size:11px;line-height:1.5}\n.service-card{background:var(--surface2);box-shadow:var(--shadow);border-radius:18px;padding:15px 16px;margin:0 0 16px;display:grid;grid-template-columns:42px 1fr auto;gap:11px;align-items:center;cursor:pointer}.service-card .service-icon{width:42px;height:42px;border-radius:13px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:20px}.service-card h3{margin:0 0 4px;font-size:15px}.service-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.service-card .service-extra{font-size:11px;color:var(--primary);margin-top:5px}.check-section{margin:14px 0}.check-section h4{margin:0 0 8px;font-size:13px}.check-row{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;padding:10px 2px;border-bottom:1px solid var(--rule)}.check-row:last-child{border-bottom:0}.check-row input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--primary)}.check-row b{font-size:13px}.check-row small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}.service-note{background:var(--primary-soft);border-radius:13px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--ink)}\n',
+              'service checklist CSS')
+
+          replace_once(
+              '      <details class="maintenance-details" id="maintenanceDetails">',
+              '      <div class="service-card" id="serviceCard">\n        <div class="service-icon">🔧</div>\n        <div><h3>Peugeot-Service</h3><p id="serviceCardText">Service wird berechnet …</p><div class="service-extra" id="serviceCardExtra"></div></div>\n        <span class="badge unknown" id="serviceCardBadge">Offen</span>\n      </div>\n\n      <details class="maintenance-details" id="maintenanceDetails">',
+              'service dashboard card')
+
+          replace_once(
+              '<div class="modal-backdrop" id="entryModal">',
+              '<div class="modal-backdrop" id="serviceModal">\n  <div class="modal">\n    <div class="handle"></div>\n    <div class="modal-head"><h3>Peugeot-Service</h3><button class="close" data-close="serviceModal">×</button></div>\n    <div class="service-note" id="serviceDueSummary"></div>\n    <div class="check-section"><h4>Grundservice</h4><div id="serviceBaseList"></div></div>\n    <div class="check-section"><h4>Typische Sicht- und Funktionskontrollen</h4><div id="serviceInspectionList"></div></div>\n    <div class="check-section"><h4>Zusatzarbeiten bei diesem Service</h4><div id="serviceExtraList"></div></div>\n    <div class="row2">\n      <div class="field"><label>Datum</label><input id="serviceDate" class="input" type="date"></div>\n      <div class="field"><label>Kilometerstand</label><input id="serviceMileage" class="input" type="number" inputmode="numeric" min="0"></div>\n    </div>\n    <div class="field"><label>Kosten (€) – optional</label><input id="serviceCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>\n    <div class="field"><label>Notiz – optional</label><textarea id="serviceNote" class="input" rows="3" placeholder="z. B. Werkstatt, Öl-Spezifikation, Besonderheiten …"></textarea></div>\n    <button class="primary-btn" id="saveServiceBtn">Service als erledigt speichern</button>\n    <p class="small-note">Die Checkliste orientiert sich am Peugeot-Serviceumfang. Maßgeblich bleibt der VIN-spezifische Wartungsplan in Peugeot Service Box.</p>\n  </div>\n</div>\n\n<div class="modal-backdrop" id="entryModal">',
+              'service modal')
+
+          replace_once(
+              'const BASE_RULES = {',
+              'const SERVICE_BASE_ITEMS = [\n  "Motoröl wechseln",\n  "Ölfilter ersetzen",\n  "Fahrzeug-Gesamtprüfung",\n  "Flüssigkeitsstände prüfen und ggf. auffüllen",\n  "Diagnose / Fehlerspeicher prüfen",\n  "Sicherheits- und Umweltkontrollen"\n];\nconst SERVICE_INSPECTION_ITEMS = [\n  "Bremsen prüfen",\n  "Reifen: Zustand, Profiltiefe und Luftdruck",\n  "Beleuchtung, Hupe und elektrische Funktionen",\n  "Wischer und Waschanlage",\n  "Batterie und Anschlüsse",\n  "Lenkung, Fahrwerk und Manschetten",\n  "Nebenaggregateriemen sichtprüfen",\n  "Undichtigkeiten, Unterboden und Abgasanlage"\n];\n\nconst BASE_RULES = {',
+              'service constants')
+
+          insert_functions = r'''
+function servicePlan(v){
+  const rules=rulesFor(v);
+  const serviceRule=rules.find(r=>r.id==="service");
+  const serviceInfo=serviceRule?dueInfo(v,serviceRule):null;
+  const extras=rules.filter(rule=>{
+    if(rule.id==="service"||rule.id==="hu"||rule.custom||rule.manual) return false;
+    const info=dueInfo(v,rule);
+    if(info.status==="due"||info.status==="soon") return true;
+    if(serviceInfo&&serviceInfo.dueKm!==null&&serviceInfo.dueKm!==undefined&&info.dueKm!==null&&info.dueKm!==undefined&&Number(info.dueKm)<=Number(serviceInfo.dueKm)) return true;
+    if(serviceInfo&&serviceInfo.dueDate&&info.dueDate&&info.dueDate<=serviceInfo.dueDate) return true;
+    return false;
+  }).map(rule=>({rule,info:dueInfo(v,rule)}));
+  return {serviceRule,serviceInfo,extras};
+}
+function renderServiceSummary(v){
+  const {serviceInfo,extras}=servicePlan(v);
+  const text=document.getElementById("serviceCardText"),extra=document.getElementById("serviceCardExtra"),badge=document.getElementById("serviceCardBadge"),card=document.getElementById("serviceCard");
+  if(!serviceInfo){
+    text.textContent="Kein Serviceintervall vorhanden.";extra.textContent="";badge.textContent="Offen";badge.className="badge unknown";card.onclick=openServiceChecklist;return;
+  }
+  text.textContent=serviceInfo.detail||"Serviceintervall";
+  extra.textContent=extras.length?`${extras.length} Zusatzarbeit${extras.length===1?"":"en"} eingeplant`:"Keine zusätzlichen Wechselarbeiten zu diesem Termin";
+  badge.textContent=serviceInfo.label;
+  badge.className=`badge ${serviceInfo.status}`;
+  card.onclick=openServiceChecklist;
+}
+function checklistRows(items,kind){
+  return items.map((name,i)=>`<label class="check-row"><input type="checkbox" data-service-kind="${kind}" data-service-index="${i}"><span><b>${esc(name)}</b></span></label>`).join("");
+}
+function openServiceChecklist(){
+  const v=vehicle();
+  const {serviceInfo,extras}=servicePlan(v);
+  const pieces=[];
+  if(serviceInfo&&serviceInfo.dueKm!==null&&serviceInfo.dueKm!==undefined) pieces.push(`${fmtKm(serviceInfo.dueKm)} km`);
+  if(serviceInfo&&serviceInfo.dueDate) pieces.push(fmtDate(serviceInfo.dueDate));
+  document.getElementById("serviceDueSummary").innerHTML=`<b>${esc(v.name)}</b><br>${pieces.length?`Nächster Service: ${pieces.join(" oder ")}`:"Für die genaue Berechnung bitte Kilometerstand und Erstzulassung ergänzen."}`;
+  document.getElementById("serviceBaseList").innerHTML=checklistRows(SERVICE_BASE_ITEMS,"base");
+  document.getElementById("serviceInspectionList").innerHTML=checklistRows(SERVICE_INSPECTION_ITEMS,"inspection");
+  const box=document.getElementById("serviceExtraList");
+  box.innerHTML=extras.length?extras.map(({rule,info})=>`<label class="check-row"><input type="checkbox" data-service-task="${esc(rule.id)}" checked><span><b>${rule.icon} ${esc(rule.name)}</b><small>${esc(info.detail||info.label||"")}</small></span></label>`).join(""):`<div class="small-note">Für diesen Service sind nach den hinterlegten Intervallen keine weiteren Austausch-/Prüfarbeiten eingeplant.</div>`;
+  document.getElementById("serviceDate").value=today();
+  document.getElementById("serviceMileage").value=v.mileage||"";
+  document.getElementById("serviceCost").value="";
+  document.getElementById("serviceNote").value="";
+  openModal("serviceModal");
+}
+function saveServiceChecklist(){
+  const v=vehicle(),rules=rulesFor(v);
+  const date=document.getElementById("serviceDate").value;
+  const mileage=Number(document.getElementById("serviceMileage").value||0);
+  const cost=Number(document.getElementById("serviceCost").value||0);
+  const note=document.getElementById("serviceNote").value.trim();
+  if(!date){alert("Bitte ein Datum eintragen.");return;}
+  if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}
+  const checkedBase=[...document.querySelectorAll('#serviceModal [data-service-kind]:checked')].map(el=>{
+    const arr=el.dataset.serviceKind==="base"?SERVICE_BASE_ITEMS:SERVICE_INSPECTION_ITEMS;
+    return arr[Number(el.dataset.serviceIndex)];
+  }).filter(Boolean);
+  const checkedExtras=[...document.querySelectorAll('#serviceModal [data-service-task]:checked')].map(el=>el.dataset.serviceTask);
+  const notes=[];
+  if(checkedBase.length) notes.push(`Checkliste: ${checkedBase.join("; ")}`);
+  if(note) notes.push(note);
+  v.records.push({id:"rec_"+Date.now(),taskId:"service",taskName:"Motoröl + Ölfilter / Inspektion",date,mileage,cost,note:notes.join(" · ")});
+  checkedExtras.forEach((taskId,i)=>{
+    const rule=rules.find(r=>r.id===taskId);
+    if(!rule) return;
+    v.records.push({id:`rec_${Date.now()}_${i}`,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
+  });
+  if(mileage>Number(v.mileage||0)) v.mileage=mileage;
+  save();closeModal("serviceModal");renderAll();alert("Service und ausgewählte Zusatzarbeiten gespeichert.");
+}
+'''
+          replace_once(
+              'function renderAll(){',
+              insert_functions + '\nfunction renderAll(){',
+              'service functions')
+
+          replace_once(
+              '    document.getElementById("nextDueCard").onclick=()=>openEntry(next.rule.id);',
+              '    document.getElementById("nextDueCard").onclick=()=>next.rule.id==="service"?openServiceChecklist():openEntry(next.rule.id);',
+              'service next-card action')
+
+          replace_once(
+              '  document.getElementById("countDue").textContent=counts.due;',
+              '  renderServiceSummary(v);\n  document.getElementById("countDue").textContent=counts.due;',
+              'render service summary')
+
+          replace_once(
+              'document.getElementById("saveEntryBtn").onclick=saveEntry;',
+              'document.getElementById("saveEntryBtn").onclick=saveEntry;\ndocument.getElementById("saveServiceBtn").onclick=saveServiceChecklist;',
+              'service save handler')
+
+          path.write_text(text, encoding='utf-8')
+
+          readme=Path('README.md')
+          r=readme.read_text(encoding='utf-8')
+          feature='- Peugeot-orientierte **Service-Checkliste** mit Grundservice, Sicht-/Funktionskontrollen und automatisch fälligen Zusatzarbeiten\n'
+          marker='- Kompakte Startseitenkarte **Als Nächstes fällig**\n'
+          if feature not in r:
+              if marker not in r: raise SystemExit('README feature marker missing')
+              r=r.replace(marker,marker+feature,1)
+          source='\n## Service-Checkliste\n\nDie Service-Checkliste orientiert sich am veröffentlichten Peugeot-Serviceumfang: Fahrzeugprüfung, Flüssigkeitskontrolle/-ergänzung, Motoröl- und Ölfilterwechsel, Diagnose sowie Sicherheits-/Umweltkontrollen. Fällige Zusatzarbeiten werden aus dem jeweiligen Wartungsplan automatisch ergänzt. Die exakte VIN-spezifische Arbeitsliste kann in Peugeot Service Box abweichen.\n\nQuellen:\n- https://www.peugeot.co.uk/owners/assistance-and-warranty/service-contracts-and-warranty-extensions.html\n- https://public.servicebox.peugeot.com/aides/DOC_OI/AP/documents/de_DE/AIDE/9941/plan_entretien_apoi.html?id=sous_menu2%7C2_12\n'
+          if '## Service-Checkliste' not in r:
+              r=r.replace('\n## Peugeot 2008 BlueHDi 120 — 3003/AUH\n',source+'\n## Peugeot 2008 BlueHDi 120 — 3003/AUH\n',1)
+          readme.write_text(r,encoding='utf-8')
+          PY
+
+      - name: Verify checklist UI and JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          for required in ['serviceCard','serviceModal','serviceBaseList','serviceExtraList','saveServiceBtn']:
+              if f'id="{required}"' not in html:
+                  raise SystemExit(f'missing {required}')
+          scripts=re.findall(r'<script>(.*?)</script>',html,flags=re.S)
+          if len(scripts)!=1: raise SystemExit('expected one inline script')
+          Path('/tmp/carservice.js').write_text(scripts[0],encoding='utf-8')
+          PY
+          node --check /tmp/carservice.js
+          git diff --check
+
+      - name: Commit service checklist
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/assets/index.html README.md
+          git commit -m 'Add Peugeot-style service checklist'
+          git push
