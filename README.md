@@ -15,7 +15,6 @@ Die feste Zuordnung der Fahrzeugtypen zu den erlaubten Wartungsprofilen ist zus�
 - Berechnung nach Kilometerstand und Datum – es zählt der zuerst erreichte Grenzwert
 - Service-Historie mit Datum, Kilometerstand, Kosten und Notizen
 - HU/AU (TÜV) mit frei eintragbarem nächsten Termin; nach eingetragener HU wird automatisch +24 Monate berechnet
-- Schnelländerung des Kilometerstands
 - Fahrzeugdaten mit HSN/TSN, Kennzeichen, FIN/VIN, Erstzulassung und HU-Termin
 - Kompakte Startseitenkarte **Als Nächstes fällig**
 - Peugeot-orientierte **Service-Checkliste** mit Grundservice, Sicht-/Funktionskontrollen und automatisch fälligen Zusatzarbeiten
