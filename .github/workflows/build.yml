@@ -124,11 +124,26 @@ jobs:
 
       - name: Sign and verify APK
         run: |
+          set -euo pipefail
+          LOG="$RUNNER_TEMP/sign.log"
+          report() {
+            code=$?
+            sleep 1
+            MSG=$(tail -n 40 "$LOG" 2>/dev/null | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Signierschritt fehlgeschlagen (exit ${code})::${MSG}"
+          }
+          trap report ERR
+          exec > >(tee "$LOG") 2>&1
+
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
+          echo "apksigner: $APKSIGNER"
           test -x "$APKSIGNER"
+          ls -l app/build/outputs/apk/release
           UNSIGNED=$(find app/build/outputs/apk/release -type f -name '*.apk' | head -1)
+          echo "unsigned: $UNSIGNED"
           test -n "$UNSIGNED"
           OUT="app/build/outputs/apk/release/CarService.apk"
+          rm -f "$OUT"
           "$APKSIGNER" sign \
             --ks "$HOME/.android/debug.keystore" \
             --ks-key-alias androiddebugkey \
@@ -136,10 +151,11 @@ jobs:
             --key-pass pass:android \
             --out "$OUT" \
             "$UNSIGNED"
-          "$APKSIGNER" verify --verbose --print-certs "$OUT"
-          APK_FP=$("$APKSIGNER" verify --print-certs "$OUT" | awk -F': ' '/certificate SHA-1 digest/ {print toupper($2); exit}')
-          APK_FP=${APK_FP//:/}
+          "$APKSIGNER" verify --verbose --print-certs "$OUT" > "$RUNNER_TEMP/verify.txt" 2>&1 || { cat "$RUNNER_TEMP/verify.txt"; exit 1; }
+          cat "$RUNNER_TEMP/verify.txt"
+          APK_FP=$(grep -i 'certificate SHA-1 digest' "$RUNNER_TEMP/verify.txt" | head -1 | sed 's/.*: *//' | tr -d ':' | tr 'a-f' 'A-F')
           EXPECTED="90D794A69CA8588815183EFA111202D654A9218C"
+          echo "APK fingerprint: $APK_FP"
           if [ "$APK_FP" != "$EXPECTED" ]; then
             echo "ERROR: APK signature fingerprint mismatch: $APK_FP"
             exit 1
