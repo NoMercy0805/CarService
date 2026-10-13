@@ -1,0 +1,135 @@
+name: Fix CarService service checklist routing
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-service-checklist.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fix Peugeot service checklist routing and wording
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/src/main/assets/index.html')
+          text = path.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly one match, found {count}')
+              text = text.replace(old, new, 1)
+
+          replace_once(
+'''const SERVICE_BASE_ITEMS = [
+  "Motoröl wechseln",
+  "Ölfilter ersetzen",
+  "Fahrzeug-Gesamtprüfung",
+  "Flüssigkeitsstände prüfen und ggf. auffüllen",
+  "Diagnose / Fehlerspeicher prüfen",
+  "Sicherheits- und Umweltkontrollen"
+];
+const SERVICE_INSPECTION_ITEMS = [
+  "Bremsen prüfen",
+  "Reifen: Zustand, Profiltiefe und Luftdruck",
+  "Beleuchtung, Hupe und elektrische Funktionen",
+  "Wischer und Waschanlage",
+  "Batterie und Anschlüsse",
+  "Lenkung, Fahrwerk und Manschetten",
+  "Nebenaggregateriemen sichtprüfen",
+  "Undichtigkeiten, Unterboden und Abgasanlage"
+];''',
+'''const SERVICE_BASE_ITEMS = [
+  "Motoröl wechseln",
+  "Ölfilter ersetzen",
+  "Flüssigkeitsstände prüfen und ggf. auffüllen",
+  "Elektronische Diagnose / Fehlerspeicher prüfen",
+  "Dieselfilter entwässern (falls vorgesehen)",
+  "Serviceanzeige zurücksetzen"
+];
+const SERVICE_INSPECTION_ITEMS = [
+  "Innenraum: Hupe und Feststellbremse prüfen",
+  "Reifen: Zustand, Profiltiefe und Luftdruck prüfen",
+  "Beleuchtung und Signalanlage prüfen",
+  "Unterboden: Bremsanlage und Lenkung prüfen",
+  "Dichtheit von Leitungen, Kreisläufen und Getriebe prüfen",
+  "Pannenset / Reifendichtmittel: Verfallsdatum prüfen (falls vorhanden)",
+  "Scheibenwischer und Waschanlage prüfen",
+  "Batterie und Anschlüsse sichtprüfen"
+];''',
+              'service checklist wording')
+
+          replace_once(
+'''function openEntry(taskId){
+  const v=vehicle(),rules=rulesFor(v),sel=document.getElementById("entryTask");
+  sel.innerHTML=rules.map(r=>`<option value="${r.id}" ${r.id===taskId?"selected":""}>${r.icon} ${esc(r.name)}</option>`).join("");
+  document.getElementById("entryDate").value=today();
+  document.getElementById("entryMileage").value=v.mileage||"";
+  document.getElementById("entryCost").value="";
+  document.getElementById("entryNote").value="";
+  openModal("entryModal");
+}''',
+'''function openEntry(taskId){
+  if(taskId==="service"){openServiceChecklist();return;}
+  const v=vehicle(),rules=rulesFor(v),sel=document.getElementById("entryTask");
+  sel.innerHTML=`<option value="">Wartung auswählen …</option>`+rules.map(r=>`<option value="${r.id}" ${r.id===taskId?"selected":""}>${r.icon} ${esc(r.name)}</option>`).join("");
+  document.getElementById("entryDate").value=today();
+  document.getElementById("entryMileage").value=v.mileage||"";
+  document.getElementById("entryCost").value="";
+  document.getElementById("entryNote").value="";
+  sel.onchange=()=>{if(sel.value==="service"){closeModal("entryModal");openServiceChecklist();}};
+  openModal("entryModal");
+}''',
+              'service entry routing')
+
+          replace_once(
+'''  const taskId=document.getElementById("entryTask").value;
+  const rule=rulesFor(v).find(r=>r.id===taskId);''',
+'''  const taskId=document.getElementById("entryTask").value;
+  if(!taskId){alert("Bitte eine Wartung auswählen.");return;}
+  if(taskId==="service"){closeModal("entryModal");openServiceChecklist();return;}
+  const rule=rulesFor(v).find(r=>r.id===taskId);''',
+              'generic entry validation')
+
+          replace_once(
+'''  document.querySelectorAll(".task[data-task]").forEach(el=>el.onclick=()=>openEntry(el.dataset.task));''',
+'''  document.querySelectorAll(".task[data-task]").forEach(el=>el.onclick=()=>el.dataset.task==="service"?openServiceChecklist():openEntry(el.dataset.task));''',
+              'maintenance task routing')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>(.*?)</script>', html, flags=re.S)
+          if len(scripts) != 1:
+              raise SystemExit(f'expected one inline script, found {len(scripts)}')
+          Path('/tmp/carservice.js').write_text(scripts[0], encoding='utf-8')
+          if 'if(taskId==="service"){openServiceChecklist();return;}' not in html:
+              raise SystemExit('service routing fix missing')
+          PY
+          node --check /tmp/carservice.js
+
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/src/main/assets/index.html
+          git diff --cached --check
+          git commit -m 'Route service entries through Peugeot checklist'
+          git push
