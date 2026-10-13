@@ -31,7 +31,7 @@ button{border:0}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 4px 14px}.top-actions{display:flex;gap:8px;align-items:center}
 .brand h1{margin:0;font-size:28px;letter-spacing:-.7px}.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
 .icon-btn{width:42px;height:42px;border-radius:14px;background:var(--surface2);box-shadow:var(--shadow);color:var(--ink);display:grid;place-items:center;font-size:19px}
-.vehicle-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:hidden;padding:2px 2px 12px}.vehicle-tabs::-webkit-scrollbar{display:none}.vehicle-tab{min-width:0;width:100%;text-align:left;padding:12px 11px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink);border:1px solid transparent;overflow:hidden}.vehicle-tab.active{border-color:var(--primary);background:var(--primary-soft)}.vehicle-tab strong{display:block;font-size:14px;line-height:1.2;white-space:normal}.vehicle-tab span{display:block;color:var(--muted);font-size:11px;line-height:1.3;margin-top:4px;white-space:normal;overflow-wrap:anywhere}
+.vehicle-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:hidden;padding:2px 2px 12px}.vehicle-tabs::-webkit-scrollbar{display:none}.vehicle-tab{min-width:0;width:100%;text-align:left;padding:12px 11px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink);border:1px solid transparent;overflow:hidden}.vehicle-tab.active{border-color:var(--primary);background:var(--primary-soft)}.vehicle-tab strong{display:block;font-size:14px;line-height:1.2;white-space:normal}.vehicle-plate{display:block;margin-top:4px;font-size:12px;font-weight:750;line-height:1.2;white-space:nowrap;color:var(--ink)}.vehicle-tab span{display:block;color:var(--muted);font-size:11px;line-height:1.3;margin-top:4px;white-space:normal;overflow-wrap:anywhere}
 .page{display:none}.page.active{display:block}
 .hero{background:var(--hero);color:var(--hero-text);border-radius:22px;padding:20px;margin:2px 0 14px;box-shadow:var(--shadow)}
 .hero-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.hero h2{font-size:22px;margin:0}.hero .sub{font-size:13px;color:var(--hero-sub);margin-top:5px}
@@ -601,7 +601,7 @@ function renderAll(){
 }
 function renderTabs(){
   const box=document.getElementById("vehicleTabs");
-  box.innerHTML=state.vehicles.map(v=>`<button class="vehicle-tab ${v.id===state.selectedVehicle?"active":""}" data-vehicle="${v.id}"><strong>${esc(v.name)}${v.licensePlate?` · ${esc(v.licensePlate)}`:""}</strong><span>${esc(v.subtitle)} · ${esc(v.hsn)}/${esc(v.tsn)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`).join("");
+  box.innerHTML=state.vehicles.map(v=>`<button class="vehicle-tab ${v.id===state.selectedVehicle?"active":""}" data-vehicle="${v.id}"><strong>${esc(v.name)}</strong>${v.licensePlate?`<small class="vehicle-plate">${esc(v.licensePlate)}</small>`:""}<span>${esc(v.subtitle)} · ${esc(v.hsn)}/${esc(v.tsn)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`).join("");
   box.querySelectorAll("[data-vehicle]").forEach(b=>b.onclick=()=>{state.selectedVehicle=b.dataset.vehicle;save();renderAll();});
 }
 function renderDashboard(){
