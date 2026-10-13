@@ -17,6 +17,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate vehicle/profile mapping
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          mapping = json.loads(Path('vehicle-identification.json').read_text())['vehicles']
+          html = Path('app/src/main/assets/index.html').read_text()
+
+          assert mapping['508']['hsn'] == '3003' and mapping['508']['tsn'] == 'AOK'
+          assert mapping['508']['profiles'] == ['508_early', '508_late']
+          assert mapping['2008']['hsn'] == '3003' and mapping['2008']['tsn'] == 'AUH'
+          assert mapping['2008']['profiles'] == ['2008_normal', '2008_severe']
+
+          assert 'const options=v.id==="508"?["508_early","508_late"]:["2008_normal","2008_severe"];' in html
+          assert 'id:"508",name:"Peugeot 508 SW"' in html and 'profile:"508_late"' in html
+          assert 'id:"2008",name:"Peugeot 2008"' in html and 'profile:"2008_normal"' in html
+
+          print('Vehicle/profile mapping OK: 3003/AOK -> 508 profiles; 3003/AUH -> 2008 profiles')
+          PY
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -37,6 +58,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate vehicle/profile mapping
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          mapping = json.loads(Path('vehicle-identification.json').read_text())['vehicles']
+          html = Path('app/src/main/assets/index.html').read_text()
+
+          assert mapping['508']['hsn'] == '3003' and mapping['508']['tsn'] == 'AOK'
+          assert mapping['508']['profiles'] == ['508_early', '508_late']
+          assert mapping['2008']['hsn'] == '3003' and mapping['2008']['tsn'] == 'AUH'
+          assert mapping['2008']['profiles'] == ['2008_normal', '2008_severe']
+
+          assert 'const options=v.id==="508"?["508_early","508_late"]:["2008_normal","2008_severe"];' in html
+          assert 'id:"508",name:"Peugeot 508 SW"' in html and 'profile:"508_late"' in html
+          assert 'id:"2008",name:"Peugeot 2008"' in html and 'profile:"2008_normal"' in html
+
+          print('Vehicle/profile mapping OK: 3003/AOK -> 508 profiles; 3003/AUH -> 2008 profiles')
+          PY
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
