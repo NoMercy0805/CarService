@@ -122,7 +122,7 @@ button{border:0}
 
       <details class="maintenance-details" id="maintenanceDetails">
         <summary><span><b>Wartungsplan</b><small>Alle Wartungspunkte und Intervalle</small></span><span>⌄</span></summary>
-        <div class="section-head"><h3>Alle Wartungen</h3><button id="openLogBtn">Erledigt eintragen</button></div>
+        <div class="section-head"><h3>Alle Wartungen</h3></div>
         <div class="chips" id="filterChips">
           <button class="chip active" data-filter="all">Alle</button>
           <button class="chip" data-filter="due">Fällig</button>
@@ -806,7 +806,6 @@ async function backupAction(){
 document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
 document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id);}));
-document.getElementById("openLogBtn").onclick=()=>openEntry();
 document.getElementById("historyAddBtn").onclick=()=>openEntry();
 document.getElementById("historyMenuBtn").onclick=()=>showPage("history");
 document.getElementById("settingsMenuBtn").onclick=openSettings;
