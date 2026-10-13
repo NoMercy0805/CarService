@@ -113,24 +113,16 @@ button{border:0}
         <div class="section-head"><h3>Nächster Service</h3></div>
         <div class="next-service-due" id="nextServiceDue">Wird berechnet …</div>
         <div class="next-service-list" id="nextServiceList"></div>
-        <button class="primary-btn" id="nextServiceChecklistBtn">Service-Checkliste öffnen</button>
       </div>
     </section>
 
     <section class="page" id="page-service">
       <div class="section-head"><h3>Peugeot-Service</h3></div>
       <div class="panel">
-        <div class="service-note" id="serviceDueSummary"></div>
         <div class="check-section"><h4>Grundservice</h4><div id="serviceBaseList"></div></div>
         <div class="check-section"><h4>Sicht- und Funktionskontrollen</h4><div id="serviceInspectionList"></div></div>
         <div class="check-section"><h4>Bei diesem Service fällige Zusatzarbeiten</h4><div id="serviceExtraList"></div></div>
-        <div class="row2">
-          <div class="field"><label>Datum</label><input id="serviceDate" class="input" type="date"></div>
-          <div class="field"><label>Kilometerstand</label><input id="serviceMileage" class="input" type="number" inputmode="numeric" min="0"></div>
-        </div>
-        <div class="field"><label>Kosten (€) – optional</label><input id="serviceCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>
-        <div class="field"><label>Notiz – optional</label><textarea id="serviceNote" class="input" rows="3" placeholder="z. B. Werkstatt, Öl-Spezifikation, Besonderheiten …"></textarea></div>
-        <button class="primary-btn" id="saveServiceBtn">Service bestätigen und speichern</button>
+        <button class="primary-btn" id="confirmServiceChecklistBtn">Service bestätigen</button>
       </div>
     </section>
 
@@ -236,6 +228,21 @@ button{border:0}
   <div class="settings-panel">
     <div class="settings-panel-head"><button class="settings-back-btn" data-back-settings aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Wartungsinformationen</h2><span class="settings-head-spacer"></span></div>
     <div class="settings-sub-body" id="settingsInfoPanel"><p class="settings-sub-note">Die App ist eine Erinnerungs- und Dokumentationshilfe. Beim Peugeot 508 von 2012 entscheidet der Produktionszeitraum bzw. die OPR/DAM-Nummer über den Wartungsplan. Die Erstzulassung allein ist dafür nicht zuverlässig.</p></div>
+  </div>
+</div>
+
+
+<div class="modal-backdrop" id="serviceConfirmModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3>Service bestätigen</h3><button class="close" data-close="serviceConfirmModal">×</button></div>
+    <div class="row2">
+      <div class="field"><label>Datum</label><input id="serviceDate" class="input" type="date"></div>
+      <div class="field"><label>Kilometerstand</label><input id="serviceMileage" class="input" type="number" inputmode="numeric" min="0"></div>
+    </div>
+    <div class="field"><label>Kosten (€) – optional</label><input id="serviceCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>
+    <div class="field"><label>Notiz – optional</label><textarea id="serviceNote" class="input" rows="3" placeholder="z. B. Werkstatt, Öl-Spezifikation, Besonderheiten …"></textarea></div>
+    <button class="primary-btn" id="saveServiceBtn">Bestätigen und speichern</button>
   </div>
 </div>
 
@@ -503,20 +510,20 @@ function checklistRows(items,kind){
 }
 function openServiceChecklist(){
   const v=vehicle();
-  const {serviceInfo,extras}=servicePlan(v);
-  const pieces=[];
-  if(serviceInfo&&serviceInfo.dueKm!==null&&serviceInfo.dueKm!==undefined) pieces.push(`${fmtKm(serviceInfo.dueKm)} km`);
-  if(serviceInfo&&serviceInfo.dueDate) pieces.push(fmtDate(serviceInfo.dueDate));
-  document.getElementById("serviceDueSummary").innerHTML=`<b>${esc(v.name)}</b><br>${pieces.length?`Nächster Service: ${pieces.join(" oder ")}`:"Für die genaue Berechnung bitte Kilometerstand und Erstzulassung ergänzen."}`;
+  const {extras}=servicePlan(v);
   document.getElementById("serviceBaseList").innerHTML=checklistRows(SERVICE_BASE_ITEMS,"base");
   document.getElementById("serviceInspectionList").innerHTML=checklistRows(SERVICE_INSPECTION_ITEMS,"inspection");
   const box=document.getElementById("serviceExtraList");
-  box.innerHTML=extras.length?extras.map(({rule,info})=>`<label class="check-row"><input type="checkbox" data-service-task="${esc(rule.id)}" checked><span><b>${rule.icon} ${esc(rule.name)}</b><small>${esc(info.detail||info.label||"")}</small></span></label>`).join(""):`<div class="small-note">Für diesen Service sind nach den hinterlegten Intervallen keine weiteren Austausch-/Prüfarbeiten eingeplant.</div>`;
+  box.innerHTML=extras.length?extras.map(({rule,info})=>`<label class="check-row"><input type="checkbox" data-service-task="${esc(rule.id)}" checked><span><b>${rule.icon} ${esc(rule.name)}</b><small>${esc(info.detail||info.label||"")}</small></span></label>`).join(""):`<div class="small-note">Für diesen Service sind keine weiteren Zusatzarbeiten fällig.</div>`;
+  showPage("service");
+}
+function openServiceConfirm(){
+  const v=vehicle();
   document.getElementById("serviceDate").value=today();
   document.getElementById("serviceMileage").value=v.mileage||"";
   document.getElementById("serviceCost").value="";
   document.getElementById("serviceNote").value="";
-  showPage("service");
+  openModal("serviceConfirmModal");
 }
 function saveServiceChecklist(){
   const v=vehicle(),rules=rulesFor(v);
@@ -542,7 +549,7 @@ function saveServiceChecklist(){
     v.records.push({id:`${serviceGroup}_${i}`,serviceGroup,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
   });
   if(mileage>Number(v.mileage||0)) v.mileage=mileage;
-  save();renderAll();openServiceChecklist();alert("Service und ausgewählte Zusatzarbeiten gespeichert.");
+  save();closeModal("serviceConfirmModal");renderAll();openServiceChecklist();alert("Service und ausgewählte Zusatzarbeiten gespeichert.");
 }
 
 function renderAll(){
@@ -798,7 +805,7 @@ document.getElementById("settingsOverlay").addEventListener("click",e=>{if(e.tar
 document.querySelectorAll('[id^="settingsSubOverlay-"]').forEach(sub=>sub.addEventListener("click",e=>{if(e.target===sub)sub.classList.remove("open");}));
 document.getElementById("saveEntryBtn").onclick=saveEntry;
 document.getElementById("saveServiceBtn").onclick=saveServiceChecklist;
-document.getElementById("nextServiceChecklistBtn").onclick=openServiceChecklist;
+document.getElementById("confirmServiceChecklistBtn").onclick=openServiceConfirm;
 document.getElementById("settingsVehicle").onchange=e=>{state.selectedVehicle=e.target.value;save();renderAll();};
 document.getElementById("saveVehicleSettings").onclick=saveVehicleSettings;
 document.getElementById("addCustomTaskBtn").onclick=()=>{document.getElementById("customName").value="";document.getElementById("customKm").value="";document.getElementById("customMonths").value="";openModal("customModal");};
