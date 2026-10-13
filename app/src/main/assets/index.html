@@ -73,6 +73,7 @@ button{border:0}
 .handle{width:42px;height:5px;border-radius:5px;background:var(--rule);margin:2px auto 14px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.modal-head h3{margin:0;font-size:19px}.close{width:34px;height:34px;border-radius:50%;background:var(--paper);color:var(--ink)}
 .theme-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.theme-pills button{padding:10px;border-radius:12px;background:var(--paper);color:var(--ink)}.theme-pills button.active{background:var(--primary);color:#fff}
 .small-note{font-size:11px;color:var(--muted);line-height:1.5}
+.next-service-panel{margin-bottom:16px}.next-service-panel .section-head{margin-top:0}.next-service-due{background:var(--primary-soft);color:var(--ink);border-radius:13px;padding:11px 12px;margin-bottom:10px;font-size:12px;line-height:1.45}.next-service-list{display:flex;flex-direction:column;margin:2px 0 8px}.next-service-item{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:start;padding:10px 2px;border-bottom:1px solid var(--rule)}.next-service-item:last-child{border-bottom:0}.next-service-item .mark{width:24px;height:24px;border-radius:8px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:12px;font-weight:800}.next-service-item b{font-size:13px}.next-service-item small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}
 .settings-overlay{display:none;position:fixed;inset:0;background:rgba(20,20,22,.45);align-items:center;justify-content:center;padding:20px;z-index:1000;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .settings-overlay.open{display:flex;animation:settingsFade .15s ease}.settings-panel{background:var(--surface2);border:1px solid rgba(255,255,255,.5);border-radius:26px;padding:22px;width:min(400px,100%);max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.25);animation:settingsPop .22s cubic-bezier(.4,0,.2,1)}html[data-theme="dark"] .settings-panel{border-color:rgba(255,255,255,.16)}
 .settings-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;min-height:42px}.settings-panel-head h2{font-size:19px;font-weight:800;color:var(--ink);margin:0;text-align:center}.settings-close-btn{background:var(--paper);border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:8px 13px;border-radius:50%}.settings-back-btn{background:var(--paper);border:none;color:var(--muted);cursor:pointer;padding:9px;border-radius:50%;width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center}.settings-head-spacer{width:36px;height:36px;flex-shrink:0}
@@ -108,30 +109,12 @@ button{border:0}
         </div>
       </div>
 
-      <div class="summary">
-        <div class="stat due"><b id="countDue">0</b><span>fällig</span></div>
-        <div class="stat soon"><b id="countSoon">0</b><span>bald</span></div>
-        <div class="stat ok"><b id="countOk">0</b><span>okay</span></div>
+      <div class="panel next-service-panel">
+        <div class="section-head"><h3>Nächster Service</h3></div>
+        <div class="next-service-due" id="nextServiceDue">Wird berechnet …</div>
+        <div class="next-service-list" id="nextServiceList"></div>
+        <button class="primary-btn" id="nextServiceChecklistBtn">Service-Checkliste öffnen</button>
       </div>
-
-      <div class="next-card" id="nextDueCard">
-        <div class="next-icon" id="nextDueIcon">◷</div>
-        <div><h3 id="nextDueTitle">Als Nächstes fällig</h3><p id="nextDueText">Wird berechnet …</p></div>
-        <span class="badge unknown" id="nextDueBadge">Offen</span>
-      </div>
-
-      <details class="maintenance-details" id="maintenanceDetails">
-        <summary><span><b>Wartungsplan</b><small>Alle Wartungspunkte und Intervalle</small></span><span>⌄</span></summary>
-        <div class="section-head"><h3>Alle Wartungen</h3></div>
-        <div class="chips" id="filterChips">
-          <button class="chip active" data-filter="all">Alle</button>
-          <button class="chip" data-filter="due">Fällig</button>
-          <button class="chip" data-filter="soon">Bald</button>
-          <button class="chip" data-filter="ok">Okay</button>
-          <button class="chip" data-filter="unknown">Offen</button>
-        </div>
-        <div class="task-list" id="taskList"></div>
-      </details>
     </section>
 
     <section class="page" id="page-service">
@@ -510,7 +493,7 @@ function servicePlan(v){
   const serviceRule=rules.find(r=>r.id==="service");
   const serviceInfo=serviceRule?dueInfo(v,serviceRule):null;
   const extras=rules.filter(rule=>{
-    if(rule.id==="service"||rule.id==="hu"||rule.custom||rule.manual) return false;
+    if(rule.id==="service"||rule.id==="hu"||rule.manual) return false;
     const info=dueInfo(v,rule);
     if(info.status==="due"||info.status==="soon") return true;
     if(serviceInfo&&serviceInfo.dueKm!==null&&serviceInfo.dueKm!==undefined&&info.dueKm!==null&&info.dueKm!==undefined&&Number(info.dueKm)<=Number(serviceInfo.dueKm)) return true;
@@ -597,7 +580,7 @@ function renderTabs(){
   box.querySelectorAll("[data-vehicle]").forEach(b=>b.onclick=()=>{state.selectedVehicle=b.dataset.vehicle;save();renderAll();});
 }
 function renderDashboard(){
-  const v=vehicle(), rules=rulesFor(v);
+  const v=vehicle();
   document.getElementById("heroName").textContent=v.name;
   document.getElementById("heroSub").innerHTML=`${esc(v.subtitle)}<div class="vehicle-id">${v.licensePlate?`Kennzeichen ${esc(v.licensePlate)} · `:""}HSN/TSN ${esc(v.hsn)}/${esc(v.tsn)}${v.huDue?` · HU ${fmtDate(v.huDue)}`:""}</div>`;
   document.getElementById("heroKm").textContent=v.mileage?fmtKm(v.mileage)+" km":"noch nicht eingetragen";
@@ -606,55 +589,34 @@ function renderDashboard(){
   if(!v.mileage) missing.push("Kilometerstand");
   if(!v.firstReg) missing.push("Erstzulassung");
   if(!v.huDue) missing.push("HU-Termin");
-  notice.innerHTML=missing.length?`<div class="notice"><b>Noch unvollständig:</b> ${missing.join(", ")}. Für genaue Fälligkeiten bitte unter Fahrzeugdaten ergänzen.</div>`:"";
-  const enriched=rules.map(rule=>({rule,info:dueInfo(v,rule)}));
-  const counts={due:0,soon:0,ok:0};
-  enriched.forEach(x=>{if(counts[x.info.status]!==undefined)counts[x.info.status]++;});
-  const nextRank={due:0,soon:1,ok:2};
-  const nextCandidates=enriched.filter(x=>nextRank[x.info.status]!==undefined).sort((a,b)=>{
-    const sr=nextRank[a.info.status]-nextRank[b.info.status];
-    if(sr) return sr;
-    const as=Math.min(a.info.dayLeft??999999,(a.info.kmLeft??999999)/100);
-    const bs=Math.min(b.info.dayLeft??999999,(b.info.kmLeft??999999)/100);
-    return as-bs;
-  });
-  const next=nextCandidates[0]||null;
-  const nextTitle=document.getElementById("nextDueTitle"),nextText=document.getElementById("nextDueText"),nextBadge=document.getElementById("nextDueBadge"),nextIcon=document.getElementById("nextDueIcon");
-  if(next){
-    nextTitle.textContent=next.rule.name;
-    nextText.textContent=(next.info.detail||"Nächste Wartung")+(shortRemaining(next.info)?` · ${shortRemaining(next.info)}`:"");
-    nextBadge.textContent=next.info.label;
-    nextBadge.className=`badge ${next.info.status}`;
-    nextIcon.textContent=next.rule.icon;
-    document.getElementById("nextDueCard").onclick=()=>next.rule.id==="service"?openServiceChecklist():openEntry(next.rule.id);
-  }else{
-    nextTitle.textContent="Als Nächstes fällig";nextText.textContent="Noch keine Fälligkeit berechenbar – Kilometerstand und Termine ergänzen.";nextBadge.textContent="Offen";nextBadge.className="badge unknown";nextIcon.textContent="◷";document.getElementById("nextDueCard").onclick=null;
-  }
+  notice.innerHTML=missing.length?`<div class="notice"><b>Noch unvollständig:</b> ${missing.join(", ")}. Für die automatische Serviceplanung bitte unter Fahrzeugdaten ergänzen.</div>`:"";
+  renderNextServicePlan(v);
   renderServiceSummary(v);
-  document.getElementById("countDue").textContent=counts.due;
-  document.getElementById("countSoon").textContent=counts.soon;
-  document.getElementById("countOk").textContent=counts.ok;
-  const rank={due:0,soon:1,unknown:2,manual:3,ok:4};
-  let filtered=enriched.filter(x=>state.filter==="all" || (state.filter==="unknown"?(x.info.status==="unknown"||x.info.status==="manual"):x.info.status===state.filter));
-  filtered.sort((a,b)=>(rank[a.info.status]-rank[b.info.status])||a.rule.name.localeCompare(b.rule.name,"de"));
-  document.getElementById("taskList").innerHTML=filtered.length?filtered.map(({rule,info})=>`
-    <div class="task" data-task="${esc(rule.id)}">
-      <div class="dot ${info.status}">${rule.icon}</div>
-      <div><h4>${esc(rule.name)}${rule.important?" · wichtig":""}</h4><div class="meta">${esc(info.detail||rule.note||"")}</div></div>
-      <div class="right"><span class="badge ${info.status}">${esc(info.label)}</span><div class="due-text">${shortRemaining(info)}</div></div>
-    </div>`).join(""):`<div class="empty">Keine Einträge in diesem Filter.</div>`;
-  document.querySelectorAll(".task[data-task]").forEach(el=>el.onclick=()=>el.dataset.task==="service"?openServiceChecklist():openEntry(el.dataset.task));
-  document.querySelectorAll("#filterChips .chip").forEach(c=>c.classList.toggle("active",c.dataset.filter===state.filter));
 }
-function shortRemaining(info){
-  if(info.status==="manual"||info.status==="unknown") return "";
-  if(info.status==="due"){
-    const xs=[];if(info.kmLeft!==undefined&&info.kmLeft!==null&&info.kmLeft<=0)xs.push(`${fmtKm(Math.abs(info.kmLeft))} km drüber`);
-    if(info.dayLeft!==undefined&&info.dayLeft!==null&&info.dayLeft<=0)xs.push(`${Math.abs(info.dayLeft)} T. drüber`);
-    return xs[0]||"jetzt";
+function renderNextServicePlan(v){
+  const {serviceInfo,extras}=servicePlan(v);
+  const due=document.getElementById("nextServiceDue");
+  const list=document.getElementById("nextServiceList");
+  if(!serviceInfo){
+    due.innerHTML="<b>Nächster Service noch nicht berechenbar.</b><br>Bitte Kilometerstand und Fahrzeugdaten ergänzen.";
+  }else{
+    const last=lastRecord(v,"service");
+    const target=[];
+    if(serviceInfo.dueKm!==null&&serviceInfo.dueKm!==undefined) target.push(`${fmtKm(serviceInfo.dueKm)} km`);
+    if(serviceInfo.dueDate) target.push(fmtDate(serviceInfo.dueDate));
+    const lastText=last?`Letzter Service: ${fmtDate(last.date)} · ${fmtKm(last.mileage)} km.<br>`:"Noch kein Service gespeichert.<br>";
+    due.innerHTML=`<b>${lastText}</b>Nächster Service: ${target.length?target.join(" oder "):"nach hinterlegtem Wartungsplan"}.`;
   }
-  const xs=[];if(info.kmLeft!==undefined&&info.kmLeft!==null)xs.push(`noch ${fmtKm(info.kmLeft)} km`);if(info.dayLeft!==undefined&&info.dayLeft!==null)xs.push(`noch ${info.dayLeft} T.`);
-  return xs[0]||"";
+  const baseItems=[
+    ...SERVICE_BASE_ITEMS.map(name=>({name,note:"Grundservice"})),
+    ...SERVICE_INSPECTION_ITEMS.map(name=>({name,note:"Prüfung"}))
+  ];
+  const extraItems=extras.map(({rule,info})=>({
+    name:`${rule.icon||"🔧"} ${rule.name}`,
+    note:info&&info.detail?`Zusatzarbeit · ${info.detail}`:"Zusatzarbeit"
+  }));
+  const items=[...baseItems,...extraItems];
+  list.innerHTML=items.map(item=>`<div class="next-service-item"><span class="mark">✓</span><span><b>${esc(item.name)}</b><small>${esc(item.note)}</small></span></div>`).join("");
 }
 function renderHistory(){
   const v=vehicle();
@@ -818,7 +780,7 @@ document.getElementById("saveEntryBtn").onclick=saveEntry;
 document.getElementById("saveServiceBtn").onclick=saveServiceChecklist;
 document.getElementById("serviceTabOpenBtn").onclick=openServiceChecklist;
 document.getElementById("serviceTabChecklistBtn").onclick=openServiceChecklist;
-document.getElementById("filterChips").onclick=e=>{const b=e.target.closest("[data-filter]");if(!b)return;state.filter=b.dataset.filter;save();renderDashboard();};
+document.getElementById("nextServiceChecklistBtn").onclick=openServiceChecklist;
 document.getElementById("settingsVehicle").onchange=e=>{state.selectedVehicle=e.target.value;save();renderAll();};
 document.getElementById("saveVehicleSettings").onclick=saveVehicleSettings;
 document.getElementById("addCustomTaskBtn").onclick=()=>{document.getElementById("customName").value="";document.getElementById("customKm").value="";document.getElementById("customMonths").value="";openModal("customModal");};
