@@ -626,7 +626,7 @@ function serviceChecklistRows(items){
   return items.map((item,i)=>`<label class="check-row"><input type="checkbox" ${item.taskId?`data-service-task="${esc(item.taskId)}"`:`data-service-systematic="${i}"`}><span><b>${esc(item.name)}</b>${item.detail?`<small>${esc(item.detail)}</small>`:""}</span></label>`).join("");
 }
 function serviceGroupFor(item){
-  const id=item.taskId||"";
+  const id=item.taskId||item.id||"";
   const name=item.name||"";
   if(["fuel","air","cabin"].includes(id)||/motoröl|ölfilter|filter/i.test(name)) return "Öl & Filter";
   if(["brakefluid","coolantph"].includes(id)||/flüssigkeit|kühlmittel/i.test(name)) return "Flüssigkeiten";
@@ -640,6 +640,12 @@ function serviceChecklistGrouped(items){
   const groups={};
   items.forEach(item=>{const g=serviceGroupFor(item);(groups[g]||(groups[g]=[])).push(item);});
   return order.filter(g=>groups[g]?.length).map(g=>`<div class="service-group"><div class="service-group-title">${esc(g)}</div>${serviceChecklistRows(groups[g])}</div>`).join("");
+}
+function nextServiceGrouped(items){
+  const order=["Öl & Filter","Flüssigkeiten","Riemen","Abgas & AdBlue","Kontrollen","Weitere Arbeiten"];
+  const groups={};
+  items.forEach(item=>{const g=serviceGroupFor(item);(groups[g]||(groups[g]=[])).push(item);});
+  return order.filter(g=>groups[g]?.length).map(g=>`<div class="service-group"><div class="service-group-title">${esc(g)}</div>${groups[g].map(item=>`<div class="next-service-item"><b>${esc(item.name)}</b><small>${esc(item.note)}</small></div>`).join("")}</div>`).join("");
 }
 function openServiceChecklist(){
   const v=vehicle();
@@ -739,7 +745,7 @@ function renderNextServicePlan(v){
     ...extraItems
   ]:[];
   list.innerHTML=items.length
-    ?items.map(item=>`<div class="next-service-item"><b>${esc(item.name)}</b><small>${esc(item.note)}</small></div>`).join("")
+    ?nextServiceGrouped(items)
     :`<div class="small-note">Noch nicht berechenbar. Bitte Kilometerstand und Fahrzeugdaten ergänzen.</div>`;
 }
 function renderHistory(){
