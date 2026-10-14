@@ -56,7 +56,7 @@ button{border:0}
 .notice{background:var(--orange-soft);color:var(--ink);border-radius:15px;padding:13px 14px;margin-bottom:12px;font-size:12px;line-height:1.45}
 .history-list{display:flex;flex-direction:column;gap:9px}.history-empty,.empty{background:var(--surface2);border-radius:16px;padding:28px 18px;text-align:center;color:var(--muted);box-shadow:var(--shadow)}
 .record{background:var(--surface2);border-radius:16px;padding:14px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr auto;gap:12px}
-.record h4{margin:0 0 4px;font-size:14px}.record p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}.record .cost{font-weight:750;color:var(--ink)}.record-actions{display:flex;align-items:center;gap:9px}.history-delete-btn{width:34px;height:34px;border-radius:11px;background:var(--red-soft);color:var(--red);display:grid;place-items:center;font-size:15px;cursor:pointer}
+.record h4{margin:0 0 4px;font-size:14px}.record p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}.record .cost{font-weight:750;color:var(--ink)}.record-actions{display:flex;align-items:center;gap:9px}.history-edit-btn,.history-delete-btn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:15px;cursor:pointer}.history-edit-btn{background:var(--primary-soft);color:var(--primary)}.history-delete-btn{background:var(--red-soft);color:var(--red)}
 .panel{background:var(--surface2);box-shadow:var(--shadow);border-radius:18px;padding:16px;margin-bottom:12px}
 .panel h3{margin:0 0 13px;font-size:16px}.field{margin-bottom:12px}.field:last-child{margin-bottom:0}.field label{display:block;font-size:11px;color:var(--muted);margin:0 0 6px}
 .input,select,textarea{width:100%;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:12px;padding:11px 12px;outline:none}
@@ -295,6 +295,21 @@ html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16);box-
 </div>
 
 
+<div class="modal-backdrop" id="editHistoryModal">
+  <div class="modal">
+    <div class="handle"></div>
+    <div class="modal-head"><h3>Eintrag bearbeiten</h3><button class="close" data-close="editHistoryModal">×</button></div>
+    <div class="field"><label>Wartung / Reparatur</label><input id="editHistoryName" class="input" type="text"></div>
+    <div class="row2">
+      <div class="field"><label>Datum</label><input id="editHistoryDate" class="input" type="date"></div>
+      <div class="field"><label>Kilometerstand</label><input id="editHistoryMileage" class="input" type="number" inputmode="numeric" min="0"></div>
+    </div>
+    <div class="field"><label>Kosten (€) – optional</label><input id="editHistoryCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>
+    <div class="field"><label>Notiz – optional</label><textarea id="editHistoryNote" class="input" rows="3"></textarea></div>
+    <button class="primary-btn" id="saveHistoryEditBtn">Änderungen speichern</button>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="deleteHistoryModal">
   <div class="modal">
     <div class="handle"></div>
@@ -348,7 +363,7 @@ const MANUAL_PRESETS_COMMON = [
   "Bremsflüssigkeit wechseln",
   "Kühlmittel wechseln",
   "Zahnriemen + Wasserpumpe wechseln",
-  "Nebenaggregateriemen wechseln",
+  "Keilrippenriemen wechseln",
   "Batterie ersetzen",
   "Lichtmaschine ersetzen",
   "Anlasser ersetzen",
@@ -430,7 +445,7 @@ const BASE_RULES = {
     r("fapadd","FAP-Additivstand prüfen","",30000,0,{firstKm:90000}),
     r("dpf","Partikelfilter/FAP auf Beladung prüfen","",30000,0,{firstKm:180000}),
     r("timing","Zahnriemen + Wasserpumpe wechseln","",240000,120,{important:true}),
-    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",240000,120),
+    r("auxbelt","Keilrippenriemen wechseln","",240000,120),
     r("brakes","Bremsen prüfen","",0,0,{manual:true}),
     r("tires","Reifen / Profiltiefe / Luftdruck","",0,0,{manual:true}),
     r("battery","Batterie prüfen","",0,0,{manual:true}),
@@ -446,7 +461,7 @@ const BASE_RULES = {
     r("fapadd","FAP-Additivstand prüfen","",30000,0,{firstKm:90000}),
     r("dpf","Partikelfilter/FAP auf Beladung prüfen","",30000,0,{firstKm:180000}),
     r("timing","Zahnriemen + Wasserpumpe wechseln","",180000,120,{important:true}),
-    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",180000,120),
+    r("auxbelt","Keilrippenriemen wechseln","",180000,120),
     r("brakes","Bremsen prüfen","",0,0,{manual:true}),
     r("tires","Reifen / Profiltiefe / Luftdruck","",0,0,{manual:true}),
     r("battery","Batterie prüfen","",0,0,{manual:true}),
@@ -462,7 +477,7 @@ const BASE_RULES = {
     r("fapadd","FAP-Additivstand prüfen","",25000,0,{firstKm:100000}),
     r("dpf","Partikelfilter auf Beladung prüfen","",25000,0,{firstKm:150000}),
     r("timing","Zahnriemen + Wasserpumpe wechseln","",175000,120,{important:true}),
-    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",175000,120),
+    r("auxbelt","Keilrippenriemen wechseln","",175000,120),
     r("adblue","AdBlue-Füllstand kontrollieren / bei Bedarf auffüllen","",25000,12),
     r("brakes","Bremsen prüfen","",0,0,{manual:true}),
     r("tires","Reifen / Profiltiefe / Luftdruck","",0,0,{manual:true}),
@@ -479,7 +494,7 @@ const BASE_RULES = {
     r("fapadd","FAP-Additivstand prüfen","",15000,0,{firstKm:90000}),
     r("dpf","Partikelfilter auf Beladung prüfen","",15000,0,{firstKm:150000}),
     r("timing","Zahnriemen + Wasserpumpe wechseln","",165000,120,{important:true}),
-    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",165000,120),
+    r("auxbelt","Keilrippenriemen wechseln","",165000,120),
     r("adblue","AdBlue-Füllstand kontrollieren / bei Bedarf auffüllen","",15000,12),
     r("brakes","Bremsen prüfen","",0,0,{manual:true}),
     r("tires","Reifen / Profiltiefe / Luftdruck","",0,0,{manual:true}),
@@ -718,10 +733,46 @@ function renderHistory(){
   const rules=rulesFor(v);
   document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
     const rule=rules.find(r=>r.id===rec.taskId);
-    return `<div class="record"><div><h4>${rule?esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} \u00b7 ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;
+    return `<div class="record"><div><h4>${esc(rec.taskName||(rule?rule.name:"Wartung"))}</h4><p>${fmtDate(rec.date)} \u00b7 ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-edit-btn" data-edit-record="${esc(rec.id)}" aria-label="Eintrag bearbeiten" title="Eintrag bearbeiten">✎</button><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;
   }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
+  document.querySelectorAll("[data-edit-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();openHistoryEdit(btn.dataset.editRecord);});
   document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});
 }
+let pendingHistoryEditId=null;
+function openHistoryEdit(recordId){
+  const v=vehicle();
+  const rec=(v.records||[]).find(r=>r.id===recordId);
+  if(!rec)return;
+  const rule=rulesFor(v).find(r=>r.id===rec.taskId);
+  pendingHistoryEditId=recordId;
+  document.getElementById("editHistoryName").value=rec.taskName||(rule?rule.name:"Wartung");
+  document.getElementById("editHistoryDate").value=rec.date||today();
+  document.getElementById("editHistoryMileage").value=rec.mileage||"";
+  document.getElementById("editHistoryCost").value=rec.cost||"";
+  document.getElementById("editHistoryNote").value=rec.note||"";
+  openModal("editHistoryModal");
+}
+function saveHistoryEdit(){
+  const v=vehicle();
+  const rec=(v.records||[]).find(r=>r.id===pendingHistoryEditId);
+  if(!rec)return;
+  const name=document.getElementById("editHistoryName").value.trim();
+  const date=document.getElementById("editHistoryDate").value;
+  const mileage=Number(document.getElementById("editHistoryMileage").value||0);
+  const cost=Number(document.getElementById("editHistoryCost").value||0);
+  const note=document.getElementById("editHistoryNote").value.trim();
+  if(!name){alert("Bitte die Wartung oder Reparatur benennen.");return;}
+  if(!date){alert("Bitte ein Datum eintragen.");return;}
+  if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}
+  const oldDate=rec.date, oldMileage=Number(rec.mileage||0);
+  rec.taskName=name;rec.date=date;rec.mileage=mileage;rec.cost=cost;rec.note=note;
+  if(rec.taskId==="service"&&rec.serviceGroup){
+    (v.records||[]).forEach(r=>{if(r.id!==rec.id&&r.serviceGroup===rec.serviceGroup){if(r.date===oldDate)r.date=date;if(Number(r.mileage||0)===oldMileage)r.mileage=mileage;}});
+  }
+  if(mileage>Number(v.mileage||0))v.mileage=mileage;
+  pendingHistoryEditId=null;save();closeModal("editHistoryModal");renderAll();
+}
+
 let pendingHistoryDeleteId=null;
 function deleteHistoryRecord(recordId){
   const v=vehicle();
@@ -933,6 +984,7 @@ document.getElementById("cancelDeleteHistoryBtn").onclick=closeHistoryDeleteConf
 document.getElementById("closeDeleteHistoryBtn").onclick=closeHistoryDeleteConfirm;
 document.getElementById("confirmDeleteHistoryBtn").onclick=confirmHistoryDelete;
 document.getElementById("deleteHistoryModal").addEventListener("click",e=>{if(e.target===e.currentTarget)closeHistoryDeleteConfirm();});
+document.getElementById("saveHistoryEditBtn").onclick=saveHistoryEdit;
 document.getElementById("historyFab").onclick=openManualEntry;
 document.getElementById("saveManualEntryBtn").onclick=saveManualEntry;
 document.getElementById("settingsMenuBtn").onclick=openSettings;
