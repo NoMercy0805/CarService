@@ -1,0 +1,35 @@
+name: Refine design and images
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refine-design-and-images.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply final design and image fixes
+        run: python3 scripts/refine-design-and-images.py
+      - name: Validate JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          js='\n'.join(re.findall(r'<script>(.*?)</script>',s,re.S))
+          Path('/tmp/carservice.js').write_text(js,encoding='utf-8')
+          PY
+          node --check /tmp/carservice.js
+      - name: Validate project build
+        run: ./gradlew assembleDebug
+      - name: Commit refinement
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add app/src/main/assets/index.html app/src/main/java/com/schiwy/carservice/MainActivity.java
+          git rm .github/workflows/refine-design-and-images.yml scripts/refine-design-and-images.py
+          git commit -m "Refine design and fix vehicle asset loading"
+          git push
