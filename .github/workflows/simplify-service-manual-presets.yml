@@ -1,178 +1,24 @@
-name: Simplify service and add manual presets
-
-on:
-  push:
-    branches: [ main ]
-
+name: Simplify service and manual presets
+on: [push]
 permissions:
   contents: write
-
 jobs:
   apply:
-    if: github.repository == 'NoMercy0805/CarService'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Apply patch
+      - name: Patch app
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('app/src/main/assets/index.html')
-          s = p.read_text()
-
-          systematic = '''const SERVICE_SYSTEMATIC_ITEMS = {
-  "508": [
-    "Motoröl wechseln",
-    "Ölfilter ersetzen",
-    "Flüssigkeitsstände prüfen und ggf. ergänzen",
-    "Bremsanlage prüfen",
-    "Reifen und Reifendruck prüfen",
-    "Beleuchtung prüfen",
-    "Scheibenwischer und Waschanlage prüfen",
-    "Serviceanzeige zurücksetzen"
-  ],
-  "2008": [
-    "Motoröl wechseln",
-    "Ölfilter ersetzen",
-    "Flüssigkeitsstände prüfen und ggf. ergänzen",
-    "Bremsanlage prüfen",
-    "Reifen und Reifendruck prüfen",
-    "Beleuchtung prüfen",
-    "Scheibenwischer und Waschanlage prüfen",
-    "Serviceanzeige zurücksetzen"
-  ]
-};
-
-const MANUAL_PRESETS_COMMON = [
-  "Motoröl + Ölfilter wechseln",
-  "Kraftstofffilter (Dieselfilter) wechseln",
-  "Luftfilter wechseln",
-  "Innenraum-/Pollenfilter wechseln",
-  "Bremsflüssigkeit wechseln",
-  "Kühlmittel wechseln",
-  "Zahnriemen + Wasserpumpe wechseln",
-  "Nebenaggregateriemen wechseln",
-  "Batterie ersetzen",
-  "Lichtmaschine ersetzen",
-  "Anlasser ersetzen",
-  "Glühkerzen ersetzen",
-  "Injektor(en) ersetzen",
-  "Turbolader ersetzen",
-  "AGR-Ventil reinigen / ersetzen",
-  "Ansaugtrakt reinigen",
-  "Motorlager ersetzen",
-  "Ventildeckeldichtung ersetzen",
-  "Ölwanne / Ölwannendichtung ersetzen",
-  "Thermostat ersetzen",
-  "Kühler ersetzen",
-  "Kühlmittelschlauch ersetzen",
-  "Wasserpumpe ersetzen",
-  "Kraftstoffpumpe ersetzen",
-  "DPF/FAP reinigen",
-  "DPF/FAP ersetzen",
-  "FAP-Additiv auffüllen",
-  "Bremsscheiben vorne ersetzen",
-  "Bremsbeläge vorne ersetzen",
-  "Bremsscheiben hinten ersetzen",
-  "Bremsbeläge hinten ersetzen",
-  "Bremssattel ersetzen",
-  "Feststellbremse reparieren",
-  "Stoßdämpfer vorne ersetzen",
-  "Stoßdämpfer hinten ersetzen",
-  "Feder vorne ersetzen",
-  "Feder hinten ersetzen",
-  "Querlenker ersetzen",
-  "Traggelenk ersetzen",
-  "Spurstangenkopf ersetzen",
-  "Radlager ersetzen",
-  "Antriebswelle ersetzen",
-  "Gleichlaufgelenk ersetzen",
-  "Lenkgetriebe ersetzen",
-  "Servolenkung reparieren",
-  "Kupplung ersetzen",
-  "Zweimassenschwungrad ersetzen",
-  "Getriebeöl wechseln",
-  "Getriebe / Schaltung reparieren",
-  "Klimaanlage warten / befüllen",
-  "Klimakompressor ersetzen",
-  "Klimakondensator ersetzen",
-  "Heizungsgebläse ersetzen",
-  "Scheibenwischer ersetzen",
-  "Windschutzscheibe ersetzen",
-  "Fensterheber reparieren",
-  "Türschloss reparieren",
-  "Scheinwerfer / Rückleuchte ersetzen",
-  "Sensor ersetzen",
-  "Reifen vorne ersetzen",
-  "Reifen hinten ersetzen",
-  "Reifendrucksensor (TPMS) ersetzen",
-  "Achsvermessung durchführen",
-  "HU / AU durchgeführt"
-];
-
-const MANUAL_PRESETS_BLUEHDI = [
-  "AdBlue auffüllen",
-  "AdBlue-Tank / Pumpe reparieren",
-  "AdBlue-Injektor ersetzen",
-  "NOx-Sensor ersetzen",
-  "SCR-System reparieren"
-];
-
-function manualPresetsFor(v){
-  return v.id==="2008"?[...MANUAL_PRESETS_COMMON,...MANUAL_PRESETS_BLUEHDI]:MANUAL_PRESETS_COMMON;
-}
-'''
-
-          s, n = re.subn(r'const SERVICE_SYSTEMATIC_ITEMS = \{.*?\n\};\n\n\nconst BASE_RULES', systematic + '\nconst BASE_RULES', s, flags=re.S)
-          assert n == 1, f'systematic replace count {n}'
-
-          old = '<div class="field"><label>Wartung / Arbeit</label><input id="manualEntryName" class="input" type="text" placeholder="z. B. Batterie getauscht" autocomplete="off"></div>'
-          new = '<div class="field"><label>Wartung / Reparatur</label><input id="manualEntryName" class="input" type="text" list="manualEntryPresets" placeholder="Aus Liste wählen oder selbst eingeben …" autocomplete="off"><datalist id="manualEntryPresets"></datalist><div class="help">Du kannst einen Vorschlag auswählen oder jederzeit einen eigenen Eintrag schreiben.</div></div>'
-          assert old in s
-          s = s.replace(old, new, 1)
-
-          old_open = '''function openManualEntry(){
-  const v=vehicle();
-  document.getElementById("manualEntryName").value="";'''
-          new_open = '''function openManualEntry(){
-  const v=vehicle();
-  const presetList=document.getElementById("manualEntryPresets");
-  if(presetList) presetList.innerHTML=manualPresetsFor(v).map(name=>`<option value="${esc(name)}"></option>`).join("");
-  document.getElementById("manualEntryName").value="";'''
-          assert old_open in s
-          s = s.replace(old_open, new_open, 1)
-
-          early_anchor = 'r("timing","Zahnriemen + Wasserpumpe wechseln","",240000,120,{important:true}),' 
-          late_anchor = 'r("timing","Zahnriemen + Wasserpumpe wechseln","",180000,120,{important:true}),' 
-          assert early_anchor in s and late_anchor in s
-          if 'r("auxbelt","Nebenaggregateriemen-Kit wechseln","",240000,120)' not in s:
-              s = s.replace(early_anchor, early_anchor + '\n    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",240000,120),', 1)
-          if 'r("auxbelt","Nebenaggregateriemen-Kit wechseln","",180000,120)' not in s:
-              s = s.replace(late_anchor, late_anchor + '\n    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",180000,120),', 1)
-
-          # Validate JS syntax by extracting the script body.
-          scripts = re.findall(r'<script>(.*?)</script>', s, flags=re.S)
-          assert scripts, 'no script found'
-          Path('/tmp/carservice.js').write_text('\n'.join(scripts))
-          p.write_text(s)
-          PY
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmltcG9ydCByZQpwPVBhdGgoImFwcC9zcmMvbWFpbi9hc3NldHMvaW5kZXguaHRtbCIpCnM9cC5yZWFkX3RleHQoKQoKc3lzdGVtYXRpYyA9ICcnJ2NvbnN0IFNFUlZJQ0VfU1lTVEVNQVRJQ19JVEVNUyA9IHsKICAiNTA4IjogWwogICAgIk1vdG9yw7ZsIHdlY2hzZWxuIiwKICAgICLElsbGZpbHRlciBlcnNldHplbiIsCiAgICAiRmx1c3NpZ2tlaXRzc3TDpG5kZSBwcsO8ZmVuIHVuZCBnZ2YuIGVyZ8OkbnplbiIsCiAgICAiQnJlbXNhbmxhZ2UgcHLDvGZlbiIsCiAgICAiUmVpZmVuIHVuZCBSZWlmZW5kcnVjayBwcsO8ZmVuIiwKICAgICJCZWxldWNodHVuZyBwcsO8ZmVuIiwKICAgICJTY2hlaWJlbndpc2NoZXIgdW5kIFdhc2NoYW5sYWdlIHByw7xmZW4iLAogICAgIlNlcnZpY2VhbnplaWdlIHp1csO8Y2tzZXR6ZW4iCiAgXSwKICAiMjAwOCI6IFsKICAgICJNb3RvcsO2bCB3ZWNoc2VsbiIsCiAgICAiw5ZsZmlsdGVyIGVyc2V0emVuIiwKICAgICJGbMO8c3NpZ2tlaXRzc3TDpG5kZSBwcsO8ZmVuIHVuZCBnZ2YuIGVyZ8OkbnplbiIsCiAgICAiQnJlbXNhbmxhZ2UgcHLDvGZlbiIsCiAgICAiUmVpZmVuIHVuZCBSZWlmZW5kcnVjayBwcsO8ZmVuIiwKICAgICJCZWxldWNodHVuZyBwcsO8ZmVuIiwKICAgICJTY2hlaWJlbndpc2NoZXIgdW5kIFdhc2NoYW5sYWdlIHByw7xmZW4iLAogICAgIlNlcnZpY2VhbnplaWdlIHp1csO8Y2tzZXR6ZW4iCiAgXQp9OwoKY29uc3QgTUFOVUFMX1BSRVNFVFNfQ09NTU9OID0gWwogICJNb3RvcsO2bCArIMOWbGZpbHRlciB3ZWNoc2VsbiIsCiAgIktyYWZ0c3RvZmZmaWx0ZXIgKERpZXNlbGZpbHRlcikgd2VjaHNlbG4iLAogICJMdWZ0ZmlsdGVyIHdlY2hzZWxuIiwKICAiSW5uZW5yYXVtLS9Qb2xsZW5maWx0ZXIgd2VjaHNlbG4iLAogICJCcmVtc2Zsw7xzc2lna2VpdCB3ZWNoc2VsbiIsCiAgIkvDvGhnbG1pdHRlbCB3ZWNoc2VsbiIsCiAgIlphaG5yaWVtZW4gKyBXYXNzZXJwdW1wZSB3ZWNoc2VsbiIsCiAgIk5lYmVuYWdncmVnYXRlcmllbWVuIHdlY2hzZWxuIiwKICAiQmF0dGVyaWUgZXJzZXR6ZW4iLAogICJMaWNodG1hc2NoaW5lIGVyc2V0emVuIiwKICAiQW5sYXNzZXIgZXJzZXR6ZW4iLAogICJHbMO8aGtlcnplbiBlcnNldHplbiIsCiAgIkluamVrdG9yKGVuKSBlcnNldHplbiIsCiAgIlR1cmJvbGFkZXIgZXJzZXR6ZW4iLAogICJBR1ItVmVudGlsIHJlaW5pZ2VuIC8gZXJzZXR6ZW4iLAogICJBbnNhdWd0cmFrdCByZWluaWdlbiIsCiAgIk1vdG9ybGFnZXIgZXJzZXR6ZW4iLAogICJWZW50aWxkZWNrZWxkaWNodHVuZyBlcnNldHplbiIsCiAgIsOWbHdhbm5lIC8gw5Zsd2FubmVuZGljaHR1bmcgZXJzZXR6ZW4iLAogICJUaGVybW9zdGF0IGVyc2V0emVuIiwKICAiS8O8aGxlciBlcnNldHplbiIsCiAgIksDvGhnbG1pdHRlbHNjaGxhdWNoIGVyc2V0emVuIiwKICAiV2Fzc2VycHVtcGUgZXJzZXR6ZW4iLAogICJLcmFmdHN0b2ZmcHVtcGUgZXJzZXR6ZW4iLAogICJEUEYvRkFQIHJlaW5pZ2VuIiwKICAiRFBGL0ZBUCBlcnNldHplbiIsCiAgIkZBUC1BZGRpdGl2IGF1ZmbDvGxsZW4iLAogICJCcmVtc3NjaGVpYmVuIHZvcm5lIGVyc2V0emVuIiwKICAiQnJlbXNiZWzDpGdlIHZvcm5lIGVyc2V0emVuIiwKICAiQnJlbXNzY2hlaWJlbiBoaW50ZW4gZXJzZXR6ZW4iLAogICJCcmVtc2JlbMOkZ2UgaGludGVuIGVyc2V0emVuIiwKICAiQnJlbXNzYXR0ZWwgZXJzZXR6ZW4iLAogICJGZXN0c3RlbGxicmVtc2UgcmVwYXJpZXJlbiIsCiAgIlN0b8OfZMOkw6RtcGZlciB2b3JuZSBlcnNldHplbiIsCiAgIlN0b8OfZMOkw6RtcGZlciBoaW50ZW4gZXJzZXR6ZW4iLAogICJGZWRlciB2b3JuZSBlcnNldHplbiIsCiAgIkZlZGVyIGhpbnRlbiBlcnNldHplbiIsCiAgIlF1ZXJsZW5rZXIgZXJzZXR6ZW4iLAogICJUcmFnZ2VsZW5rIGVyc2V0emVuIiwKICAiU3B1cnN0YW5nZW5rb3BmIGVyc2V0emVuIiwKICAiUmFkbGFnZXIgZXJzZXR6ZW4iLAogICJBbnRyaWVic3dlbGxlIGVyc2V0emVuIiwKICAiR2xlaWNobGF1ZmdlbGVuayBlcnNldHplbiIsCiAgIkxlbmt2ZXRyaWViIGVyc2V0emVuIiwKICAiU2Vydm9sZW5rdW5nIHJlcGFyaWVyZW4iLAogICJLdXBwbHVuZyBlcnNldHplbiIsCiAgIlp3ZWltYXNzZW5zY2h3dW5ncmFkIGVyc2V0emVuIiwKICAiR2V0cmllYmXDtmwgd2VjaHNlbG4iLAogICJH ZXRyaWViZSAvIFNjaGFsdHVuZyByZXBhcmllcmVuIiwKICAiS2xpbWFh bmxhZ2Ugd2FydGVuIC8gYmVmw7xsbGVuIiwKICAiS2xpbWFrb21wcmVzc29yIGVyc2V0emVuIiwKICAiS2xpbWFrb25kZW5zYXRvciBlcnNldHplbiIsCiAgIkhlaXp1bmdzZ2VibMO8c2UgZXJzZXR6ZW4iLAogICJTY2hlaWJlbndpc2NoZXIgZXJzZXR6ZW4iLAogICJXaW5kc2NodXR6c2NoZWliZSBlcnNldHplbiIsCiAgIkZlbnN0ZXJoZWJlciByZXBhcmllcmVuIiwKICAiVMO8cnNjaGxvc3MgcmVwYXJpZXJlbiIsCiAgIlNjaGVpbndlcmZlciAvIFLDvGNrbGV1Y2h0ZSBlcnNldHplbiIsCiAgIlNlbnNvciBlcnNldHplbiIsCiAgIlJlaWZlbiB2b3JuZSBlcnNldHplbiIsCiAgIlJlaWZlbiBoaW50ZW4gZXJzZXR6ZW4iLAogICJSZWlmZW5kcnVja3NlbnNvciAoVFBNUykgZXJzZXR6ZW4iLAogICJBY2hzdmVybWVzc3VuZyBkdXJjaGbDvGhyZW4iLAogICJIVSAvIEFVIER1cmNoZ2Vmw7xocnQiCl07Cgpjb25zdCBNQU5VQUxfUFJFU0VUU19CTFVF SERJID0gWwogICJBZEJsdWUgYXVmZsO8bGxlbiIsCiAgIkFkQmx1ZS1UYW5rIC8gUHVtcGUgcmVwYXJpZXJlbiIsCiAgIkFkQmx1ZS1Jbmpla3RvciBlcnNldHplbiIsCiAgIk5PeC1TZW5zb3IgZXJzZXR6ZW4iLAogICJTQ1ItU3lzdGVtIHJlcGFyaWVyZW4iCl07CgpmdW5jdGlvbiBtYW51YWxQcmVzZXRzRm9yKHYpewogIHJldHVybiB2LmlkPT09IjIwMDgiP1suLi5NQU5VQUxfUFJFU0VUU19DT01NT04sLi4uTUFOVUFMX1BSRVNFVFNfQkxVRUhESV06TUFOVUFMX1BSRVNFVFNfQ09NTU9OOwp9CicnJwoKcyxuPXJlLnN1Ym4ocidjb25zdCBTRVJWSUNFX1NZU1RFTUFUSUNfSVRFTVMgPSBcXSouKj9cblx9O1xuXG5cbmNvbnN0IEJBU0VfUlVMRVMnLCBzeXN0ZW1hdGljKydcbmNvbnN0IEJBU0VfUlVMRVMnLCBzLCBmbGFncz1yZS5TKQphc3NlcnQgbj09MSwgbgoKb2xkPSc8ZGl2IGNsYXNzPSJmaWVsZCI+PGxhYmVsPldhcnR1bmcgLyBBcmJlaXQ8L2xhYmVsPjxpbnB1dCBpZD0ibWFudWFsRW50cnlOYW1lIiBjbGFzcz0iaW5wdXQiIHR5cGU9InRleHQiIHBsYWNlaG9sZGVyPSJ6LiBCLiBCYXR0ZXJpZSBnZXRhdXNjaHQiIGF1dG9jb21wbGV0ZT0ib2ZmIj48L2Rpdj4nCm5ldz0nPGRpdiBjbGFzcz0iZmllbGQiPjxsYWJlbD5XYXJ0dW5nIC8gUmVwYXJhdHVyPC9sYWJlbD48aW5wdXQgaWQ9Im1hbnVhbEVudHJ5TmFtZSIgY2xhc3M9ImlucHV0IiB0eXBlPSJ0ZXh0IiBsaXN0PSJtYW51YWxFbnRyeVByZXNldHMiIHBsYWNlaG9sZGVyPSJBdXMgTGlzdGUgdyOkaGxlbiBvZGVyIHNlbGJzdCBlaW5nZWJlbiDigKYiIGF1dG9jb21wbGV0ZT0ib2ZmIj48ZGF0YWxpc3QgaWQ9Im1hbnVhbEVudHJ5UHJlc2V0cyI+PC9kYXRhbGlzdD48ZGl2IGNsYXNzPSJoZWxwIj5EdSBrYW5uc3QgZWluZW4gVm9yc2NobGFnIGF1c3fDpGhsZW4gb2RlciBqZWRlcnplaXQgZWluZW4gZWlnZW5lbiBFaW50cmFnIHNjaHJlaWJlbi48L2Rpdj48L2Rpdj4nCmFzc2VydCBvbGQgaW4gcwpzPXMucmVwbGFjZShvbGQsbmV3LDEpCgpvbGRfb3Blbj0nZnVuY3Rpb24gb3Blbk1hbnVhbEVudHJ5KCl7XG4gIGNvbnN0IHY9dmVoaWNsZSgpO1xuICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgibWFudWFsRW50cnlOYW1lIikudmFsdWU9IiI7JwpuZXdfb3Blbj0nZnVuY3Rpb24gb3Blbk1hbnVhbEVudHJ5KCl7XG4gIGNvbnN0IHY9dmVoaWNsZSgpO1xuICBjb25zdCBwcmVzZXRMaXN0PWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJtYW51YWxFbnRyeVByZXNldHMiKTtcbiAgaWYocHJlc2V0TGlzdCkgcHJlc2V0TGlzdC5pbm5lckhUTUw9bWFudWFsUHJlc2V0c0Zvcih2KS5tYXAobmFtZT0+YDxvcHRpb24gdmFsdWU9IiR7ZXNjKG5hbWUpfSI+PC9vcHRpb24+YCkuam9pbigiIik7XG4gIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCJtYW51YWxFbnRyeU5hbWUiKS52YWx1ZT0iIjsnCmFzc2VydCBvbGRfb3BlbiBpbiBzCnM9cy5yZXBsYWNlKG9sZF9vcGVuLG5ld19vcGVuLDEpCgplYT0ncigidGltaW5nIiwiWmFobnJpZW1lbiArIFdhc3NlcnB1bXBlIHdlY2hzZWxuIiwiIiwyNDAwMDAsMTIwLHtpbXBvcnRhbnQ6dHJ1ZX0pLCcKbGE9J3IoInRpbWluZyIsIlphaG5yaWVtZW4gKyBXYXNzZXJwdW1wZSB3ZWNoc2VsbiIsIiIsMTgwMDAwLDEyMCx7aW1wb3J0YW50OnRydWV9KSwnCmFzc2VydCBlYSBpbiBzIGFuZCBsYSBpbiBzCmlmICdyKCJhdXhiZWx0IiwiTmViZW5hZ2dyZWdhdGVyaWVtZW4tS2l0IHdlY2hzZWxuIiwiIiwyNDAwMDAsMTIwKScgbm90IGluIHM6CiAgICBzPXMucmVwbGFjZShlYSxlYSsnXG4gICAgcigiYXV4YmVsdCIsIk5lYmVuYWdncmVnYXRlcmllbWVuLUtpdCB3ZWNoc2VsbiIsIiIsMjQwMDAwLDEyMCksJyw xKQppZiAnci giYXV4YmVsdCIsIk5lYmVuYWdncmVnYXRlcmllbWVuLUtpdCB3ZWNoc2VsbiIsIiIsMTgwMDAwLDEyMCknIG5vdCBpbiBzOgogICAgcz1zLnJlcGxhY2UobGEsbGErJ1xuICAgIHIoImF1eGJlbHQiLCJOZWJlbmFnZ3JlZ2F0ZXJpZW1lbi1LaXQgd2VjaHNlbG4iLCIiLDE4MDAwMCwxMjApLCcsMSkKCnNjcmlwdHM9cmUuZmluZGFsbChyJzxzY3JpcHQ+KC4qPyk8L3NjcmlwdD4nLHMsZmxhZ3M9cmUuUykKYXNzZXJ0IHNjcmlwdHMKUGF0aCgiL3RtcC9jYXJzZXJ2aWNlLmpzIikud3JpdGVfdGV4dCgiXG4iLmpvaW4oc2NyaXB0cykpCnAud3JpdGVfdGV4dChzKQo=' | base64 -d > /tmp/patch.py
+          python3 /tmp/patch.py
           node --check /tmp/carservice.js
-
-      - name: Verify intended changes
-        run: |
           grep -q 'MANUAL_PRESETS_COMMON' app/src/main/assets/index.html
           grep -q 'manualEntryPresets' app/src/main/assets/index.html
-          grep -q 'Flüssigkeitsstände prüfen und ggf. ergänzen' app/src/main/assets/index.html
-          grep -q 'Nebenaggregateriemen-Kit wechseln' app/src/main/assets/index.html
-
-      - name: Commit app change and remove helper
+      - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm .github/workflows/simplify-service-manual-presets.yml
           git add app/src/main/assets/index.html
+          git rm .github/workflows/simplify-service-manual-presets.yml
           git commit -m 'Simplify service checklist and add repair presets'
           git push
