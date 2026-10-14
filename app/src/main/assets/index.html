@@ -881,7 +881,7 @@ function openServiceChecklist(){
   const v=vehicle();
   const rules=rulesFor(v);
   const systematic=(SERVICE_SYSTEMATIC_ITEMS[v.id]||[]).map((name,systematicIndex)=>({name,systematicIndex,detail:"Kontrolle bei jedem Peugeot-Service"}));
-  const maintenanceRules=rules.filter(rule=>!rule.manual&&!rule.hu).map(rule=>{
+  const maintenanceRules=rules.filter(rule=>!rule.manual).map(rule=>{
     const info=dueInfo(v,rule);
     let detail="Wartungspunkt";
     if(info){
@@ -916,13 +916,15 @@ function saveServiceChecklist(){
   const systematic=SERVICE_SYSTEMATIC_ITEMS[v.id]||[];
   const checkedSystematic=[...document.querySelectorAll('#page-service [data-service-systematic]:checked')].map(el=>systematic[Number(el.dataset.serviceSystematic)]).filter(Boolean);
   const checkedPageExtras=[...document.querySelectorAll('#page-service [data-service-task]:checked')].map(el=>el.dataset.serviceTask);
-  const checkedExtras=[...new Set([...checkedPageExtras,...pendingOverviewServiceTasks])].filter(taskId=>taskId&&taskId!=="service");
+  const checkedExtras=[...new Set([...checkedPageExtras,...pendingOverviewServiceTasks])].filter(Boolean);
+  if(!checkedExtras.length&&!checkedSystematic.length){alert("Bitte mindestens eine tatsächlich erledigte Arbeit abhaken.");return;}
   const notes=[];
   if(checkedSystematic.length) notes.push(`Checkliste: ${checkedSystematic.join("; ")}`);
   if(note) notes.push(note);
   const serviceGroup=`service_${Date.now()}`;
-  v.records.push({id:serviceGroup,serviceGroup,taskId:"service",taskName:"Motor\u00f6l + \u00d6lfilter / Inspektion",date,mileage,cost,note:notes.join(" \u00b7 ")});
-  checkedExtras.forEach((taskId,i)=>{
+  const didInspection=checkedExtras.includes("service");
+  v.records.push({id:serviceGroup,serviceGroup,taskId:didInspection?"service":"service_group",taskName:"Peugeot-Service",date,mileage,cost,note:notes.join(" \u00b7 ")});
+  checkedExtras.filter(taskId=>taskId!=="service").forEach((taskId,i)=>{
     const rule=rules.find(r=>r.id===taskId);
     if(!rule) return;
     v.records.push({id:`${serviceGroup}_${i}`,serviceGroup,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
@@ -997,6 +999,7 @@ function renderNextServicePlan(v){
 function serviceHistoryInfo(base,v){
   const grouped=(v.records||[]).filter(r=>r.id===base.id||(base.serviceGroup&&r.serviceGroup===base.serviceGroup&&r.id!==base.id));
   const items=[];
+  if(base.taskId==="service")items.push("Motoröl + Ölfilter / Inspektion");
   const note=String(base.note||"");
   const m=note.match(/Checkliste:\s*(.*?)(?=\s·\s|$)/);
   if(m&&m[1])m[1].split(";").map(x=>x.trim()).filter(Boolean).forEach(x=>items.push(x));
@@ -1011,7 +1014,7 @@ function closeServiceHistoryDetails(){const el=document.getElementById("serviceH
 function openServiceHistoryDetails(recordId){
   const v=vehicle();
   const base=(v.records||[]).find(r=>r.id===recordId);
-  if(!base||base.taskId!=="service")return;
+  if(!base||(base.taskId!=="service"&&base.taskId!=="service_group"))return;
   const info=serviceHistoryInfo(base,v);
   let modal=document.getElementById("serviceHistoryDetailModal");
   if(!modal){
@@ -1030,14 +1033,14 @@ function openServiceHistoryDetails(recordId){
 function renderHistory(){
   const v=vehicle();
   const allRecords=[...(v.records||[])].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  const serviceGroups=new Set(allRecords.filter(r=>r.taskId==="service"&&r.serviceGroup).map(r=>r.serviceGroup));
-  const records=allRecords.filter(r=>r.taskId==="service"||!(r.serviceGroup&&serviceGroups.has(r.serviceGroup)));
+  const serviceGroups=new Set(allRecords.filter(r=>(r.taskId==="service"||r.taskId==="service_group")&&r.serviceGroup).map(r=>r.serviceGroup));
+  const records=allRecords.filter(r=>r.taskId==="service"||r.taskId==="service_group"||!(r.serviceGroup&&serviceGroups.has(r.serviceGroup)));
   const total=allRecords.reduce((sum,r)=>sum+Number(r.cost||0),0);
   document.getElementById("historySummary").innerHTML=`<h3>${esc(v.name)}</h3><div class="row2"><div><div class="small-note">Einträge</div><b>${records.length}</b></div><div><div class="small-note">Dokumentierte Kosten</div><b>${fmtMoney(total)}</b></div></div>`;
   const rules=rulesFor(v);
   document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
     const rule=rules.find(r=>r.id===rec.taskId);
-    if(rec.taskId==="service"){
+    if(rec.taskId==="service"||rec.taskId==="service_group"){
       const info=serviceHistoryInfo(rec,v);
       return `<div class="record service-history-record" data-service-details="${esc(rec.id)}"><div><h4>Peugeot-Service</h4><p>${fmtDate(rec.date)}${rec.mileage!==null&&rec.mileage!==undefined&&rec.mileage!==""?" · "+fmtKm(rec.mileage)+" km":""}<br><span class="service-record-count">${info.items.length} ${info.items.length===1?"Arbeit":"Arbeiten"} durchgeführt</span></p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-edit-btn" data-edit-record="${esc(rec.id)}" aria-label="Eintrag bearbeiten" title="Eintrag bearbeiten">✎</button><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag löschen" title="Eintrag löschen">&#128465;</button></div></div>`;
     }
@@ -1076,7 +1079,7 @@ function saveHistoryEdit(){
   if(mileage!==null&&(!Number.isFinite(mileage)||mileage<0)){alert("Bitte einen gültigen Kilometerstand eintragen oder das Feld leer lassen.");return;}
   const oldDate=rec.date, oldMileage=Number(rec.mileage||0);
   rec.taskName=name;rec.date=date;rec.mileage=mileage;rec.cost=cost;rec.note=note;
-  if(rec.taskId==="service"&&rec.serviceGroup){
+  if((rec.taskId==="service"||rec.taskId==="service_group")&&rec.serviceGroup){
     (v.records||[]).forEach(r=>{if(r.id!==rec.id&&r.serviceGroup===rec.serviceGroup){if(r.date===oldDate)r.date=date;if(Number(r.mileage||0)===oldMileage)r.mileage=mileage;}});
   }
   if(mileage>Number(v.mileage||0))v.mileage=mileage;
@@ -1089,7 +1092,7 @@ function deleteHistoryRecord(recordId){
   const rec=(v.records||[]).find(r=>r.id===recordId);
   if(!rec)return;
   pendingHistoryDeleteId=recordId;
-  document.getElementById("deleteHistoryText").textContent=rec.taskId==="service"
+  document.getElementById("deleteHistoryText").textContent=(rec.taskId==="service"||rec.taskId==="service_group")
     ?"Diesen Service wirklich l\u00f6schen? Zugeh\u00f6rige Zusatzarbeiten dieses Servicevorgangs werden ebenfalls entfernt."
     :"Diesen Historien-Eintrag wirklich l\u00f6schen?";
   openModal("deleteHistoryModal");
@@ -1103,7 +1106,7 @@ function confirmHistoryDelete(){
   const v=vehicle();
   const rec=(v.records||[]).find(r=>r.id===recordId);
   if(!recordId||!rec){closeHistoryDeleteConfirm();return;}
-  if(rec.taskId==="service"){
+  if(rec.taskId==="service"||rec.taskId==="service_group"){
     const group=rec.serviceGroup||null;
     v.records=(v.records||[]).filter(r=>{
       if(r.id===rec.id)return false;
