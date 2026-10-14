@@ -117,6 +117,13 @@ html,body{background:var(--paper)}body{padding-bottom:104px}#app{max-width:560px
 .modal{border-radius:26px 26px 0 0}.service-detail-list{border-radius:16px}
 @media(max-width:390px){.brand h1{font-size:31px}.vehicle-tab{min-height:170px}.vehicle-photo{height:88px}.vehicle-tab strong{font-size:14px}.next-service-head h3{font-size:22px}}
 
+
+/* Overview service checklist interaction */
+.next-service-item.next-service-check-row{grid-template-columns:30px 1fr;cursor:pointer;align-items:center}
+.next-service-check-row input{width:22px;height:22px;margin:0;accent-color:var(--primary);cursor:pointer}
+.next-service-check-row:active{background:var(--primary-soft)}
+.overview-service-confirm{margin-top:14px}
+
 </style>
 </head>
 <body>
@@ -147,6 +154,7 @@ html,body{background:var(--paper)}body{padding-bottom:104px}#app{max-width:560px
         <div class="next-service-due" id="nextServiceDue">Wird berechnet …</div>
         <div class="next-service-label">Fällige Arbeiten</div>
         <div class="next-service-list" id="nextServiceList"></div>
+        <button class="primary-btn overview-service-confirm" id="overviewConfirmServiceBtn" type="button" onclick="openOverviewServiceConfirm()">Service bestätigen</button>
       </div>
     </section>
 
@@ -724,7 +732,13 @@ function nextServiceGrouped(items){
   const order=["Öl & Filter","Flüssigkeiten","Riemen","Abgas & AdBlue","Kontrollen","Weitere Arbeiten"];
   const groups={};
   items.forEach(item=>{const g=serviceGroupFor(item);(groups[g]||(groups[g]=[])).push(item);});
-  return order.filter(g=>groups[g]?.length).map(g=>`<div class="service-group next-group"><div class="service-group-title">${esc(g)}</div>${groups[g].map(item=>`<div class="next-service-item"><span class="next-service-mark">✓</span><div><b>${esc(item.name)}</b><small>${esc(item.note)}</small></div><span class="next-chevron">›</span></div>`).join("")}</div>`).join("");
+  return order.filter(g=>groups[g]?.length).map(g=>`<div class="service-group next-group"><div class="service-group-title">${esc(g)}</div>${groups[g].map(item=>`<label class="next-service-item next-service-check-row"><input type="checkbox" data-overview-service-task="${esc(item.id||item.taskId||"")}"><div><b>${esc(item.name)}</b><small>${esc(item.note)}</small></div></label>`).join("")}</div>`).join("");
+}
+let pendingOverviewServiceTasks=[];
+function openOverviewServiceConfirm(){
+  pendingOverviewServiceTasks=[...document.querySelectorAll('#page-dashboard [data-overview-service-task]:checked')].map(el=>el.dataset.overviewServiceTask).filter(Boolean);
+  if(!pendingOverviewServiceTasks.length){alert("Bitte mindestens eine erledigte Arbeit abhaken.");return;}
+  openServiceConfirm();
 }
 function openServiceChecklist(){
   const v=vehicle();
@@ -764,7 +778,8 @@ function saveServiceChecklist(){
   if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}
   const systematic=SERVICE_SYSTEMATIC_ITEMS[v.id]||[];
   const checkedSystematic=[...document.querySelectorAll('#page-service [data-service-systematic]:checked')].map(el=>systematic[Number(el.dataset.serviceSystematic)]).filter(Boolean);
-  const checkedExtras=[...document.querySelectorAll('#page-service [data-service-task]:checked')].map(el=>el.dataset.serviceTask);
+  const checkedPageExtras=[...document.querySelectorAll('#page-service [data-service-task]:checked')].map(el=>el.dataset.serviceTask);
+  const checkedExtras=[...new Set([...checkedPageExtras,...pendingOverviewServiceTasks])].filter(taskId=>taskId&&taskId!=="service");
   const notes=[];
   if(checkedSystematic.length) notes.push(`Checkliste: ${checkedSystematic.join("; ")}`);
   if(note) notes.push(note);
@@ -776,7 +791,8 @@ function saveServiceChecklist(){
     v.records.push({id:`${serviceGroup}_${i}`,serviceGroup,taskId,taskName:rule.name,date,mileage,cost:0,note:"Im Rahmen des Service erledigt"});
   });
   if(mileage>Number(v.mileage||0)) v.mileage=mileage;
-  save();closeModal("serviceConfirmModal");renderAll();openServiceChecklist();alert("Service und ausgewählte Zusatzarbeiten gespeichert.");
+  pendingOverviewServiceTasks=[];
+  save();closeModal("serviceConfirmModal");renderAll();openServiceChecklist();alert("Service und ausgewählte Arbeiten gespeichert.");
 }
 
 function renderAll(){
@@ -838,6 +854,8 @@ function renderNextServicePlan(v){
   list.innerHTML=dueItems.length
     ?nextServiceGrouped(dueItems)
     :`<div class="small-note">Aktuell ist keine Wartungsarbeit fällig oder bald fällig.</div>`;
+  const overviewConfirm=document.getElementById("overviewConfirmServiceBtn");
+  if(overviewConfirm) overviewConfirm.style.display=dueItems.length?"block":"none";
 }
 function serviceHistoryInfo(base,v){
   const grouped=(v.records||[]).filter(r=>r.id===base.id||(base.serviceGroup&&r.serviceGroup===base.serviceGroup&&r.id!==base.id));
