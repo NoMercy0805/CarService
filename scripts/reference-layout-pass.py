@@ -52,5 +52,45 @@ s=s.replace('const systematic=(SERVICE_SYSTEMATIC_ITEMS[v.id]||[]).map(name=>({n
 s=s.replace('profile:"508_late",records:[],customTasks:[]','profile:"508_late",profileConfirmed:false,records:[],customTasks:[]')
 s=s.replace('v.profile=document.getElementById("settingsProfile").value;\n  save();','v.profile=document.getElementById("settingsProfile").value;\n  if(v.id==="508")v.profileConfirmed=true;\n  save();')
 
+
+# Never calculate repeatable maintenance from first registration alone.
+# A first-use belt interval is shown only when the production profile is confirmed.
+due_logic=r'''function dueInfo(v,rule){
+  if(rule.hu){
+    if(!v.huDue)return {status:"unknown",label:"Termin fehlt",detail:"HU-Termin eintragen",dueDate:null,dueKm:null};
+    const days=daysBetween(today(),v.huDue);
+    return {status:days<=0?"due":days<=60?"soon":"ok",label:days<0?`${Math.abs(days)} Tage überfällig`:days===0?"heute fällig":`${days} Tage`,detail:`fällig ${fmtDate(v.huDue)}`,dueDate:v.huDue,dueKm:null};
+  }
+  if(rule.manual)return {status:"manual",label:"Kontrolle",detail:rule.note||"bei Bedarf / Sichtprüfung",dueDate:null,dueKm:null};
+  const last=lastRecord(v,rule.id);
+  const initialBelt=rule.id==="timing"||rule.id==="auxbelt";
+  if(!last&&!initialBelt)return {status:"unknown",label:"Letzte Wartung unbekannt",detail:"Letzte Durchführung mit Datum und Kilometerstand eintragen",dueDate:null,dueKm:null};
+  if(!last&&v.id==="508"&&!v.profileConfirmed)return {status:"unknown",label:"Produktionszeitraum unbestätigt",detail:"OPR/Produktionszeitraum in Fahrzeugdaten bestätigen",dueDate:null,dueKm:null};
+  let dueKm=null,dueDate=null;
+  if(last){
+    if(rule.km&&last.mileage!==null&&last.mileage!==undefined&&last.mileage!=="")dueKm=Number(last.mileage)+Number(rule.km);
+    if(rule.months&&last.date)dueDate=addMonths(last.date,rule.months);
+  }else{
+    if(rule.firstKm||rule.km)dueKm=Number(rule.firstKm||rule.km);
+    if(v.firstReg&&(rule.firstMonths||rule.months))dueDate=addMonths(v.firstReg,rule.firstMonths||rule.months);
+  }
+  const kmKnown=Number(v.mileage)>0;
+  const kmLeft=dueKm!==null&&kmKnown?dueKm-Number(v.mileage):null;
+  const dayLeft=dueDate?daysBetween(today(),dueDate):null;
+  if(kmLeft===null&&dayLeft===null)return {status:"unknown",label:"Daten fehlen",detail:"Letzte Wartung bzw. Erstzulassung/Kilometerstand ergänzen",dueDate,dueKm};
+  const due=(kmLeft!==null&&kmLeft<=0)||(dayLeft!==null&&dayLeft<=0);
+  const soon=!due&&((kmLeft!==null&&kmLeft<=Math.max(1500,(rule.km||0)*.10))||(dayLeft!==null&&dayLeft<=60));
+  const status=due?"due":soon?"soon":"ok";
+  const limits=[dueKm!==null?`${fmtKm(dueKm)} km`:null,dueDate?fmtDate(dueDate):null].filter(Boolean);
+  const detail=last?`zuletzt ${last.date?fmtDate(last.date):"Datum fehlt"} · ${last.mileage!==null&&last.mileage!==undefined?fmtKm(last.mileage)+" km":"km fehlen"} · nächster: ${limits.join(" oder ")}`:`Erstintervall ${limits.join(" oder ")} – prüfen, ob schon gewechselt`;
+  return {status,label:due?"Fällig":soon?"Bald":"Okay",detail,dueDate,dueKm,kmLeft,dayLeft};
+}
+'''
+s,n=re.subn(r'function dueInfo\\(v,rule\\)\\{.*?(?=function today\\(\\)\\{)',lambda m:due_logic,s,flags=re.S)
+assert n==1, f'dueInfo patch failed: {n}'
+# Show unknown service baseline explicitly; never display fictitious dates like 2014.
+s=s.replace('const lastText=last?', 'const lastText=last?')
+s=s.replace('due.innerHTML=`<b>${lastText}</b>Nächster Service: ${target.length?target.join(" oder "):"nach hinterlegtem Wartungsplan"}.`;', 'due.innerHTML=serviceInfo.status==="unknown"?"<b>Letzter Service nicht dokumentiert</b><br>Bitte letzte Inspektion mit Datum und Kilometerstand nachtragen.":`<b>${lastText}</b>Nächster Service: ${target.length?target.join(" oder "):"nach Wartungsplan"}.`;')
+
 html_path.write_text(s,encoding='utf-8')
 print('reference layout + android_res vehicle images applied')
