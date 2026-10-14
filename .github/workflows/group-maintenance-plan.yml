@@ -1,0 +1,57 @@
+name: Group maintenance plan
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Group maintenance plan list
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text()
+
+          s=s.replace('const id=item.taskId||"";','const id=item.taskId||item.id||"";',1)
+
+          if 'function nextServiceGrouped(items)' not in s:
+              marker='function openServiceChecklist(){'
+              helper='''function nextServiceGrouped(items){\n  const order=["Öl & Filter","Flüssigkeiten","Riemen","Abgas & AdBlue","Kontrollen","Weitere Arbeiten"];\n  const groups={};\n  items.forEach(item=>{const g=serviceGroupFor(item);(groups[g]||(groups[g]=[])).push(item);});\n  return order.filter(g=>groups[g]?.length).map(g=>`<div class="service-group"><div class="service-group-title">${esc(g)}</div>${groups[g].map(item=>`<div class="next-service-item"><b>${esc(item.name)}</b><small>${esc(item.note)}</small></div>`).join("")}</div>`).join("");\n}\n'''
+              assert marker in s
+              s=s.replace(marker,helper+marker,1)
+
+          old='?items.map(item=>`<div class="next-service-item"><b>${esc(item.name)}</b><small>${esc(item.note)}</small></div>`).join("")'
+          new='?nextServiceGrouped(items)'
+          assert old in s
+          s=s.replace(old,new,1)
+
+          p.write_text(s)
+          assert 'function nextServiceGrouped(items)' in s
+          assert '?nextServiceGrouped(items)' in s
+          assert 'const id=item.taskId||item.id||"";' in s
+          PY
+      - name: Check JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('app/src/main/assets/index.html').read_text()
+          js=s.split('<script>',1)[1].split('</script>',1)[0]
+          Path('/tmp/app.js').write_text(js)
+          PY
+          node --check /tmp/app.js
+      - name: Commit changes and remove helper
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/assets/index.html
+          git rm .github/workflows/group-maintenance-plan.yml
+          git commit -m "Group maintenance plan by category"
+          git push
