@@ -83,6 +83,17 @@ html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16);box-
 
 .service-group{margin:4px 0 14px}.service-group-title{font-size:11px;font-weight:800;letter-spacing:.25px;color:var(--muted);text-transform:uppercase;padding:8px 2px 5px;border-bottom:1px solid var(--rule);margin-bottom:2px}
 @media(max-width:380px){.summary{grid-template-columns:1fr 1fr 1fr}.km-value{font-size:28px}.vehicle-tab{min-width:0!important;padding:11px 9px}.vehicle-tab strong{font-size:13px}.vehicle-tab span{font-size:10.5px}}
+
+.manual-picker-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 13px;border-radius:12px;background:var(--primary-soft);color:var(--primary);font-weight:700;text-align:left}
+.manual-picker-toggle span{font-size:20px;line-height:1;transition:transform .15s ease}.manual-picker-toggle.open span{transform:rotate(90deg)}
+.manual-picker{display:none;margin-top:8px;max-height:44vh;overflow:auto;border:1px solid var(--rule);border-radius:14px;background:var(--paper);padding:7px}
+.manual-picker.open{display:block}
+.manual-picker-group{background:var(--surface2);border-radius:12px;overflow:hidden;margin-bottom:8px}.manual-picker-group:last-child{margin-bottom:0}
+.manual-picker-group-title{padding:9px 11px 6px;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.35px}
+.manual-picker-item{width:100%;padding:11px 12px;background:transparent;color:var(--ink);text-align:left;border-top:1px solid var(--rule);font-size:14px}
+.manual-picker-item:active{background:var(--primary-soft)}
+.manual-picker-or{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:11px;margin:10px 0}.manual-picker-or:before,.manual-picker-or:after{content:"";height:1px;background:var(--rule);flex:1}
+
 </style>
 </head>
 <body>
@@ -247,7 +258,7 @@ html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16);box-
   <div class="modal">
     <div class="handle"></div>
     <div class="modal-head"><h3>Manuelle Wartung</h3><button class="close" data-close="manualEntryModal">×</button></div>
-    <div class="field"><label>Wartung / Reparatur</label><input id="manualEntryName" class="input" type="text" list="manualEntryPresets" placeholder="Aus Liste wählen oder selbst eingeben …" autocomplete="off"><datalist id="manualEntryPresets"></datalist><div class="help">Du kannst einen Vorschlag auswählen oder jederzeit einen eigenen Eintrag schreiben.</div></div>
+    <div class="field"><label>Wartung / Reparatur</label><button type="button" class="manual-picker-toggle" id="manualPresetToggle"><span class="manual-picker-label">Aus Wartungsliste auswählen</span><span>›</span></button><div id="manualPresetPicker" class="manual-picker"></div><div class="manual-picker-or">oder</div><input id="manualEntryName" class="input" type="text" placeholder="Eigene Wartung / Reparatur eingeben …" autocomplete="off"><div class="help">Wähle einen Eintrag aus der sortierten Liste oder schreibe jederzeit einen eigenen.</div></div>
     <div class="row2">
       <div class="field"><label>Datum</label><input id="manualEntryDate" class="input" type="date"></div>
       <div class="field"><label>Kilometerstand</label><input id="manualEntryMileage" class="input" type="number" inputmode="numeric" min="0"></div>
@@ -436,6 +447,41 @@ const MANUAL_PRESETS_BLUEHDI = [
 
 function manualPresetsFor(v){
   return v.id==="2008"?[...MANUAL_PRESETS_COMMON,...MANUAL_PRESETS_BLUEHDI]:MANUAL_PRESETS_COMMON;
+}
+
+function manualPresetGroup(name){
+  const n=(name||"").toLowerCase();
+  if(/motoröl|ölfilter|kraftstofffilter|dieselfilter|luftfilter|innenraum|pollenfilter/.test(n)) return "Öl & Filter";
+  if(/brems|feststellbremse/.test(n)) return "Bremsen";
+  if(/kühlmittel|kühler|kühlmittelschlauch/.test(n)) return "Kühlung & Flüssigkeiten";
+  if(/zahnriemen|keilrippenriemen|wasserpumpe/.test(n)) return "Riemen & Wasserpumpe";
+  if(/turbo|agr|injektor|glühkerze|kraftstoffpumpe|kupplung|zweimassen|getriebe|schaltung|motor /.test(n)) return "Motor & Antrieb";
+  if(/dpf|fap|partikelfilter/.test(n)) return "Abgas & Diesel";
+  if(/adblue|nox|scr/.test(n)) return "AdBlue & SCR";
+  if(/stoßdämpfer|feder |querlenker|traggelenk|spurstange|radlager|antriebswelle|gleichlaufgelenk|lenkgetriebe|servolenkung|achsvermessung/.test(n)) return "Fahrwerk & Lenkung";
+  if(/batterie|lichtmaschine|anlasser|sensor|scheinwerfer|rückleuchte/.test(n)) return "Elektrik & Beleuchtung";
+  if(/klima|heizungsgebläse|scheibenwischer|windschutzscheibe|fensterheber|türschloss/.test(n)) return "Klima & Komfort";
+  if(/reifen|tpms/.test(n)) return "Reifen & Räder";
+  return "Sonstiges";
+}
+function renderManualPresetPicker(v){
+  const picker=document.getElementById("manualPresetPicker");
+  const toggle=document.getElementById("manualPresetToggle");
+  if(!picker||!toggle)return;
+  const order=["Öl & Filter","Bremsen","Kühlung & Flüssigkeiten","Riemen & Wasserpumpe","Motor & Antrieb","Abgas & Diesel","AdBlue & SCR","Fahrwerk & Lenkung","Elektrik & Beleuchtung","Klima & Komfort","Reifen & Räder","Sonstiges"];
+  const groups={};
+  manualPresetsFor(v).forEach(name=>{const g=manualPresetGroup(name);(groups[g]||(groups[g]=[])).push(name);});
+  picker.innerHTML=order.filter(g=>groups[g]?.length).map(g=>`<div class="manual-picker-group"><div class="manual-picker-group-title">${esc(g)}</div>${groups[g].map(name=>`<button type="button" class="manual-picker-item" data-manual-preset="${encodeURIComponent(name)}">${esc(name)}</button>`).join("")}</div>`).join("");
+  picker.classList.remove("open");
+  toggle.classList.remove("open");
+  toggle.querySelector(".manual-picker-label").textContent="Aus Wartungsliste auswählen";
+  toggle.onclick=()=>{const open=picker.classList.toggle("open");toggle.classList.toggle("open",open);};
+  picker.querySelectorAll("[data-manual-preset]").forEach(btn=>btn.onclick=()=>{
+    const name=decodeURIComponent(btn.dataset.manualPreset);
+    document.getElementById("manualEntryName").value=name;
+    toggle.querySelector(".manual-picker-label").textContent=name;
+    picker.classList.remove("open");toggle.classList.remove("open");
+  });
 }
 
 const BASE_RULES = {
@@ -907,8 +953,7 @@ function openModal(id){document.getElementById(id).classList.add("open");}
 function closeModal(id){document.getElementById(id).classList.remove("open");}
 function openManualEntry(){
   const v=vehicle();
-  const presetList=document.getElementById("manualEntryPresets");
-  if(presetList) presetList.innerHTML=manualPresetsFor(v).map(name=>`<option value="${esc(name)}"></option>`).join("");
+  renderManualPresetPicker(v);
   document.getElementById("manualEntryName").value="";
   document.getElementById("manualEntryDate").value=today();
   document.getElementById("manualEntryMileage").value=v.mileage||"";
