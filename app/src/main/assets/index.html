@@ -205,6 +205,59 @@ body{padding-bottom:72px}
   .next-service-head h3,.page-title-row h2{font-size:17px}
 }
 
+
+/* Readable reference layout — replaces overly small prior pass */
+body{padding-bottom:88px}
+#app{padding-left:15px;padding-right:15px}
+.topbar{padding:18px 3px 12px}.brand h1{font-size:32px}
+.vehicle-tabs{gap:9px;padding:2px 0 14px}
+.vehicle-tab{min-height:155px;padding:9px 10px 10px;border-radius:16px}
+.vehicle-photo{height:84px;margin-bottom:7px;background:transparent}
+.vehicle-photo img{object-fit:contain}
+.vehicle-tab strong{font-size:14px}
+.vehicle-plate{font-size:11.5px!important}
+.vehicle-subline{font-size:10px!important}
+.vehicle-check{width:24px;height:24px;font-size:14px!important}
+.next-service-panel{padding:15px;border-radius:20px;margin-bottom:14px}
+.next-service-panel:after{background:url('file:///android_res/drawable/peugeot_508.jpg') center/contain no-repeat;opacity:.12}
+.next-service-head{gap:11px;margin-bottom:11px}
+.next-service-icon,.page-title-icon{width:44px;height:44px;flex-basis:44px;border-radius:14px;font-size:21px}
+.next-service-head h3,.page-title-row h2{font-size:21px}
+.next-service-head small,.page-title-row p{font-size:11.5px}
+.next-service-due{padding:11px 12px;font-size:11.5px;line-height:1.4}
+.next-service-label{font-size:12px;margin:5px 0 6px}
+.next-service-list{padding:3px 9px;border-radius:13px}
+.next-group .service-group-title{font-size:10.5px;padding:8px 1px 4px}
+.next-service-item.next-service-check-row{grid-template-columns:23px 1fr;gap:9px;padding:10px 1px}
+.next-service-check-row input{width:19px;height:19px}
+.next-service-item b{font-size:12.5px}
+.next-service-item small{font-size:10.5px;line-height:1.35}
+.next-service-panel .primary-btn{padding:11px;border-radius:12px;font-size:13px}
+.page-title-row{gap:11px;margin:3px 1px 11px}
+.service-main-panel{padding:0;background:transparent;border:0;box-shadow:none}
+.service-main-panel .check-section>h4,.service-main-panel .check-section>.small-note{display:none}
+.service-group{background:var(--surface2);border:1px solid var(--rule);border-radius:15px;margin:0 0 10px;box-shadow:0 4px 13px rgba(30,75,125,.05);overflow:hidden}
+.service-group-title{background:var(--primary-soft);padding:10px 12px;font-size:12px;margin:0}
+.check-row{padding:11px 12px;grid-template-columns:22px 1fr;gap:10px}
+.check-row input{width:20px;height:20px}
+.check-row b{font-size:12.5px}
+.check-row small{font-size:10.5px;line-height:1.35}
+.service-main-panel>.primary-btn{padding:11px;border-radius:12px;font-size:13px}
+.history-summary-panel{display:none}
+.history-list{gap:0;border:1px solid var(--rule);border-radius:15px;overflow:hidden;background:var(--surface2);box-shadow:0 4px 13px rgba(30,75,125,.05)}
+.record{border:0;border-bottom:1px solid var(--rule);border-radius:0;padding:11px;box-shadow:none;min-height:61px}
+.record:last-child{border-bottom:0}
+.record h4{font-size:12.5px}
+.record p{font-size:10.5px}
+.record .cost{font-size:10.5px}
+.history-edit-btn,.history-delete-btn{width:29px;height:29px;font-size:13px}
+.service-record-count{font-size:9.5px}
+.fab{width:52px;height:52px;bottom:85px;font-size:28px}
+.bottom-nav{min-height:68px;border-radius:20px 20px 0 0;padding:5px 8px calc(5px + env(safe-area-inset-bottom,0px))}
+.nav-btn{font-size:10px;padding:7px 3px 6px;gap:4px}
+.nav-btn svg{width:21px;height:21px}
+.nav-btn.active:after{width:36px;height:3px}
+@media(max-width:390px){#app{padding-left:12px;padding-right:12px}.brand h1{font-size:30px}.vehicle-tab{min-height:150px}.vehicle-photo{height:79px}.vehicle-tab strong{font-size:13px}.next-service-head h3,.page-title-row h2{font-size:20px}}
 </style>
 </head>
 <body>
@@ -680,7 +733,7 @@ function defaultState(){
     filter:"all",
     theme:"system",
     vehicles:[
-      {id:"508",name:"Peugeot 508 SW",subtitle:"2.0 HDi · 163 PS · 2012",hsn:"3003",tsn:"AOK",licensePlate:"ÖHR RT 777",vin:"",mileage:0,firstReg:"",huDue:"",profile:"508_late",records:[],customTasks:[]},
+      {id:"508",name:"Peugeot 508 SW",subtitle:"2.0 HDi · 163 PS · 2012",hsn:"3003",tsn:"AOK",licensePlate:"ÖHR RT 777",vin:"",mileage:0,firstReg:"",huDue:"",profile:"508_late",profileConfirmed:false,records:[],customTasks:[]},
       {id:"2008",name:"Peugeot 2008",subtitle:"1.6 BlueHDi · 120 PS · 2016",hsn:"3003",tsn:"AUH",licensePlate:"ÖHR RT 188",vin:"",mileage:0,firstReg:"",huDue:"",profile:"2008_normal",records:[],customTasks:[]}
     ]
   };
@@ -748,10 +801,10 @@ function dueInfo(v,rule){
     if(rule.km) dueKm=Number(last.mileage||0)+Number(rule.km);
     if(rule.months) dueDate=addMonths(last.date,rule.months);
   } else {
-    if(rule.firstKm) dueKm=Number(rule.firstKm);
-    else if(rule.km) dueKm=Number(rule.km);
-    const firstMonths=rule.firstMonths||rule.months;
-    if(firstMonths&&v.firstReg) dueDate=addMonths(v.firstReg,firstMonths);
+    if(rule.id!=="timing"&&rule.id!=="auxbelt")return {status:"unknown",label:"Wartungsstand unbekannt",detail:"Letzte Durchführung mit Datum und km nachtragen",dueDate:null,dueKm:null};
+    if(v.id==="508"&&!v.profileConfirmed)return {status:"unknown",label:"Produktionszeitraum prüfen",detail:"OPR/Produktionszeitraum bestätigen",dueDate:null,dueKm:null};
+    if(rule.firstKm||rule.km)dueKm=Number(rule.firstKm||rule.km);
+    if(v.firstReg&&(rule.firstMonths||rule.months))dueDate=addMonths(v.firstReg,rule.firstMonths||rule.months);
   }
   if(!dueKm&&!dueDate) return {status:"unknown",label:"Offen",detail:"noch kein Intervall",dueDate,dueKm};
   const kmLeft=dueKm!==null?dueKm-Number(v.mileage||0):null;
@@ -794,7 +847,7 @@ const SERVICE_CHECKLIST_ICON_IDS = {
   inspection:[null,null,null,null,null,null,null,"battery"]
 };
 function serviceChecklistRows(items){
-  return items.map((item,i)=>`<label class="check-row"><input type="checkbox" ${item.taskId?`data-service-task="${esc(item.taskId)}"`:`data-service-systematic="${i}"`}><span><b>${esc(item.name)}</b>${item.detail?`<small>${esc(item.detail)}</small>`:""}</span></label>`).join("");
+  return items.map((item,i)=>`<label class="check-row"><input type="checkbox" ${item.taskId?`data-service-task="${esc(item.taskId)}"`:`data-service-systematic="${item.systematicIndex}"`}><span><b>${esc(item.name)}</b>${item.detail?`<small>${esc(item.detail)}</small>`:""}</span></label>`).join("");
 }
 function serviceGroupFor(item){
   const id=item.taskId||item.id||"";
@@ -827,7 +880,7 @@ function openOverviewServiceConfirm(){
 function openServiceChecklist(){
   const v=vehicle();
   const rules=rulesFor(v);
-  const systematic=(SERVICE_SYSTEMATIC_ITEMS[v.id]||[]).map(name=>({name,detail:"Kontrolle bei jedem Peugeot-Service"}));
+  const systematic=(SERVICE_SYSTEMATIC_ITEMS[v.id]||[]).map((name,systematicIndex)=>({name,systematicIndex,detail:"Kontrolle bei jedem Peugeot-Service"}));
   const maintenanceRules=rules.filter(rule=>!rule.manual&&!rule.hu).map(rule=>{
     const info=dueInfo(v,rule);
     let detail="Wartungspunkt";
@@ -891,8 +944,8 @@ function renderTabs(){
   const box=document.getElementById("vehicleTabs");
   box.innerHTML=state.vehicles.map(v=>{
     const active=v.id===state.selectedVehicle;
-    const img=v.id==="508"?"peugeot-508.jpg":"peugeot-2008.jpg";
-    return `<button class="vehicle-tab ${active?"active":""}" data-vehicle="${v.id}"><span class="vehicle-check">${active?"✓":""}</span><div class="vehicle-photo"><img src="${img}" alt="${esc(v.name)}" onerror="this.style.display='none';this.parentElement.classList.add('image-load-error')"></div><strong>${esc(v.name)}</strong>${v.licensePlate?`<small class="vehicle-plate">${esc(v.licensePlate)}</small>`:""}<span class="vehicle-subline">${esc(v.subtitle)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`;
+    const img=v.id==="508"?"file:///android_res/drawable/peugeot_508.jpg":"file:///android_res/drawable/peugeot_2008.jpg";
+    return `<button class="vehicle-tab ${active?"active":""}" data-vehicle="${v.id}"><span class="vehicle-check">${active?"✓":""}</span><div class="vehicle-photo"><img src="${img}" alt="${esc(v.name)}" onerror="if(!this.dataset.retry){this.dataset.retry='1';this.src=this.dataset.fallback;}else{this.style.display='none';this.parentElement.classList.add('image-load-error');}" data-fallback="${v.id==='508'?'peugeot-508.jpg':'peugeot-2008.jpg'}"></div><strong>${esc(v.name)}</strong>${v.licensePlate?`<small class="vehicle-plate">${esc(v.licensePlate)}</small>`:""}<span class="vehicle-subline">${esc(v.subtitle)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`;
   }).join("");
   box.querySelectorAll("[data-vehicle]").forEach(b=>b.onclick=()=>{state.selectedVehicle=b.dataset.vehicle;save();renderAll();});
 }
@@ -932,7 +985,7 @@ function renderNextServicePlan(v){
     if(serviceInfo.dueKm!==null&&serviceInfo.dueKm!==undefined) target.push(`${fmtKm(serviceInfo.dueKm)} km`);
     if(serviceInfo.dueDate) target.push(fmtDate(serviceInfo.dueDate));
     const lastText=last?`Letzter Service: ${fmtDate(last.date)}${last.mileage!==null&&last.mileage!==undefined&&last.mileage!==""?" · "+fmtKm(last.mileage)+" km":""}.<br>`:"Noch kein Service gespeichert.<br>";
-    due.innerHTML=`<b>${lastText}</b>Nächster Service: ${target.length?target.join(" oder "):"nach hinterlegtem Wartungsplan"}.`;
+    due.innerHTML=serviceInfo.status==="unknown"?"<b>Letzter Service nicht dokumentiert</b><br>Letzten Service mit Datum und Kilometerstand in der Historie ergänzen.":`<b>${lastText}</b>Nächster Service: ${target.length?target.join(" oder "):"nach Wartungsplan"}.`;
   }
 
   list.innerHTML=dueItems.length
@@ -1199,6 +1252,7 @@ function saveVehicleSettings(){
   v.firstReg=document.getElementById("settingsFirstReg").value||"";
   v.huDue=document.getElementById("settingsHuDue").value||"";
   v.profile=document.getElementById("settingsProfile").value;
+  if(v.id==="508")v.profileConfirmed=true;
   save();renderAll();alert("Fahrzeugdaten gespeichert.");
 }
 function applyTheme(){
