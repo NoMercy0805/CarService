@@ -430,9 +430,12 @@ const MANUAL_PRESETS_COMMON = [
   "Türschloss reparieren",
   "Scheinwerfer / Rückleuchte ersetzen",
   "Sensor ersetzen",
-  "Reifen komplett ersetzen",
-  "Reifen vorne ersetzen",
-  "Reifen hinten ersetzen",
+  "Sommerreifen komplett ersetzen",
+  "Sommerreifen vorne ersetzen",
+  "Sommerreifen hinten ersetzen",
+  "Winterreifen komplett ersetzen",
+  "Winterreifen vorne ersetzen",
+  "Winterreifen hinten ersetzen",
   "Reifendrucksensor (TPMS) ersetzen",
   "Achsvermessung durchführen",
   "HU / AU durchgeführt"
@@ -462,6 +465,8 @@ function manualPresetGroup(name){
   if(/stoßdämpfer|feder |querlenker|traggelenk|spurstange|radlager|antriebswelle|gleichlaufgelenk|lenkgetriebe|servolenkung|achsvermessung/.test(n)) return "Fahrwerk & Lenkung";
   if(/batterie|lichtmaschine|anlasser|sensor|scheinwerfer|rückleuchte/.test(n)) return "Elektrik & Beleuchtung";
   if(/klima|heizungsgebläse|scheibenwischer|windschutzscheibe|fensterheber|türschloss/.test(n)) return "Klima & Komfort";
+  if(/sommerreifen/.test(n)) return "Sommerreifen";
+  if(/winterreifen/.test(n)) return "Winterreifen";
   if(/reifen|tpms/.test(n)) return "Reifen & Räder";
   return "Sonstiges";
 }
@@ -469,7 +474,7 @@ function renderManualPresetPicker(v){
   const picker=document.getElementById("manualPresetPicker");
   const toggle=document.getElementById("manualPresetToggle");
   if(!picker||!toggle)return;
-  const order=["Öl & Filter","Bremsen","Kühlung & Flüssigkeiten","Riemen & Wasserpumpe","Motor & Antrieb","Abgas & Diesel","AdBlue & SCR","Fahrwerk & Lenkung","Elektrik & Beleuchtung","Klima & Komfort","Reifen & Räder","Sonstiges"];
+  const order=["Öl & Filter","Bremsen","Kühlung & Flüssigkeiten","Riemen & Wasserpumpe","Motor & Antrieb","Abgas & Diesel","AdBlue & SCR","Fahrwerk & Lenkung","Elektrik & Beleuchtung","Klima & Komfort","Sommerreifen","Winterreifen","Reifen & Räder","Sonstiges"];
   const groups={};
   manualPresetsFor(v).forEach(name=>{const g=manualPresetGroup(name);(groups[g]||(groups[g]=[])).push(name);});
   picker.innerHTML=order.filter(g=>groups[g]?.length).map(g=>`<div class="manual-picker-group"><div class="manual-picker-group-title">${esc(g)}</div>${groups[g].map(name=>`<button type="button" class="manual-picker-item" data-manual-preset="${encodeURIComponent(name)}">${esc(name)}</button>`).join("")}</div>`).join("");
