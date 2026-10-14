@@ -246,7 +246,7 @@ html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16);box-
   <div class="modal">
     <div class="handle"></div>
     <div class="modal-head"><h3>Manuelle Wartung</h3><button class="close" data-close="manualEntryModal">×</button></div>
-    <div class="field"><label>Wartung / Arbeit</label><input id="manualEntryName" class="input" type="text" placeholder="z. B. Batterie getauscht" autocomplete="off"></div>
+    <div class="field"><label>Wartung / Reparatur</label><input id="manualEntryName" class="input" type="text" list="manualEntryPresets" placeholder="Aus Liste wählen oder selbst eingeben …" autocomplete="off"><datalist id="manualEntryPresets"></datalist><div class="help">Du kannst einen Vorschlag auswählen oder jederzeit einen eigenen Eintrag schreiben.</div></div>
     <div class="row2">
       <div class="field"><label>Datum</label><input id="manualEntryDate" class="input" type="date"></div>
       <div class="field"><label>Kilometerstand</label><input id="manualEntryMileage" class="input" type="number" inputmode="numeric" min="0"></div>
@@ -321,39 +321,103 @@ const SERVICE_SYSTEMATIC_ITEMS = {
   "508": [
     "Motoröl wechseln",
     "Ölfilter ersetzen",
-    "Sichtbare Schläuche, Leitungen und Anschlüsse auf Zustand prüfen",
-    "Abgasanlage prüfen",
-    "Antriebswellen-/Gleichlaufgelenke auf Schäden und Undichtigkeiten prüfen",
-    "Lenkung auf Schäden und Spiel prüfen",
-    "Spurstangen-/Kugelgelenke auf Schäden und Spiel prüfen",
-    "Bremsflüssigkeitsstand prüfen und ggf. ergänzen",
-    "Bremsleitungen/-schläuche und Kupplungsanschlüsse auf Schäden und Undichtigkeiten prüfen",
-    "Reifenprofil und Reifenzustand inkl. Reserverad prüfen",
-    "Fahrwerk/Aufhängung auf Schäden und Verschleiß prüfen",
-    "Reifendruck prüfen und korrigieren",
+    "Flüssigkeitsstände prüfen und ggf. ergänzen",
+    "Bremsanlage prüfen",
+    "Reifen und Reifendruck prüfen",
+    "Beleuchtung prüfen",
     "Scheibenwischer und Waschanlage prüfen",
     "Serviceanzeige zurücksetzen"
   ],
   "2008": [
     "Motoröl wechseln",
     "Ölfilter ersetzen",
-    "Motor auf Ölundichtigkeiten prüfen",
-    "Abgasanlage prüfen",
-    "Kühlsystem auf Undichtigkeiten, Füllstand und Frostschutzkonzentration prüfen",
-    "Antriebswellen-/Gleichlaufgelenke auf Schäden und Undichtigkeiten prüfen",
-    "Lenkung auf Schäden und Spiel prüfen",
-    "Spurstangen-/Kugelgelenke auf Schäden und Spiel prüfen",
-    "Bremsflüssigkeitsstand prüfen und ggf. ergänzen",
-    "Bremsleitungen/-schläuche und Kupplungsanschlüsse auf Schäden und Undichtigkeiten prüfen",
-    "Reifenprofil und Reifenzustand inkl. Reserverad prüfen",
-    "Fahrwerk/Aufhängung auf Schäden und Verschleiß prüfen",
-    "Reifendruck prüfen und korrigieren",
-    "Außenbeleuchtung prüfen",
+    "Flüssigkeitsstände prüfen und ggf. ergänzen",
+    "Bremsanlage prüfen",
+    "Reifen und Reifendruck prüfen",
+    "Beleuchtung prüfen",
     "Scheibenwischer und Waschanlage prüfen",
     "Serviceanzeige zurücksetzen"
   ]
 };
 
+const MANUAL_PRESETS_COMMON = [
+  "Motoröl + Ölfilter wechseln",
+  "Kraftstofffilter (Dieselfilter) wechseln",
+  "Luftfilter wechseln",
+  "Innenraum-/Pollenfilter wechseln",
+  "Bremsflüssigkeit wechseln",
+  "Kühlmittel wechseln",
+  "Zahnriemen + Wasserpumpe wechseln",
+  "Nebenaggregateriemen wechseln",
+  "Batterie ersetzen",
+  "Lichtmaschine ersetzen",
+  "Anlasser ersetzen",
+  "Glühkerzen ersetzen",
+  "Injektor(en) ersetzen",
+  "Turbolader ersetzen",
+  "AGR-Ventil reinigen / ersetzen",
+  "Ansaugtrakt reinigen",
+  "Motorlager ersetzen",
+  "Ventildeckeldichtung ersetzen",
+  "Ölwanne / Ölwannendichtung ersetzen",
+  "Thermostat ersetzen",
+  "Kühler ersetzen",
+  "Kühlmittelschlauch ersetzen",
+  "Wasserpumpe ersetzen",
+  "Kraftstoffpumpe ersetzen",
+  "DPF/FAP reinigen",
+  "DPF/FAP ersetzen",
+  "FAP-Additiv auffüllen",
+  "Bremsscheiben vorne ersetzen",
+  "Bremsbeläge vorne ersetzen",
+  "Bremsscheiben hinten ersetzen",
+  "Bremsbeläge hinten ersetzen",
+  "Bremssattel ersetzen",
+  "Feststellbremse reparieren",
+  "Stoßdämpfer vorne ersetzen",
+  "Stoßdämpfer hinten ersetzen",
+  "Feder vorne ersetzen",
+  "Feder hinten ersetzen",
+  "Querlenker ersetzen",
+  "Traggelenk ersetzen",
+  "Spurstangenkopf ersetzen",
+  "Radlager ersetzen",
+  "Antriebswelle ersetzen",
+  "Gleichlaufgelenk ersetzen",
+  "Lenkgetriebe ersetzen",
+  "Servolenkung reparieren",
+  "Kupplung ersetzen",
+  "Zweimassenschwungrad ersetzen",
+  "Getriebeöl wechseln",
+  "Getriebe / Schaltung reparieren",
+  "Klimaanlage warten / befüllen",
+  "Klimakompressor ersetzen",
+  "Klimakondensator ersetzen",
+  "Heizungsgebläse ersetzen",
+  "Scheibenwischer ersetzen",
+  "Windschutzscheibe ersetzen",
+  "Fensterheber reparieren",
+  "Türschloss reparieren",
+  "Scheinwerfer / Rückleuchte ersetzen",
+  "Sensor ersetzen",
+  "Reifen vorne ersetzen",
+  "Reifen hinten ersetzen",
+  "Reifendrucksensor (TPMS) ersetzen",
+  "Achsvermessung durchführen",
+  "HU / AU durchgeführt"
+];
+
+const MANUAL_PRESETS_BLUEHDI = [
+  "AdBlue auffüllen",
+  "AdBlue-Tank / Pumpe reparieren",
+  "AdBlue-Injektor ersetzen",
+  "NOx-Sensor ersetzen",
+  "SCR-System reparieren"
+];
+
+function manualPresetsFor(v){
+  return v.id==="2008"?[...MANUAL_PRESETS_COMMON,...MANUAL_PRESETS_BLUEHDI]:MANUAL_PRESETS_COMMON;
+}
 
 const BASE_RULES = {
   "508_early": [
@@ -366,6 +430,7 @@ const BASE_RULES = {
     r("fapadd","FAP-Additivstand prüfen","",30000,0,{firstKm:90000}),
     r("dpf","Partikelfilter/FAP auf Beladung prüfen","",30000,0,{firstKm:180000}),
     r("timing","Zahnriemen + Wasserpumpe wechseln","",240000,120,{important:true}),
+    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",240000,120),
     r("brakes","Bremsen prüfen","",0,0,{manual:true}),
     r("tires","Reifen / Profiltiefe / Luftdruck","",0,0,{manual:true}),
     r("battery","Batterie prüfen","",0,0,{manual:true}),
@@ -381,6 +446,7 @@ const BASE_RULES = {
     r("fapadd","FAP-Additivstand prüfen","",30000,0,{firstKm:90000}),
     r("dpf","Partikelfilter/FAP auf Beladung prüfen","",30000,0,{firstKm:180000}),
     r("timing","Zahnriemen + Wasserpumpe wechseln","",180000,120,{important:true}),
+    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",180000,120),
     r("brakes","Bremsen prüfen","",0,0,{manual:true}),
     r("tires","Reifen / Profiltiefe / Luftdruck","",0,0,{manual:true}),
     r("battery","Batterie prüfen","",0,0,{manual:true}),
@@ -763,6 +829,8 @@ function openModal(id){document.getElementById(id).classList.add("open");}
 function closeModal(id){document.getElementById(id).classList.remove("open");}
 function openManualEntry(){
   const v=vehicle();
+  const presetList=document.getElementById("manualEntryPresets");
+  if(presetList) presetList.innerHTML=manualPresetsFor(v).map(name=>`<option value="${esc(name)}"></option>`).join("");
   document.getElementById("manualEntryName").value="";
   document.getElementById("manualEntryDate").value=today();
   document.getElementById("manualEntryMileage").value=v.mileage||"";
