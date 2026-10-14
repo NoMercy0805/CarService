@@ -1,0 +1,65 @@
+name: Show all Peugeot service items
+on:
+  push:
+    paths:
+      - '.github/workflows/show-all-service-items.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Peugeot service tab
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text()
+
+          s=s.replace('<div class="check-section"><h4>Bei diesem Service fällig</h4><div id="serviceDueList"></div></div>',
+                      '<div class="check-section"><h4>Alle Servicepunkte</h4><div class="small-note" style="margin:-5px 0 12px">Fällige und kommende Wartungspunkte für dieses Fahrzeug.</div><div id="serviceDueList"></div></div>',1)
+
+          start=s.find('function openServiceChecklist(){')
+          if start<0: raise SystemExit('openServiceChecklist not found')
+          end=s.find('\nfunction openServiceConfirm()',start)
+          if end<0: raise SystemExit('openServiceConfirm anchor not found')
+          new=r'''function openServiceChecklist(){
+  const v=vehicle();
+  const rules=rulesFor(v);
+  const systematic=(SERVICE_SYSTEMATIC_ITEMS[v.id]||[]).map(name=>({name,detail:"Kontrolle bei jedem Peugeot-Service"}));
+  const maintenanceRules=rules.filter(rule=>!rule.manual&&!rule.hu).map(rule=>{
+    const info=dueInfo(v,rule);
+    let detail="Wartungspunkt";
+    if(info){
+      if(info.status==="due")detail="Jetzt fällig · "+info.detail;
+      else if(info.status==="soon")detail="Bald fällig · "+info.detail;
+      else detail=info.detail||"Noch nicht fällig";
+    }
+    return {name:rule.name,taskId:rule.id,detail};
+  });
+  const items=[...maintenanceRules,...systematic];
+  document.getElementById("serviceDueList").innerHTML=items.length
+    ?serviceChecklistGrouped(items)
+    :`<div class="small-note">Keine Servicepunkte hinterlegt.</div>`;
+  showPage("service");
+}'''
+          s=s[:start]+new+s[end:]
+          p.write_text(s)
+
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
+          Path('/tmp/carservice.js').write_text('\n'.join(scripts))
+          subprocess.run(['node','--check','/tmp/carservice.js'],check=True)
+          assert 'Alle Servicepunkte' in s
+          assert 'rules.filter(rule=>!rule.manual&&!rule.hu)' in s
+          print('Peugeot service tab now shows all items; overview unchanged')
+          PY
+      - name: Commit and remove helper workflow
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add app/src/main/assets/index.html
+          git rm .github/workflows/show-all-service-items.yml
+          git commit -m "Show all maintenance points in Peugeot service tab"
+          git push
