@@ -1,0 +1,178 @@
+name: Simplify service and add manual presets
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('app/src/main/assets/index.html')
+          s = p.read_text()
+
+          systematic = '''const SERVICE_SYSTEMATIC_ITEMS = {
+  "508": [
+    "Motoröl wechseln",
+    "Ölfilter ersetzen",
+    "Flüssigkeitsstände prüfen und ggf. ergänzen",
+    "Bremsanlage prüfen",
+    "Reifen und Reifendruck prüfen",
+    "Beleuchtung prüfen",
+    "Scheibenwischer und Waschanlage prüfen",
+    "Serviceanzeige zurücksetzen"
+  ],
+  "2008": [
+    "Motoröl wechseln",
+    "Ölfilter ersetzen",
+    "Flüssigkeitsstände prüfen und ggf. ergänzen",
+    "Bremsanlage prüfen",
+    "Reifen und Reifendruck prüfen",
+    "Beleuchtung prüfen",
+    "Scheibenwischer und Waschanlage prüfen",
+    "Serviceanzeige zurücksetzen"
+  ]
+};
+
+const MANUAL_PRESETS_COMMON = [
+  "Motoröl + Ölfilter wechseln",
+  "Kraftstofffilter (Dieselfilter) wechseln",
+  "Luftfilter wechseln",
+  "Innenraum-/Pollenfilter wechseln",
+  "Bremsflüssigkeit wechseln",
+  "Kühlmittel wechseln",
+  "Zahnriemen + Wasserpumpe wechseln",
+  "Nebenaggregateriemen wechseln",
+  "Batterie ersetzen",
+  "Lichtmaschine ersetzen",
+  "Anlasser ersetzen",
+  "Glühkerzen ersetzen",
+  "Injektor(en) ersetzen",
+  "Turbolader ersetzen",
+  "AGR-Ventil reinigen / ersetzen",
+  "Ansaugtrakt reinigen",
+  "Motorlager ersetzen",
+  "Ventildeckeldichtung ersetzen",
+  "Ölwanne / Ölwannendichtung ersetzen",
+  "Thermostat ersetzen",
+  "Kühler ersetzen",
+  "Kühlmittelschlauch ersetzen",
+  "Wasserpumpe ersetzen",
+  "Kraftstoffpumpe ersetzen",
+  "DPF/FAP reinigen",
+  "DPF/FAP ersetzen",
+  "FAP-Additiv auffüllen",
+  "Bremsscheiben vorne ersetzen",
+  "Bremsbeläge vorne ersetzen",
+  "Bremsscheiben hinten ersetzen",
+  "Bremsbeläge hinten ersetzen",
+  "Bremssattel ersetzen",
+  "Feststellbremse reparieren",
+  "Stoßdämpfer vorne ersetzen",
+  "Stoßdämpfer hinten ersetzen",
+  "Feder vorne ersetzen",
+  "Feder hinten ersetzen",
+  "Querlenker ersetzen",
+  "Traggelenk ersetzen",
+  "Spurstangenkopf ersetzen",
+  "Radlager ersetzen",
+  "Antriebswelle ersetzen",
+  "Gleichlaufgelenk ersetzen",
+  "Lenkgetriebe ersetzen",
+  "Servolenkung reparieren",
+  "Kupplung ersetzen",
+  "Zweimassenschwungrad ersetzen",
+  "Getriebeöl wechseln",
+  "Getriebe / Schaltung reparieren",
+  "Klimaanlage warten / befüllen",
+  "Klimakompressor ersetzen",
+  "Klimakondensator ersetzen",
+  "Heizungsgebläse ersetzen",
+  "Scheibenwischer ersetzen",
+  "Windschutzscheibe ersetzen",
+  "Fensterheber reparieren",
+  "Türschloss reparieren",
+  "Scheinwerfer / Rückleuchte ersetzen",
+  "Sensor ersetzen",
+  "Reifen vorne ersetzen",
+  "Reifen hinten ersetzen",
+  "Reifendrucksensor (TPMS) ersetzen",
+  "Achsvermessung durchführen",
+  "HU / AU durchgeführt"
+];
+
+const MANUAL_PRESETS_BLUEHDI = [
+  "AdBlue auffüllen",
+  "AdBlue-Tank / Pumpe reparieren",
+  "AdBlue-Injektor ersetzen",
+  "NOx-Sensor ersetzen",
+  "SCR-System reparieren"
+];
+
+function manualPresetsFor(v){
+  return v.id==="2008"?[...MANUAL_PRESETS_COMMON,...MANUAL_PRESETS_BLUEHDI]:MANUAL_PRESETS_COMMON;
+}
+'''
+
+          s, n = re.subn(r'const SERVICE_SYSTEMATIC_ITEMS = \{.*?\n\};\n\n\nconst BASE_RULES', systematic + '\nconst BASE_RULES', s, flags=re.S)
+          assert n == 1, f'systematic replace count {n}'
+
+          old = '<div class="field"><label>Wartung / Arbeit</label><input id="manualEntryName" class="input" type="text" placeholder="z. B. Batterie getauscht" autocomplete="off"></div>'
+          new = '<div class="field"><label>Wartung / Reparatur</label><input id="manualEntryName" class="input" type="text" list="manualEntryPresets" placeholder="Aus Liste wählen oder selbst eingeben …" autocomplete="off"><datalist id="manualEntryPresets"></datalist><div class="help">Du kannst einen Vorschlag auswählen oder jederzeit einen eigenen Eintrag schreiben.</div></div>'
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old_open = '''function openManualEntry(){
+  const v=vehicle();
+  document.getElementById("manualEntryName").value="";'''
+          new_open = '''function openManualEntry(){
+  const v=vehicle();
+  const presetList=document.getElementById("manualEntryPresets");
+  if(presetList) presetList.innerHTML=manualPresetsFor(v).map(name=>`<option value="${esc(name)}"></option>`).join("");
+  document.getElementById("manualEntryName").value="";'''
+          assert old_open in s
+          s = s.replace(old_open, new_open, 1)
+
+          early_anchor = 'r("timing","Zahnriemen + Wasserpumpe wechseln","",240000,120,{important:true}),' 
+          late_anchor = 'r("timing","Zahnriemen + Wasserpumpe wechseln","",180000,120,{important:true}),' 
+          assert early_anchor in s and late_anchor in s
+          if 'r("auxbelt","Nebenaggregateriemen-Kit wechseln","",240000,120)' not in s:
+              s = s.replace(early_anchor, early_anchor + '\n    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",240000,120),', 1)
+          if 'r("auxbelt","Nebenaggregateriemen-Kit wechseln","",180000,120)' not in s:
+              s = s.replace(late_anchor, late_anchor + '\n    r("auxbelt","Nebenaggregateriemen-Kit wechseln","",180000,120),', 1)
+
+          # Validate JS syntax by extracting the script body.
+          scripts = re.findall(r'<script>(.*?)</script>', s, flags=re.S)
+          assert scripts, 'no script found'
+          Path('/tmp/carservice.js').write_text('\n'.join(scripts))
+          p.write_text(s)
+          PY
+          node --check /tmp/carservice.js
+
+      - name: Verify intended changes
+        run: |
+          grep -q 'MANUAL_PRESETS_COMMON' app/src/main/assets/index.html
+          grep -q 'manualEntryPresets' app/src/main/assets/index.html
+          grep -q 'Flüssigkeitsstände prüfen und ggf. ergänzen' app/src/main/assets/index.html
+          grep -q 'Nebenaggregateriemen-Kit wechseln' app/src/main/assets/index.html
+
+      - name: Commit app change and remove helper
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/simplify-service-manual-presets.yml
+          git add app/src/main/assets/index.html
+          git commit -m 'Simplify service checklist and add repair presets'
+          git push
