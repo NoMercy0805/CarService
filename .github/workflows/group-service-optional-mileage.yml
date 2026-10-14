@@ -62,7 +62,7 @@ jobs:
           for field_id in ('editHistoryMileage','historyEditMileage'):
               old=f'const mileage=Number(document.getElementById("{field_id}").value||0);'
               if old in s:
-                  new=f'const mileageRaw=document.getElementById("{field_id}").value.trim();\\n  const mileage=mileageRaw===""?null:Number(mileageRaw);'
+                  new=f'const mileageRaw=document.getElementById("{field_id}").value.trim();\n  const mileage=mileageRaw===""?null:Number(mileageRaw);'
                   s=s.replace(old,new,1)
                   pos=s.index(new)
                   chk=s.find('if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}',pos)
