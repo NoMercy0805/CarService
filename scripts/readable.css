@@ -1,3 +1,18 @@
-/* CarService reference */
-.vehicle-tab{min-height:160px}
-.vehicle-photo{height:84px}
+/* Reference readable layout */
+body{padding-bottom:82px}
+#app{padding-left:15px;padding-right:15px}
+.topbar{padding:14px 3px 11px}
+.brand h1{font-size:30px;letter-spacing:-1.1px}
+.vehicle-tabs{gap:9px;padding-bottom:13px}
+.vehicle-tab{min-height:164px;padding:9px 10px 10px;border-radius:16px}
+.vehicle-photo{height:85px;margin-bottom:7px;background:white}
+.vehicle-photo img{width:100%;height:100%;object-fit:contain}
+.vehicle-tab strong{font-size:14px}
+.vehicle-plate{font-size:11px!important}
+.vehicle-subline{font-size:10px!important}
+.vehicle-check{width:24px;height:24px;font-size:13px!important}
+.next-service-panel{padding:14px;border-radius:18px}
+.next-service-head h3,.page-title-row h2{font-size:21px}
+.next-service-icon,.page-title-icon{width:43px;height:43px;flex-basis:43px;font-size:21px}
+.next-service-due{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px}
+.next-service-due b,.next-service-due small{display:block}
