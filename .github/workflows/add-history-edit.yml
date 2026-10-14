@@ -1,0 +1,74 @@
+name: Add history editing
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.repository == 'NoMercy0805/CarService'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch history editing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text()
+
+          s=s.replace('.history-delete-btn{width:34px;height:34px;border-radius:11px;background:var(--red-soft);color:var(--red);display:grid;place-items:center;font-size:15px;cursor:pointer}',
+            '.history-edit-btn,.history-delete-btn{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:15px;cursor:pointer}.history-edit-btn{background:var(--primary-soft);color:var(--primary)}.history-delete-btn{background:var(--red-soft);color:var(--red)}')
+
+          marker='<div class="modal-backdrop" id="deleteHistoryModal">'
+          edit_modal='''<div class="modal-backdrop" id="editHistoryModal">\n  <div class="modal">\n    <div class="handle"></div>\n    <div class="modal-head"><h3>Eintrag bearbeiten</h3><button class="close" data-close="editHistoryModal">×</button></div>\n    <div class="field"><label>Wartung / Reparatur</label><input id="editHistoryName" class="input" type="text"></div>\n    <div class="row2">\n      <div class="field"><label>Datum</label><input id="editHistoryDate" class="input" type="date"></div>\n      <div class="field"><label>Kilometerstand</label><input id="editHistoryMileage" class="input" type="number" inputmode="numeric" min="0"></div>\n    </div>\n    <div class="field"><label>Kosten (€) – optional</label><input id="editHistoryCost" class="input" type="number" inputmode="decimal" step="0.01" min="0"></div>\n    <div class="field"><label>Notiz – optional</label><textarea id="editHistoryNote" class="input" rows="3"></textarea></div>\n    <button class="primary-btn" id="saveHistoryEditBtn">Änderungen speichern</button>\n  </div>\n</div>\n\n'''
+          assert marker in s
+          s=s.replace(marker,edit_modal+marker,1)
+
+          old='''return `<div class="record"><div><h4>${rule?esc(rule.name):esc(rec.taskName||"Wartung")}</h4><p>${fmtDate(rec.date)} \\u00b7 ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;'''
+          new='''return `<div class="record"><div><h4>${esc(rec.taskName||(rule?rule.name:"Wartung"))}</h4><p>${fmtDate(rec.date)} \\u00b7 ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-edit-btn" data-edit-record="${esc(rec.id)}" aria-label="Eintrag bearbeiten" title="Eintrag bearbeiten">✎</button><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;'''
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old_handlers='''  document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});\n}'''
+          new_handlers='''  document.querySelectorAll("[data-edit-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();openHistoryEdit(btn.dataset.editRecord);});\n  document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});\n}'''
+          assert old_handlers in s
+          s=s.replace(old_handlers,new_handlers,1)
+
+          insert='''let pendingHistoryEditId=null;\nfunction openHistoryEdit(recordId){\n  const v=vehicle();\n  const rec=(v.records||[]).find(r=>r.id===recordId);\n  if(!rec)return;\n  const rule=rulesFor(v).find(r=>r.id===rec.taskId);\n  pendingHistoryEditId=recordId;\n  document.getElementById("editHistoryName").value=rec.taskName||(rule?rule.name:"Wartung");\n  document.getElementById("editHistoryDate").value=rec.date||today();\n  document.getElementById("editHistoryMileage").value=rec.mileage||"";\n  document.getElementById("editHistoryCost").value=rec.cost||"";\n  document.getElementById("editHistoryNote").value=rec.note||"";\n  openModal("editHistoryModal");\n}\nfunction saveHistoryEdit(){\n  const v=vehicle();\n  const rec=(v.records||[]).find(r=>r.id===pendingHistoryEditId);\n  if(!rec)return;\n  const name=document.getElementById("editHistoryName").value.trim();\n  const date=document.getElementById("editHistoryDate").value;\n  const mileage=Number(document.getElementById("editHistoryMileage").value||0);\n  const cost=Number(document.getElementById("editHistoryCost").value||0);\n  const note=document.getElementById("editHistoryNote").value.trim();\n  if(!name){alert("Bitte die Wartung oder Reparatur benennen.");return;}\n  if(!date){alert("Bitte ein Datum eintragen.");return;}\n  if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}\n  const oldDate=rec.date, oldMileage=Number(rec.mileage||0);\n  rec.taskName=name;rec.date=date;rec.mileage=mileage;rec.cost=cost;rec.note=note;\n  if(rec.taskId==="service"&&rec.serviceGroup){\n    (v.records||[]).forEach(r=>{if(r.id!==rec.id&&r.serviceGroup===rec.serviceGroup){if(r.date===oldDate)r.date=date;if(Number(r.mileage||0)===oldMileage)r.mileage=mileage;}});\n  }\n  if(mileage>Number(v.mileage||0))v.mileage=mileage;\n  pendingHistoryEditId=null;save();closeModal("editHistoryModal");renderAll();\n}\n\n'''
+          anchor='let pendingHistoryDeleteId=null;'
+          assert anchor in s
+          s=s.replace(anchor,insert+anchor,1)
+
+          hook='document.getElementById("historyFab").onclick=openManualEntry;'
+          assert hook in s
+          s=s.replace(hook,'document.getElementById("saveHistoryEditBtn").onclick=saveHistoryEdit;\n'+hook,1)
+
+          # simplify wording everywhere while touching this file
+          s=s.replace('Nebenaggregateriemen-Kit wechseln','Keilrippenriemen wechseln')
+          s=s.replace('Nebenaggregateriemen wechseln','Keilrippenriemen wechseln')
+
+          p.write_text(s)
+          PY
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('app/src/main/assets/index.html').read_text()
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
+          Path('/tmp/carservice.js').write_text('\n'.join(scripts))
+          PY
+          node --check /tmp/carservice.js
+          grep -q 'saveHistoryEdit' app/src/main/assets/index.html
+          grep -q 'data-edit-record' app/src/main/assets/index.html
+          grep -q 'Keilrippenriemen wechseln' app/src/main/assets/index.html
+      - name: Commit app update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/add-history-edit.yml
+          git add app/src/main/assets/index.html
+          git commit -m 'Allow editing history entries'
+          git push
