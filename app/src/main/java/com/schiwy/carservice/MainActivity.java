@@ -44,7 +44,7 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setDefaultTextEncodingName("utf-8");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && Build.VERSION.SDK_INT < 33) {
@@ -52,6 +52,7 @@ public class MainActivity extends Activity {
         }
 
         webView.setWebViewClient(new WebViewClient());
+        webView.clearCache(true);
         webView.loadUrl("file:///android_asset/index.html");
     }
 
