@@ -81,6 +81,7 @@ html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16);box-
 .service-card{background:var(--surface2);box-shadow:var(--shadow);border-radius:18px;padding:15px 16px;margin:0 0 16px;display:grid;grid-template-columns:42px 1fr auto;gap:11px;align-items:center;cursor:pointer}.service-card .service-icon{width:42px;height:42px;border-radius:13px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:20px}.service-card h3{margin:0 0 4px;font-size:15px}.service-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.service-card .service-extra{font-size:11px;color:var(--primary);margin-top:5px}.check-section{margin:14px 0}.check-section h4{margin:0 0 8px;font-size:13px}.check-row{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;padding:10px 2px;border-bottom:1px solid var(--rule)}.check-row:last-child{border-bottom:0}.check-row input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--primary)}.check-row b{font-size:13px}.check-row small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:2px}.service-note{background:var(--primary-soft);border-radius:13px;padding:10px 12px;font-size:11px;line-height:1.5;color:var(--ink)}
 
 
+.service-group{margin:4px 0 14px}.service-group-title{font-size:11px;font-weight:800;letter-spacing:.25px;color:var(--muted);text-transform:uppercase;padding:8px 2px 5px;border-bottom:1px solid var(--rule);margin-bottom:2px}
 @media(max-width:380px){.summary{grid-template-columns:1fr 1fr 1fr}.km-value{font-size:28px}.vehicle-tab{min-width:0!important;padding:11px 9px}.vehicle-tab strong{font-size:13px}.vehicle-tab span{font-size:10.5px}}
 </style>
 </head>
@@ -624,6 +625,22 @@ const SERVICE_CHECKLIST_ICON_IDS = {
 function serviceChecklistRows(items){
   return items.map((item,i)=>`<label class="check-row"><input type="checkbox" ${item.taskId?`data-service-task="${esc(item.taskId)}"`:`data-service-systematic="${i}"`}><span><b>${esc(item.name)}</b>${item.detail?`<small>${esc(item.detail)}</small>`:""}</span></label>`).join("");
 }
+function serviceGroupFor(item){
+  const id=item.taskId||"";
+  const name=item.name||"";
+  if(["fuel","air","cabin"].includes(id)||/motoröl|ölfilter|filter/i.test(name)) return "Öl & Filter";
+  if(["brakefluid","coolantph"].includes(id)||/flüssigkeit|kühlmittel/i.test(name)) return "Flüssigkeiten";
+  if(["timing","auxbelt"].includes(id)||/zahnriemen|keilrippenriemen/i.test(name)) return "Riemen";
+  if(["dpf","fapadd","adblue"].includes(id)||/partikelfilter|fap|adblue|scr/i.test(name)) return "Abgas & AdBlue";
+  if(id.startsWith("custom_")) return "Weitere Arbeiten";
+  return "Kontrollen";
+}
+function serviceChecklistGrouped(items){
+  const order=["Öl & Filter","Flüssigkeiten","Riemen","Abgas & AdBlue","Kontrollen","Weitere Arbeiten"];
+  const groups={};
+  items.forEach(item=>{const g=serviceGroupFor(item);(groups[g]||(groups[g]=[])).push(item);});
+  return order.filter(g=>groups[g]?.length).map(g=>`<div class="service-group"><div class="service-group-title">${esc(g)}</div>${serviceChecklistRows(groups[g])}</div>`).join("");
+}
 function openServiceChecklist(){
   const v=vehicle();
   const {serviceInfo,extras}=servicePlan(v);
@@ -635,7 +652,7 @@ function openServiceChecklist(){
   }));
   const items=serviceInfo?[...systematic,...extraItems]:[];
   document.getElementById("serviceDueList").innerHTML=items.length
-    ?serviceChecklistRows(items)
+    ?serviceChecklistGrouped(items)
     :`<div class="small-note">Service noch nicht berechenbar. Bitte Kilometerstand und Fahrzeugdaten ergänzen.</div>`;
   showPage("service");
 }
@@ -733,7 +750,7 @@ function renderHistory(){
   const rules=rulesFor(v);
   document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
     const rule=rules.find(r=>r.id===rec.taskId);
-    return `<div class="record"><div><h4>${esc(rec.taskName||(rule?rule.name:"Wartung"))}</h4><p>${fmtDate(rec.date)} \u00b7 ${fmtKm(rec.mileage)} km${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-edit-btn" data-edit-record="${esc(rec.id)}" aria-label="Eintrag bearbeiten" title="Eintrag bearbeiten">✎</button><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;
+    return `<div class="record"><div><h4>${esc(rec.taskName||(rule?rule.name:"Wartung"))}</h4><p>${fmtDate(rec.date)}${rec.mileage!==null&&rec.mileage!==undefined&&rec.mileage!==""?" · "+fmtKm(rec.mileage)+" km":""}${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-edit-btn" data-edit-record="${esc(rec.id)}" aria-label="Eintrag bearbeiten" title="Eintrag bearbeiten">✎</button><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;
   }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
   document.querySelectorAll("[data-edit-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();openHistoryEdit(btn.dataset.editRecord);});
   document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});
@@ -758,12 +775,13 @@ function saveHistoryEdit(){
   if(!rec)return;
   const name=document.getElementById("editHistoryName").value.trim();
   const date=document.getElementById("editHistoryDate").value;
-  const mileage=Number(document.getElementById("editHistoryMileage").value||0);
+  const mileageRaw=document.getElementById("editHistoryMileage").value.trim();
+  const mileage=mileageRaw===""?null:Number(mileageRaw);
   const cost=Number(document.getElementById("editHistoryCost").value||0);
   const note=document.getElementById("editHistoryNote").value.trim();
   if(!name){alert("Bitte die Wartung oder Reparatur benennen.");return;}
   if(!date){alert("Bitte ein Datum eintragen.");return;}
-  if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}
+  if(mileage!==null&&(!Number.isFinite(mileage)||mileage<0)){alert("Bitte einen gültigen Kilometerstand eintragen oder das Feld leer lassen.");return;}
   const oldDate=rec.date, oldMileage=Number(rec.mileage||0);
   rec.taskName=name;rec.date=date;rec.mileage=mileage;rec.cost=cost;rec.note=note;
   if(rec.taskId==="service"&&rec.serviceGroup){
@@ -893,12 +911,13 @@ function saveManualEntry(){
   const v=vehicle();
   const name=document.getElementById("manualEntryName").value.trim();
   const date=document.getElementById("manualEntryDate").value;
-  const mileage=Number(document.getElementById("manualEntryMileage").value||0);
+  const mileageRaw=document.getElementById("manualEntryMileage").value.trim();
+  const mileage=mileageRaw===""?null:Number(mileageRaw);
   const cost=Number(document.getElementById("manualEntryCost").value||0);
   const note=document.getElementById("manualEntryNote").value.trim();
   if(!name){alert("Bitte die Wartung oder Arbeit benennen.");return;}
   if(!date){alert("Bitte ein Datum eintragen.");return;}
-  if(!mileage){alert("Bitte den Kilometerstand eintragen.");return;}
+  if(mileage!==null&&(!Number.isFinite(mileage)||mileage<0)){alert("Bitte einen gültigen Kilometerstand eintragen oder das Feld leer lassen.");return;}
   const stamp=Date.now();
   v.records.push({id:"manual_"+stamp,taskId:"manual_record_"+stamp,taskName:name,date,mileage,cost,note,manual:true});
   if(mileage>Number(v.mileage||0)) v.mileage=mileage;
