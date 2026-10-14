@@ -94,6 +94,14 @@ html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16);box-
 .manual-picker-item:active{background:var(--primary-soft)}
 .manual-picker-or{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:11px;margin:10px 0}.manual-picker-or:before,.manual-picker-or:after{content:"";height:1px;background:var(--rule);flex:1}
 
+
+.service-history-record{cursor:pointer}.service-history-record:active{transform:scale(.995)}
+.service-detail-meta{display:flex;flex-wrap:wrap;gap:7px;margin:-2px 0 14px}.service-detail-chip{padding:6px 9px;border-radius:999px;background:var(--primary-soft);color:var(--primary);font-size:11px;font-weight:700}
+.service-detail-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--rule);border-radius:14px;overflow:hidden;background:var(--paper)}
+.service-detail-item{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-bottom:1px solid var(--rule);font-size:13px;line-height:1.35}.service-detail-item:last-child{border-bottom:0}.service-detail-check{width:22px;height:22px;flex:0 0 22px;border-radius:7px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-weight:800;font-size:12px}
+.service-detail-note{margin-top:12px;padding:11px 12px;border-radius:12px;background:var(--paper);font-size:12px;color:var(--muted);line-height:1.45}
+.service-record-count{display:inline-block;margin-top:5px;padding:4px 7px;border-radius:999px;background:var(--primary-soft);color:var(--primary);font-size:10px;font-weight:750}
+
 </style>
 </head>
 <body>
@@ -803,16 +811,56 @@ function renderNextServicePlan(v){
     ?nextServiceGrouped(items)
     :`<div class="small-note">Noch nicht berechenbar. Bitte Kilometerstand und Fahrzeugdaten ergänzen.</div>`;
 }
+function serviceHistoryInfo(base,v){
+  const grouped=(v.records||[]).filter(r=>r.id===base.id||(base.serviceGroup&&r.serviceGroup===base.serviceGroup&&r.id!==base.id));
+  const items=[];
+  const note=String(base.note||"");
+  const m=note.match(/Checkliste:\s*(.*?)(?=\s·\s|$)/);
+  if(m&&m[1])m[1].split(";").map(x=>x.trim()).filter(Boolean).forEach(x=>items.push(x));
+  grouped.filter(r=>r.id!==base.id).forEach(r=>{if(r.taskName)items.push(r.taskName);});
+  if(!items.length&&base.taskName)items.push(base.taskName);
+  const unique=[...new Set(items)];
+  let extraNote=note;
+  if(m){extraNote=note.replace(m[0],"").replace(/^\s*·\s*/,"").trim();}
+  return {items:unique,note:extraNote};
+}
+function closeServiceHistoryDetails(){const el=document.getElementById("serviceHistoryDetailModal");if(el)el.classList.remove("open");}
+function openServiceHistoryDetails(recordId){
+  const v=vehicle();
+  const base=(v.records||[]).find(r=>r.id===recordId);
+  if(!base||base.taskId!=="service")return;
+  const info=serviceHistoryInfo(base,v);
+  let modal=document.getElementById("serviceHistoryDetailModal");
+  if(!modal){
+    document.body.insertAdjacentHTML("beforeend",`<div class="modal-backdrop" id="serviceHistoryDetailModal"><div class="modal"><div class="handle"></div><div class="modal-head"><h3>Peugeot-Service</h3><button class="close" type="button" id="closeServiceHistoryDetail">×</button></div><div id="serviceHistoryDetailContent"></div></div></div>`);
+    modal=document.getElementById("serviceHistoryDetailModal");
+    modal.addEventListener("click",e=>{if(e.target===modal)closeServiceHistoryDetails();});
+    document.getElementById("closeServiceHistoryDetail").onclick=closeServiceHistoryDetails;
+  }
+  const meta=[fmtDate(base.date)];
+  if(base.mileage!==null&&base.mileage!==undefined&&base.mileage!=="")meta.push(fmtKm(base.mileage)+" km");
+  if(base.cost)meta.push(fmtMoney(base.cost));
+  document.getElementById("serviceHistoryDetailContent").innerHTML=`<div class="service-detail-meta">${meta.map(x=>`<span class="service-detail-chip">${esc(x)}</span>`).join("")}</div><h4 style="margin:0 0 9px">Durchgeführte Arbeiten</h4><div class="service-detail-list">${info.items.map(name=>`<div class="service-detail-item"><span class="service-detail-check">✓</span><span>${esc(name)}</span></div>`).join("")}</div>${info.note?`<div class="service-detail-note"><b>Notiz</b><br>${esc(info.note)}</div>`:""}`;
+  modal.classList.add("open");
+}
+
 function renderHistory(){
   const v=vehicle();
-  const records=[...(v.records||[])].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  const total=records.reduce((sum,r)=>sum+Number(r.cost||0),0);
-  document.getElementById("historySummary").innerHTML=`<h3>${esc(v.name)}</h3><div class="row2"><div><div class="small-note">Eintr\u00e4ge</div><b>${records.length}</b></div><div><div class="small-note">Dokumentierte Kosten</div><b>${fmtMoney(total)}</b></div></div>`;
+  const allRecords=[...(v.records||[])].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const serviceGroups=new Set(allRecords.filter(r=>r.taskId==="service"&&r.serviceGroup).map(r=>r.serviceGroup));
+  const records=allRecords.filter(r=>r.taskId==="service"||!(r.serviceGroup&&serviceGroups.has(r.serviceGroup)));
+  const total=allRecords.reduce((sum,r)=>sum+Number(r.cost||0),0);
+  document.getElementById("historySummary").innerHTML=`<h3>${esc(v.name)}</h3><div class="row2"><div><div class="small-note">Einträge</div><b>${records.length}</b></div><div><div class="small-note">Dokumentierte Kosten</div><b>${fmtMoney(total)}</b></div></div>`;
   const rules=rulesFor(v);
   document.getElementById("historyList").innerHTML=records.length?records.map(rec=>{
     const rule=rules.find(r=>r.id===rec.taskId);
-    return `<div class="record"><div><h4>${esc(rec.taskName||(rule?rule.name:"Wartung"))}</h4><p>${fmtDate(rec.date)}${rec.mileage!==null&&rec.mileage!==undefined&&rec.mileage!==""?" · "+fmtKm(rec.mileage)+" km":""}${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-edit-btn" data-edit-record="${esc(rec.id)}" aria-label="Eintrag bearbeiten" title="Eintrag bearbeiten">✎</button><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag loeschen" title="Eintrag loeschen">&#128465;</button></div></div>`;
+    if(rec.taskId==="service"){
+      const info=serviceHistoryInfo(rec,v);
+      return `<div class="record service-history-record" data-service-details="${esc(rec.id)}"><div><h4>Peugeot-Service</h4><p>${fmtDate(rec.date)}${rec.mileage!==null&&rec.mileage!==undefined&&rec.mileage!==""?" · "+fmtKm(rec.mileage)+" km":""}<br><span class="service-record-count">${info.items.length} ${info.items.length===1?"Arbeit":"Arbeiten"} durchgeführt</span></p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-edit-btn" data-edit-record="${esc(rec.id)}" aria-label="Eintrag bearbeiten" title="Eintrag bearbeiten">✎</button><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag löschen" title="Eintrag löschen">&#128465;</button></div></div>`;
+    }
+    return `<div class="record"><div><h4>${esc(rec.taskName||(rule?rule.name:"Wartung"))}</h4><p>${fmtDate(rec.date)}${rec.mileage!==null&&rec.mileage!==undefined&&rec.mileage!==""?" · "+fmtKm(rec.mileage)+" km":""}${rec.note?`<br>${esc(rec.note)}`:""}</p></div><div class="record-actions"><div class="cost">${rec.cost?fmtMoney(rec.cost):""}</div><button class="history-edit-btn" data-edit-record="${esc(rec.id)}" aria-label="Eintrag bearbeiten" title="Eintrag bearbeiten">✎</button><button class="history-delete-btn" data-delete-record="${esc(rec.id)}" aria-label="Eintrag löschen" title="Eintrag löschen">&#128465;</button></div></div>`;
   }).join(""):`<div class="history-empty">Noch keine Wartungen eingetragen.</div>`;
+  document.querySelectorAll("[data-service-details]").forEach(row=>row.onclick=()=>openServiceHistoryDetails(row.dataset.serviceDetails));
   document.querySelectorAll("[data-edit-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();openHistoryEdit(btn.dataset.editRecord);});
   document.querySelectorAll("[data-delete-record]").forEach(btn=>btn.onclick=e=>{e.stopPropagation();deleteHistoryRecord(btn.dataset.deleteRecord);});
 }
