@@ -137,7 +137,7 @@ html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16);box-
     <section class="page" id="page-service">
       <div class="section-head"><h3>Peugeot-Service</h3></div>
       <div class="panel">
-        <div class="check-section"><h4>Bei diesem Service fällig</h4><div id="serviceDueList"></div></div>
+        <div class="check-section"><h4>Alle Servicepunkte</h4><div class="small-note" style="margin:-5px 0 12px">Fällige und kommende Wartungspunkte für dieses Fahrzeug.</div><div id="serviceDueList"></div></div>
         <button class="primary-btn" id="confirmServiceChecklistBtn">Service bestätigen</button>
       </div>
     </section>
@@ -712,17 +712,22 @@ function nextServiceGrouped(items){
 }
 function openServiceChecklist(){
   const v=vehicle();
-  const {serviceInfo,extras}=servicePlan(v);
-  const systematic=(SERVICE_SYSTEMATIC_ITEMS[v.id]||[]).map(name=>({name}));
-  const extraItems=extras.map(({rule,info})=>({
-    name:rule.name,
-    taskId:rule.id,
-    detail:info&&info.detail?info.detail:"Zusatzarbeit beim nächsten Service"
-  }));
-  const items=serviceInfo?[...systematic,...extraItems]:[];
+  const rules=rulesFor(v);
+  const systematic=(SERVICE_SYSTEMATIC_ITEMS[v.id]||[]).map(name=>({name,detail:"Kontrolle bei jedem Peugeot-Service"}));
+  const maintenanceRules=rules.filter(rule=>!rule.manual&&!rule.hu).map(rule=>{
+    const info=dueInfo(v,rule);
+    let detail="Wartungspunkt";
+    if(info){
+      if(info.status==="due")detail="Jetzt fällig · "+info.detail;
+      else if(info.status==="soon")detail="Bald fällig · "+info.detail;
+      else detail=info.detail||"Noch nicht fällig";
+    }
+    return {name:rule.name,taskId:rule.id,detail};
+  });
+  const items=[...maintenanceRules,...systematic];
   document.getElementById("serviceDueList").innerHTML=items.length
     ?serviceChecklistGrouped(items)
-    :`<div class="small-note">Service noch nicht berechenbar. Bitte Kilometerstand und Fahrzeugdaten ergänzen.</div>`;
+    :`<div class="small-note">Keine Servicepunkte hinterlegt.</div>`;
   showPage("service");
 }
 function openServiceConfirm(){
