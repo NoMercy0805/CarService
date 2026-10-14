@@ -1,0 +1,62 @@
+name: Fix car image paths
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-car-image-paths.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use absolute Android asset URLs
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text()
+
+          # Vehicle card images: use explicit absolute Android asset URLs.
+          pattern=r'const img=v\.id==="508"\?"data:image/jpeg;base64,[^"]+":"data:image/jpeg;base64,[^"]+";'
+          repl='const img=v.id==="508"?"file:///android_asset/peugeot-508.jpg":"file:///android_asset/peugeot-2008.jpg";'
+          s,n=re.subn(pattern,repl,s,count=1)
+          if n!=1:
+              raise SystemExit(f'renderTabs image assignment not replaced: {n}')
+
+          # Decorative next-service background should also use the local asset.
+          pattern2=r"(\.next-service-panel:after\{[^}]*background:)url\('data:image/jpeg;base64,[^']+'\)([^}]*\})"
+          s,n2=re.subn(pattern2,r"\1url('file:///android_asset/peugeot-508.jpg')\2",s,count=1)
+          if n2!=1:
+              raise SystemExit(f'next-service background not replaced: {n2}')
+
+          # Add image error diagnostics in development-friendly form without changing UI.
+          old='<div class="vehicle-photo"><img src="${img}" alt="${esc(v.name)}"></div>'
+          new='<div class="vehicle-photo"><img src="${img}" alt="${esc(v.name)}" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'image-load-error\')"></div>'
+          if old in s:
+              s=s.replace(old,new,1)
+
+          # If an image still fails, show a neutral placeholder rather than broken-image text.
+          css="""
+.vehicle-photo.image-load-error:after{content:'Fahrzeugbild';font-size:11px;font-weight:700;color:var(--muted)}
+"""
+          s=s.replace('</style>',css+'\n</style>',1)
+
+          p.write_text(s)
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
+          Path('/tmp/carservice.js').write_text('\n'.join(scripts))
+          subprocess.run(['node','--check','/tmp/carservice.js'],check=True)
+          assert 'file:///android_asset/peugeot-508.jpg' in s
+          assert 'file:///android_asset/peugeot-2008.jpg' in s
+          print('absolute Android asset image URLs configured')
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add app/src/main/assets/index.html
+          git rm .github/workflows/fix-car-image-paths.yml
+          git commit -m "Use absolute Android asset URLs for vehicle images"
+          git push
