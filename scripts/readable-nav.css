@@ -1,2 +1,12 @@
 .nav-btn{font-size:10px}
 .bottom-nav{min-height:67px}
+.bottom-nav{border-radius:19px 19px 0 0;padding:5px 7px}
+.nav-btn{padding:7px 4px 6px;gap:3px}
+.nav-btn svg{width:21px;height:21px}
+.nav-btn.active:after{bottom:0;width:36px;height:3px}
+.fab{width:54px;height:54px;bottom:80px;font-size:29px}
+.next-service-due small{font-size:10.5px;color:var(--muted)}
+.next-service-item b{font-size:12px}
+.next-service-item small{font-size:10px}
+.next-service-check-row input{width:19px;height:19px}
+.next-service-panel .primary-btn{padding:11px;font-size:13px}
