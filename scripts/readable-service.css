@@ -1,0 +1,10 @@
+/* Service screen: separate categories, readable controls */
+.service-main-panel{padding:0;background:transparent;border:0;box-shadow:none}
+.service-main-panel .check-section>h4,.service-main-panel .check-section>.small-note{display:none}
+.service-group{margin:0 0 10px;border:1px solid var(--rule);border-radius:14px;overflow:hidden;background:var(--surface);box-shadow:0 3px 10px rgba(38,75,123,.04)}
+.service-group-title{padding:9px 11px;font-size:12px;background:var(--primary-soft);font-weight:800}
+.check-row{padding:10px 11px;grid-template-columns:22px 1fr;gap:9px}
+.check-row input{width:19px;height:19px}
+.check-row b{font-size:12.5px;line-height:1.3}
+.check-row small{font-size:10.5px;line-height:1.3;margin-top:3px}
+.service-main-panel>.primary-btn{padding:11px 12px;font-size:13px;border-radius:12px;margin-top:3px;box-shadow:none}
