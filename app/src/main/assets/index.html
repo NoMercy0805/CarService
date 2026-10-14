@@ -85,7 +85,7 @@ html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16);box-
 @media(max-width:380px){.summary{grid-template-columns:1fr 1fr 1fr}.km-value{font-size:28px}.vehicle-tab{min-width:0!important;padding:11px 9px}.vehicle-tab strong{font-size:13px}.vehicle-tab span{font-size:10.5px}}
 
 .manual-picker-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 13px;border-radius:12px;background:var(--primary-soft);color:var(--primary);font-weight:700;text-align:left}
-.manual-picker-toggle span{font-size:20px;line-height:1;transition:transform .15s ease}.manual-picker-toggle.open span{transform:rotate(90deg)}
+.manual-picker-toggle .manual-picker-arrow{font-size:20px;line-height:1;transition:transform .15s ease}.manual-picker-toggle.open .manual-picker-arrow{transform:rotate(90deg)}
 .manual-picker{display:none;margin-top:8px;max-height:44vh;overflow:auto;border:1px solid var(--rule);border-radius:14px;background:var(--paper);padding:7px}
 .manual-picker.open{display:block}
 .manual-picker-group{background:var(--surface2);border-radius:12px;overflow:hidden;margin-bottom:8px}.manual-picker-group:last-child{margin-bottom:0}
@@ -258,7 +258,7 @@ html[data-theme="dark"] #settingsMenuBtn{border-color:rgba(255,255,255,.16);box-
   <div class="modal">
     <div class="handle"></div>
     <div class="modal-head"><h3>Manuelle Wartung</h3><button class="close" data-close="manualEntryModal">×</button></div>
-    <div class="field"><label>Wartung / Reparatur</label><button type="button" class="manual-picker-toggle" id="manualPresetToggle"><span class="manual-picker-label">Aus Wartungsliste auswählen</span><span>›</span></button><div id="manualPresetPicker" class="manual-picker"></div><div class="manual-picker-or">oder</div><input id="manualEntryName" class="input" type="text" placeholder="Eigene Wartung / Reparatur eingeben …" autocomplete="off"><div class="help">Wähle einen Eintrag aus der sortierten Liste oder schreibe jederzeit einen eigenen.</div></div>
+    <div class="field"><label>Wartung / Reparatur</label><button type="button" class="manual-picker-toggle" id="manualPresetToggle"><span class="manual-picker-label">Aus Wartungsliste auswählen</span><span class="manual-picker-arrow">›</span></button><div id="manualPresetPicker" class="manual-picker"></div><div class="manual-picker-or">oder</div><input id="manualEntryName" class="input" type="text" placeholder="Eigene Wartung / Reparatur eingeben …" autocomplete="off"><div class="help">Wähle einen Eintrag aus der sortierten Liste oder schreibe jederzeit einen eigenen.</div></div>
     <div class="row2">
       <div class="field"><label>Datum</label><input id="manualEntryDate" class="input" type="date"></div>
       <div class="field"><label>Kilometerstand</label><input id="manualEntryMileage" class="input" type="number" inputmode="numeric" min="0"></div>
