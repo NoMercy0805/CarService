@@ -86,7 +86,7 @@ due_logic=r'''function dueInfo(v,rule){
   return {status,label:due?"Fällig":soon?"Bald":"Okay",detail,dueDate,dueKm,kmLeft,dayLeft};
 }
 '''
-s,n=re.subn(r'function dueInfo\\(v,rule\\)\\{.*?(?=function today\\(\\)\\{)',lambda m:due_logic,s,flags=re.S)
+s,n=re.subn(r'function dueInfo\(v,rule\)\{.*?(?=function today\(\)\{)',lambda m:due_logic,s,flags=re.S)
 assert n==1, f'dueInfo patch failed: {n}'
 # Show unknown service baseline explicitly; never display fictitious dates like 2014.
 s=s.replace('const lastText=last?', 'const lastText=last?')
