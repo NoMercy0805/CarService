@@ -790,9 +790,20 @@ function renderDashboard(){
   renderNextServicePlan(v);
 }
 function renderNextServicePlan(v){
-  const {serviceRule,serviceInfo,extras}=servicePlan(v);
+  const rules=rulesFor(v);
   const due=document.getElementById("nextServiceDue");
   const list=document.getElementById("nextServiceList");
+  const serviceRule=rules.find(r=>r.id==="service");
+  const serviceInfo=serviceRule?dueInfo(v,serviceRule):null;
+  const dueItems=[];
+
+  rules.forEach(rule=>{
+    if(rule.manual) return;
+    const info=dueInfo(v,rule);
+    if(!info||!(info.status==="due"||info.status==="soon")) return;
+    dueItems.push({id:rule.id,name:rule.name,note:info.detail||((info.status==="due")?"Jetzt fällig":"Bald fällig")});
+  });
+
   if(!serviceInfo){
     due.innerHTML="<b>Nächster Service noch nicht berechenbar.</b><br>Bitte Kilometerstand und Fahrzeugdaten ergänzen.";
   }else{
@@ -800,21 +811,13 @@ function renderNextServicePlan(v){
     const target=[];
     if(serviceInfo.dueKm!==null&&serviceInfo.dueKm!==undefined) target.push(`${fmtKm(serviceInfo.dueKm)} km`);
     if(serviceInfo.dueDate) target.push(fmtDate(serviceInfo.dueDate));
-    const lastText=last?`Letzter Service: ${fmtDate(last.date)} · ${fmtKm(last.mileage)} km.<br>`:"Noch kein Service gespeichert.<br>";
+    const lastText=last?`Letzter Service: ${fmtDate(last.date)}${last.mileage!==null&&last.mileage!==undefined&&last.mileage!==""?" · "+fmtKm(last.mileage)+" km":""}.<br>`:"Noch kein Service gespeichert.<br>";
     due.innerHTML=`<b>${lastText}</b>Nächster Service: ${target.length?target.join(" oder "):"nach hinterlegtem Wartungsplan"}.`;
   }
-  const extraItems=extras.map(({rule,info})=>({
-    id:rule.id,
-    name:rule.name,
-    note:info&&info.detail?info.detail:"Beim nächsten Service fällig"
-  }));
-  const items=serviceInfo?[
-    {id:"service",name:serviceRule?serviceRule.name:"Motoröl + Ölfilter / Inspektion",note:"Beim nächsten Service fällig"},
-    ...extraItems
-  ]:[];
-  list.innerHTML=items.length
-    ?nextServiceGrouped(items)
-    :`<div class="small-note">Noch nicht berechenbar. Bitte Kilometerstand und Fahrzeugdaten ergänzen.</div>`;
+
+  list.innerHTML=dueItems.length
+    ?nextServiceGrouped(dueItems)
+    :`<div class="small-note">Aktuell ist keine Wartungsarbeit fällig oder bald fällig.</div>`;
 }
 function serviceHistoryInfo(base,v){
   const grouped=(v.records||[]).filter(r=>r.id===base.id||(base.serviceGroup&&r.serviceGroup===base.serviceGroup&&r.id!==base.id));
