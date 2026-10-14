@@ -1,0 +1,40 @@
+name: Embed car images
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/embed-car-images.yml'
+permissions:
+  contents: write
+jobs:
+  embed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Embed JPGs in HTML
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64,re,subprocess
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text()
+          for name in ['peugeot-508.jpg','peugeot-2008.jpg']:
+              b64=base64.b64encode(Path('app/src/main/assets/'+name).read_bytes()).decode()
+              uri='data:image/jpeg;base64,'+b64
+              s=s.replace('"'+name+'"','"'+uri+'"')
+              s=s.replace("url('"+name+"')","url('"+uri+"')")
+          p.write_text(s)
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
+          Path('/tmp/carservice.js').write_text('\n'.join(scripts))
+          subprocess.run(['node','--check','/tmp/carservice.js'],check=True)
+          assert 'src="data:image/jpeg;base64,' in s
+          print('embedded images successfully')
+          PY
+      - name: Commit embedded images
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add app/src/main/assets/index.html
+          git rm .github/workflows/embed-car-images.yml
+          git commit -m "Embed vehicle images in app HTML"
+          git push
