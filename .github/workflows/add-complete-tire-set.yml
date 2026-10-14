@@ -1,0 +1,34 @@
+name: Add complete tire set option
+on:
+  push:
+    paths:
+      - '.github/workflows/add-complete-tire-set.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add complete tire set preset
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app/src/main/assets/index.html')
+          s=p.read_text()
+          old='  "Reifen vorne ersetzen",\n  "Reifen hinten ersetzen",'
+          new='  "Reifen komplett ersetzen",\n  "Reifen vorne ersetzen",\n  "Reifen hinten ersetzen",'
+          if '"Reifen komplett ersetzen"' not in s:
+              if old not in s: raise SystemExit('tire presets not found')
+              s=s.replace(old,new,1)
+          p.write_text(s)
+          assert '"Reifen komplett ersetzen"' in s
+          PY
+      - name: Commit app change and remove helper
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add app/src/main/assets/index.html
+          git rm .github/workflows/add-complete-tire-set.yml
+          git commit -m "Add complete tire set maintenance option"
+          git push
