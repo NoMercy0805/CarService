@@ -38,6 +38,20 @@ jobs:
           print('Vehicle/profile mapping OK: 3003/AOK -> 508 profiles; 3003/AUH -> 2008 profiles')
           PY
 
+      - name: Use simple belt wording
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/src/main/assets/index.html')
+          s = p.read_text()
+          s = s.replace('Nebenaggregateriemen-Kit wechseln', 'Keilrippenriemen wechseln')
+          s = s.replace('Nebenaggregateriemen wechseln', 'Keilrippenriemen wechseln')
+          s = s.replace('Nebenaggregateriemen-Kit', 'Keilrippenriemen')
+          s = s.replace('Nebenaggregateriemen', 'Keilrippenriemen')
+          p.write_text(s)
+          assert 'Nebenaggregateriemen' not in s
+          PY
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -78,6 +92,20 @@ jobs:
           assert 'id:"2008",name:"Peugeot 2008"' in html and 'profile:"2008_normal"' in html
 
           print('Vehicle/profile mapping OK: 3003/AOK -> 508 profiles; 3003/AUH -> 2008 profiles')
+          PY
+
+      - name: Use simple belt wording
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/src/main/assets/index.html')
+          s = p.read_text()
+          s = s.replace('Nebenaggregateriemen-Kit wechseln', 'Keilrippenriemen wechseln')
+          s = s.replace('Nebenaggregateriemen wechseln', 'Keilrippenriemen wechseln')
+          s = s.replace('Nebenaggregateriemen-Kit', 'Keilrippenriemen')
+          s = s.replace('Nebenaggregateriemen', 'Keilrippenriemen')
+          p.write_text(s)
+          assert 'Nebenaggregateriemen' not in s
           PY
 
       - name: Set up JDK 17
