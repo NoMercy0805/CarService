@@ -1,9 +1,11 @@
 name: Apply CarService redesign
 on:
   push:
-    branches: [ui-redesign-final2]
+    branches:
+      - ui-redesign-final2
     paths:
-      - '.github/workflows/apply-new-ui.yml'
+      - tools/apply_ui.py
+      - .github/workflows/apply-new-ui.yml
 permissions:
   contents: write
 jobs:
@@ -12,78 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Apply redesign
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re, subprocess
-          p=Path('app/src/main/assets/index.html')
-          s=p.read_text()
-
-          s=s.replace('<div class="brand"><h1>CarService</h1><p>Wartung · HU/TÜV · Historie</p></div>', '<div class="brand"><h1>Car<span>Service</span></h1><p>Wartung. Einfach im Blick.</p></div>', 1)
-
-          old='''      <div class="panel next-service-panel">\n        <div class="section-head"><h3>Nächster Service</h3></div>\n        <div class="next-service-due" id="nextServiceDue">Wird berechnet …</div>\n        <div class="next-service-list" id="nextServiceList"></div>\n      </div>'''
-          new='''      <div class="panel next-service-panel">\n        <div class="next-service-head"><div class="next-service-icon">◫</div><div><h3>Nächster Service</h3><small>Alle aktuell anstehenden Arbeiten</small></div></div>\n        <div class="next-service-due" id="nextServiceDue">Wird berechnet …</div>\n        <div class="next-service-label">Fällige Arbeiten</div>\n        <div class="next-service-list" id="nextServiceList"></div>\n      </div>'''
-          if old in s: s=s.replace(old,new,1)
-
-          s=s.replace('<div class="section-head"><h3>Peugeot-Service</h3></div>\n      <div class="panel">', '<div class="page-title-row"><div class="page-title-icon">🔧</div><div><h2>Peugeot-Service</h2><p>Alle Servicepunkte auf einen Blick</p></div></div>\n      <div class="panel service-main-panel">',1)
-          s=s.replace('<div class="section-head"><h3>Service-Historie</h3></div>\n      <div class="panel" id="historySummary"></div>', '<div class="page-title-row"><div class="page-title-icon">▣</div><div><h2>Historie</h2><p>Alle Einträge zu diesem Fahrzeug</p></div></div>\n      <div class="panel history-summary-panel" id="historySummary"></div>',1)
-
-          start=s.find('function renderTabs(){')
-          end=s.find('\nfunction renderDashboard(){',start)
-          if start<0 or end<0: raise SystemExit('renderTabs anchors not found')
-          new_tabs=r'''function renderTabs(){
-  const box=document.getElementById("vehicleTabs");
-  box.innerHTML=state.vehicles.map(v=>{
-    const active=v.id===state.selectedVehicle;
-    const img=v.id==="508"?"peugeot-508.jpg":"peugeot-2008.jpg";
-    return `<button class="vehicle-tab ${active?"active":""}" data-vehicle="${v.id}"><span class="vehicle-check">${active?"✓":""}</span><div class="vehicle-photo"><img src="${img}" alt="${esc(v.name)}"></div><strong>${esc(v.name)}</strong>${v.licensePlate?`<small class="vehicle-plate">${esc(v.licensePlate)}</small>`:""}<span class="vehicle-subline">${esc(v.subtitle)}${v.mileage?` · ${fmtKm(v.mileage)} km`:""}</span></button>`;
-  }).join("");
-  box.querySelectorAll("[data-vehicle]").forEach(b=>b.onclick=()=>{state.selectedVehicle=b.dataset.vehicle;save();renderAll();});
-}'''
-          s=s[:start]+new_tabs+s[end:]
-
-          start=s.find('function nextServiceGrouped(items){')
-          end=s.find('\nfunction openServiceChecklist(){',start)
-          if start<0 or end<0: raise SystemExit('nextServiceGrouped anchors not found')
-          new_next=r'''function nextServiceGrouped(items){
-  const order=["Öl & Filter","Flüssigkeiten","Riemen","Abgas & AdBlue","Kontrollen","Weitere Arbeiten"];
-  const groups={};
-  items.forEach(item=>{const g=serviceGroupFor(item);(groups[g]||(groups[g]=[])).push(item);});
-  return order.filter(g=>groups[g]?.length).map(g=>`<div class="service-group next-group"><div class="service-group-title">${esc(g)}</div>${groups[g].map(item=>`<div class="next-service-item"><span class="next-service-mark">✓</span><div><b>${esc(item.name)}</b><small>${esc(item.note)}</small></div><span class="next-chevron">›</span></div>`).join("")}</div>`).join("");
-}'''
-          s=s[:start]+new_next+s[end:]
-
-          css=r'''
-/* 2026 redesign */
-:root{--paper:#F7FAFE;--surface:#FFFFFF;--surface2:#FFFFFF;--ink:#0A1733;--muted:#7484A3;--rule:#E4EBF5;--primary:#0877F9;--primary-soft:#EAF4FF;--shadow:0 10px 28px rgba(42,86,140,.10),0 2px 6px rgba(42,86,140,.05);--radius:22px}
-html[data-theme="dark"]{--paper:#0D1420;--surface:#131E2E;--surface2:#131E2E;--ink:#F5F8FF;--muted:#9FB0C9;--rule:#25354B;--primary:#4B9BFF;--primary-soft:#172E4D;--shadow:0 10px 28px rgba(0,0,0,.28)}
-html,body{background:var(--paper)}body{padding-bottom:104px}#app{max-width:560px;padding-left:14px;padding-right:14px}
-.topbar{padding:20px 6px 12px}.brand h1{font-size:34px;line-height:1;font-weight:850;letter-spacing:-1.5px;color:var(--ink)}.brand h1 span{color:var(--primary)}.brand p{display:none}.icon-btn{width:46px;height:46px;border-radius:50%;box-shadow:none;border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
-.vehicle-tabs{gap:12px;padding:2px 1px 18px}.vehicle-tab{position:relative;padding:10px 10px 12px;border-radius:20px;border:1.5px solid var(--rule);background:var(--surface);box-shadow:0 5px 18px rgba(38,73,120,.06);min-height:185px}.vehicle-tab.active{border:2px solid var(--primary);background:linear-gradient(180deg,#F8FCFF,#EEF7FF)}html[data-theme="dark"] .vehicle-tab.active{background:#13253B}.vehicle-photo{height:100px;border-radius:14px;overflow:hidden;margin-bottom:8px;background:#F1F4F8;display:flex;align-items:center;justify-content:center}.vehicle-photo img{width:100%;height:100%;object-fit:cover;object-position:center}.vehicle-tab strong{font-size:16px;letter-spacing:-.2px;color:var(--ink)}.vehicle-plate{font-size:12px!important;color:var(--muted)!important;font-weight:700!important;margin-top:4px!important}.vehicle-subline{font-size:10px!important;color:var(--muted)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.vehicle-check{position:absolute!important;right:10px;top:10px;width:27px;height:27px;border-radius:50%;display:grid!important;place-items:center;background:var(--surface);border:2px solid #9AAECC;color:#fff!important;font-weight:900;z-index:2;margin:0!important;font-size:16px!important}.vehicle-tab.active .vehicle-check{background:var(--primary);border-color:var(--primary)}
-#page-dashboard .hero{display:none}#setupNotice .notice{margin:0 0 12px;border-radius:16px;box-shadow:none}
-.next-service-panel{position:relative;overflow:hidden;margin:0 0 16px;padding:18px;border-radius:24px;background:linear-gradient(135deg,#F7FBFF 0%,#EEF7FF 54%,#D8ECFF 100%);border:1px solid #DFECFA;box-shadow:var(--shadow)}html[data-theme="dark"] .next-service-panel{background:linear-gradient(135deg,#142237,#162C48 60%,#173B61);border-color:#254466}.next-service-panel:after{content:"";position:absolute;right:-36px;top:18px;width:180px;height:118px;background:url('peugeot-508.jpg') center/cover no-repeat;border-radius:28px;opacity:.16;transform:rotate(-3deg)}.next-service-panel>*{position:relative;z-index:1}.next-service-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}.next-service-icon,.page-title-icon{width:50px;height:50px;border-radius:17px;background:#DCEEFF;color:var(--primary);display:grid;place-items:center;font-size:24px;font-weight:850;flex:0 0 50px}.next-service-head h3,.page-title-row h2{margin:0;color:var(--ink);font-size:25px;letter-spacing:-.7px}.next-service-head small,.page-title-row p{display:block;margin:3px 0 0;color:var(--muted);font-size:12px}.next-service-due{background:rgba(255,255,255,.74);border:1px solid rgba(255,255,255,.85);padding:12px 13px;border-radius:15px;margin-bottom:12px;color:var(--ink);font-size:12px;line-height:1.45}html[data-theme="dark"] .next-service-due{background:rgba(9,23,39,.46);border-color:#28415D}.next-service-label{font-size:13px;font-weight:850;color:var(--ink);margin:3px 0 5px}.next-service-list{background:rgba(255,255,255,.78);border-radius:17px;overflow:hidden;padding:0 10px}html[data-theme="dark"] .next-service-list{background:rgba(9,23,39,.46)}.next-group{margin:0}.next-group .service-group-title{padding:11px 4px 6px;border-bottom:0;color:var(--muted);font-size:10px}.next-service-item{display:grid;grid-template-columns:27px 1fr 18px;gap:9px;align-items:center;padding:11px 2px;border-bottom:1px solid var(--rule)}.next-service-item:last-child{border-bottom:0}.next-service-mark{width:25px;height:25px;border-radius:8px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-weight:900}.next-service-item b{font-size:13px;color:var(--ink)}.next-service-item small{font-size:10px;color:var(--muted);margin-top:2px}.next-chevron{font-size:24px;color:#4D668B}
-.page-title-row{display:flex;align-items:center;gap:13px;margin:2px 2px 14px}.page-title-row h2{font-size:24px}.service-main-panel,.history-summary-panel{border-radius:22px;border:1px solid var(--rule);box-shadow:var(--shadow)}.service-main-panel{padding:8px 15px 16px}.check-section>h4{font-size:16px;margin:8px 0 2px}.check-section>.small-note{margin:0 0 9px!important}.service-group{margin:8px 0 15px;border:1px solid var(--rule);border-radius:15px;overflow:hidden}.service-group-title{background:var(--primary-soft);border:0;padding:10px 12px;margin:0;font-size:12px;color:var(--ink);text-transform:none;letter-spacing:0}.check-row{padding:11px 12px;background:var(--surface);grid-template-columns:24px 1fr}.check-row input{width:20px;height:20px}.check-row b{font-size:13px}.check-row small{font-size:10px}.primary-btn{border-radius:15px;padding:14px;font-size:15px;box-shadow:0 9px 22px rgba(8,119,249,.22)}
-.history-summary-panel{padding:14px 15px;margin-bottom:12px}.history-summary-panel h3{font-size:14px}.history-list{gap:8px}.record{border-radius:18px;border:1px solid var(--rule);box-shadow:0 6px 18px rgba(36,73,118,.06);padding:13px 12px}.record h4{font-size:14px}.record p{font-size:11px}.service-record-count{background:var(--primary-soft);color:var(--primary)}.history-edit-btn,.history-delete-btn{border-radius:10px}.fab{width:60px;height:60px;bottom:92px;right:max(18px,calc((100vw - 560px)/2 + 18px));box-shadow:0 12px 28px rgba(8,119,249,.35)}
-.bottom-nav{width:min(560px,100%);border-radius:28px 28px 0 0;background:rgba(255,255,255,.97);border:1px solid var(--rule);padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(35,69,113,.10);backdrop-filter:blur(18px)}html[data-theme="dark"] .bottom-nav{background:rgba(19,30,46,.97)}.nav-btn{position:relative;font-size:10px;padding:10px 4px;color:#91A0B8}.nav-btn svg{width:22px;height:22px}.nav-btn.active{color:var(--primary)}.nav-btn.active:after{content:"";position:absolute;bottom:2px;width:42px;height:3px;border-radius:3px;background:var(--primary)}
-.modal{border-radius:26px 26px 0 0}.service-detail-list{border-radius:16px}
-@media(max-width:390px){.brand h1{font-size:31px}.vehicle-tab{min-height:170px}.vehicle-photo{height:88px}.vehicle-tab strong{font-size:14px}.next-service-head h3{font-size:22px}}
-'''
-          if '/* 2026 redesign */' not in s:
-              s=s.replace('</style>',css+'\n</style>',1)
-
-          p.write_text(s)
-          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
-          Path('/tmp/carservice.js').write_text('\n'.join(scripts))
-          subprocess.run(['node','--check','/tmp/carservice.js'],check=True)
-          for token in ['vehicle-photo','next-service-head','2026 redesign','peugeot-508.jpg','Alle Servicepunkte']:
-              assert token in s, token
-          print('UI redesign validated')
-          PY
+        run: python3 tools/apply_ui.py
       - name: Commit redesign
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add app/src/main/assets/index.html app/src/main/assets/peugeot-508.jpg app/src/main/assets/peugeot-2008.jpg
-          git rm .github/workflows/apply-new-ui.yml
+          git rm .github/workflows/apply-new-ui.yml tools/apply_ui.py
           git commit -m "Apply new CarService design"
           git push origin HEAD:ui-redesign-final2
