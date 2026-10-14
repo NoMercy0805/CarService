@@ -27,7 +27,9 @@ jobs:
           scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
           Path('/tmp/carservice.js').write_text('\n'.join(scripts))
           subprocess.run(['node','--check','/tmp/carservice.js'],check=True)
-          assert 'src="data:image/jpeg;base64,' in s
+          assert s.count('data:image/jpeg;base64,') >= 3
+          assert 'peugeot-508.jpg' not in s
+          assert 'peugeot-2008.jpg' not in s
           print('embedded images successfully')
           PY
       - name: Commit embedded images
