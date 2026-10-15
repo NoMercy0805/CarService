@@ -28,8 +28,7 @@
   };
 
   const vehicleImageParts={
-    '508':['vehicle-images/508-1.b64','vehicle-images/508-2.b64','vehicle-images/508-3.b64','vehicle-images/508-4.b64'],
-    '2008':['vehicle-images/peugeot-2008-correct.b64']
+    '508':['vehicle-images/508-1.b64','vehicle-images/508-2.b64','vehicle-images/508-3.b64','vehicle-images/508-4.b64']
   };
   const vehicleObjectUrls={};
   let vehicleImagesLoading=false;
@@ -83,14 +82,13 @@
   }
 
   async function ensureVehicleImages(){
-    if(vehicleImagesLoading || (vehicleObjectUrls['508'] && vehicleObjectUrls['2008'])) return;
+    if(vehicleImagesLoading || vehicleObjectUrls['508']) return;
     vehicleImagesLoading=true;
     try{
-      const values=await Promise.all([loadTextParts(vehicleImageParts['508']),loadTextParts(vehicleImageParts['2008'])]);
-      vehicleObjectUrls['508']=base64ToBlobUrl(values[0]);
-      vehicleObjectUrls['2008']=base64ToBlobUrl(values[1]);
+      const value=await loadTextParts(vehicleImageParts['508']);
+      vehicleObjectUrls['508']=base64ToBlobUrl(value);
       patchVehicleImages();
-    }catch(err){console.error('CarService vehicle artwork load failed',err);}
+    }catch(err){console.error('CarService 508 artwork load failed',err);}
     finally{vehicleImagesLoading=false;}
   }
 
@@ -98,9 +96,9 @@
     document.querySelectorAll('.vehicle-photo img').forEach(img=>{
       const card=img.closest('.vehicle-card');
       const context=((card?.textContent||'')+' '+(img.getAttribute('alt')||'')+' '+(img.dataset.vehicleArtwork||'')).toLowerCase();
-      const key=context.includes('2008')?'2008':'508';
-      const replacement=vehicleObjectUrls[key];
-      if(replacement && img.getAttribute('src')!==replacement){img.setAttribute('src',replacement);img.dataset.vehicleArtwork=key;}
+      const is2008=context.includes('2008');
+      const replacement=is2008?'peugeot-2008-custom.jpg':vehicleObjectUrls['508'];
+      if(replacement && img.getAttribute('src')!==replacement){img.setAttribute('src',replacement);img.dataset.vehicleArtwork=is2008?'2008':'508';}
       img.removeAttribute('onerror');
       img.style.removeProperty('display');
       const holder=img.closest('.vehicle-photo');if(holder) holder.classList.remove('image-load-error');
