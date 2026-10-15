@@ -1,0 +1,16 @@
+CarService vehicle image credits
+
+Peugeot 508 SW I
+Source: Wikimedia Commons — “Peugeot 508-SW Side view.JPG”
+Author: Luc106
+Source page: https://commons.wikimedia.org/wiki/File:Peugeot_508-SW_Side_view.JPG
+License: Public domain (released by the copyright holder)
+Build uses the Wikimedia 1024 px derivative of the original image.
+
+Peugeot 2008 I Facelift
+Source: Wikimedia Commons — “Peugeot 2008 (2016 facelift) (2).jpg”
+Author: Antoineets
+Source page: https://commons.wikimedia.org/wiki/File:Peugeot_2008_(2016_facelift)_(2).jpg
+License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+License: https://creativecommons.org/licenses/by-sa/4.0/
+Build uses the Wikimedia 1024 px derivative of the original image. No content alteration is performed beyond Wikimedia’s thumbnail scaling and display-time fitting inside the app card.
