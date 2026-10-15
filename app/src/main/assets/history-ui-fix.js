@@ -2,9 +2,6 @@
   if(window.__carserviceHistoryInlineInstalled) return;
   window.__carserviceHistoryInlineInstalled=true;
 
-  let actionRecordId=null;
-  let actionIsService=false;
-
   function ensureStyle(){
     if(document.getElementById('carservice-history-inline-style')) return;
     const style=document.createElement('style');
@@ -16,19 +13,39 @@
       .service-history-inline-check{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green);font-size:9px;font-weight:900;margin-top:1px}
       .service-history-inline-note{margin-top:7px;padding-top:7px;border-top:1px solid var(--rule);font-size:10.5px;line-height:1.4;color:var(--muted)}
       .service-history-record{align-items:start}
-      #historyList .record{cursor:pointer;position:relative}
+
+      #historyList .record{cursor:pointer;position:relative;transition:transform .12s ease}
       #historyList .record:active{transform:scale(.995)}
       #historyList .record .record-actions .history-edit-btn,
       #historyList .record .record-actions .history-delete-btn{display:none!important}
-      .history-action-sheet .history-action-summary{padding:2px 1px 10px}
-      .history-action-sheet .history-action-summary h4{margin:0 0 5px;font-size:16px;color:var(--ink)}
-      .history-action-sheet .history-action-summary p{margin:0;font-size:12px;line-height:1.45;color:var(--muted)}
-      .history-action-buttons{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-      .history-action-btn{width:100%;padding:13px 14px;border-radius:13px;font-size:14px;font-weight:800;text-align:left}
-      .history-action-btn.details{background:var(--primary-soft);color:var(--primary)}
-      .history-action-btn.edit{background:var(--primary-soft);color:var(--primary)}
-      .history-action-btn.delete{background:var(--red-soft);color:var(--red)}
-      .history-action-btn.cancel{background:var(--paper);color:var(--muted)}
+
+      .history-row-actions{
+        grid-column:1/-1;
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        width:100%;
+        max-height:0;
+        opacity:0;
+        overflow:hidden;
+        margin-top:0;
+        pointer-events:none;
+        transition:max-height .2s ease,opacity .2s ease,margin-top .2s ease;
+      }
+      #historyList .record[data-history-actions-open="1"] .history-row-actions{
+        max-height:78px;
+        opacity:1;
+        margin-top:10px;
+        pointer-events:auto;
+      }
+      .history-action-icon-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:56px;color:var(--muted)}
+      .history-action-icon-btn{
+        width:36px;height:36px;border-radius:12px;display:grid;place-items:center;padding:0;border:0;
+        background:var(--paper);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;
+      }
+      .history-action-icon-btn svg{width:15px;height:15px;display:block}
+      .history-action-icon-btn.danger{background:var(--red-soft);color:var(--red)}
+      .history-action-icon-label{font-size:10px;line-height:1.15;color:var(--muted);font-weight:650}
     `;
     document.head.appendChild(style);
   }
@@ -73,51 +90,41 @@
     });
   }
 
-  function ensureActionSheet(){
-    let modal=document.getElementById('historyActionModal');
-    if(modal) return modal;
-    document.body.insertAdjacentHTML('beforeend',`
-      <div class="modal-backdrop" id="historyActionModal">
-        <div class="modal history-action-sheet">
-          <div class="handle"></div>
-          <div class="modal-head"><h3>Historien-Eintrag</h3><button class="close" id="historyActionClose" type="button">×</button></div>
-          <div class="history-action-summary"><h4 id="historyActionTitle"></h4><p id="historyActionMeta"></p></div>
-          <div class="history-action-buttons">
-            <button class="history-action-btn details" id="historyActionDetails" type="button">Details anzeigen</button>
-            <button class="history-action-btn edit" id="historyActionEdit" type="button">✎ Bearbeiten</button>
-            <button class="history-action-btn delete" id="historyActionDelete" type="button">🗑 Löschen</button>
-            <button class="history-action-btn cancel" id="historyActionCancel" type="button">Abbrechen</button>
-          </div>
-        </div>
-      </div>`);
-    modal=document.getElementById('historyActionModal');
-    const close=()=>{modal.classList.remove('open');actionRecordId=null;actionIsService=false;};
-    document.getElementById('historyActionClose').onclick=close;
-    document.getElementById('historyActionCancel').onclick=close;
-    modal.addEventListener('click',e=>{if(e.target===modal)close();});
-    document.getElementById('historyActionEdit').onclick=()=>{
-      const id=actionRecordId;close();if(id&&typeof openHistoryEdit==='function')openHistoryEdit(id);
-    };
-    document.getElementById('historyActionDelete').onclick=()=>{
-      const id=actionRecordId;close();if(id&&typeof deleteHistoryRecord==='function')deleteHistoryRecord(id);
-    };
-    document.getElementById('historyActionDetails').onclick=()=>{
-      const id=actionRecordId;close();if(id&&typeof openServiceHistoryDetails==='function')openServiceHistoryDetails(id);
-    };
-    return modal;
+  function makeActions(row,id){
+    let actions=row.querySelector('.history-row-actions');
+    if(actions) return actions;
+    actions=document.createElement('div');
+    actions.className='history-row-actions';
+    actions.innerHTML=`
+      <span class="history-action-icon-wrap" data-history-row-action="edit">
+        <button type="button" class="history-action-icon-btn" data-history-row-action="edit" aria-label="Bearbeiten" title="Bearbeiten">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </button>
+        <span class="history-action-icon-label">Bearbeiten</span>
+      </span>
+      <span class="history-action-icon-wrap" data-history-row-action="delete">
+        <button type="button" class="history-action-icon-btn danger" data-history-row-action="delete" aria-label="Löschen" title="Löschen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        </button>
+        <span class="history-action-icon-label">Löschen</span>
+      </span>`;
+    row.appendChild(actions);
+
+    actions.querySelectorAll('[data-history-row-action="edit"]').forEach(el=>el.addEventListener('click',e=>{
+      e.preventDefault();e.stopPropagation();
+      if(typeof openHistoryEdit==='function') openHistoryEdit(id);
+    }));
+    actions.querySelectorAll('[data-history-row-action="delete"]').forEach(el=>el.addEventListener('click',e=>{
+      e.preventDefault();e.stopPropagation();
+      if(typeof deleteHistoryRecord==='function') deleteHistoryRecord(id);
+    }));
+    return actions;
   }
 
-  function openHistoryActions(row,id,isService){
-    if(!id) return;
-    actionRecordId=id;
-    actionIsService=!!isService;
-    const modal=ensureActionSheet();
-    const title=(row.querySelector('h4')?.textContent||'Historien-Eintrag').trim();
-    const meta=(row.querySelector('p')?.textContent||'').replace(/\s+/g,' ').trim();
-    document.getElementById('historyActionTitle').textContent=title;
-    document.getElementById('historyActionMeta').textContent=meta;
-    document.getElementById('historyActionDetails').style.display=actionIsService?'block':'none';
-    modal.classList.add('open');
+  function closeOtherRows(exceptRow){
+    document.querySelectorAll('#historyList .record').forEach(row=>{
+      if(row!==exceptRow) row.removeAttribute('data-history-actions-open');
+    });
   }
 
   function wireHistoryRows(){
@@ -127,10 +134,16 @@
       const serviceId=row.dataset.serviceDetails||'';
       const id=(edit&&edit.dataset.editRecord)||(del&&del.dataset.deleteRecord)||serviceId;
       if(!id) return;
-      row.dataset.historyActionId=id;
+      makeActions(row,id);
       row.onclick=e=>{
-        if(e.target.closest('button')) return;
-        openHistoryActions(row,id,!!serviceId);
+        if(e.target.closest('[data-history-row-action]')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+        const isOpen=row.getAttribute('data-history-actions-open')==='1';
+        closeOtherRows(row);
+        if(isOpen) row.removeAttribute('data-history-actions-open');
+        else row.setAttribute('data-history-actions-open','1');
       };
     });
   }
@@ -142,7 +155,6 @@
 
   function install(){
     ensureStyle();
-    ensureActionSheet();
     if(typeof window.renderHistory==='function' && !window.renderHistory.__historyInlineWrapped){
       const original=window.renderHistory;
       const wrapped=function(){
