@@ -3,12 +3,17 @@ package com.schiwy.carservice;
 import android.app.Activity;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Window;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
+
+import androidx.webkit.WebViewAssetLoader;
+import androidx.webkit.WebViewClientCompat;
 
 public class MainActivity extends Activity {
 
@@ -21,8 +26,8 @@ public class MainActivity extends Activity {
         Window window = getWindow();
         boolean darkMode = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
                 == Configuration.UI_MODE_NIGHT_YES;
-        window.setStatusBarColor(darkMode ? Color.rgb(15, 16, 19) : Color.rgb(242, 242, 245));
-        window.setNavigationBarColor(darkMode ? Color.rgb(15, 16, 19) : Color.rgb(242, 242, 245));
+        window.setStatusBarColor(darkMode ? Color.rgb(15, 16, 19) : Color.rgb(246, 248, 252));
+        window.setNavigationBarColor(darkMode ? Color.rgb(15, 16, 19) : Color.rgb(246, 248, 252));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int flags = window.getDecorView().getSystemUiVisibility();
@@ -35,7 +40,7 @@ public class MainActivity extends Activity {
         }
 
         webView = new WebView(this);
-        webView.setBackgroundColor(darkMode ? Color.rgb(15, 16, 19) : Color.rgb(242, 242, 245));
+        webView.setBackgroundColor(darkMode ? Color.rgb(15, 16, 19) : Color.rgb(246, 248, 252));
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();
@@ -51,9 +56,39 @@ public class MainActivity extends Activity {
             settings.setForceDark(WebSettings.FORCE_DARK_OFF);
         }
 
-        webView.setWebViewClient(new WebViewClient());
+        final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
+                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/res/", new WebViewAssetLoader.ResourcesPathHandler(this))
+                .build();
+
+        webView.setWebViewClient(new WebViewClientCompat() {
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                return assetLoader.shouldInterceptRequest(request.getUrl());
+            }
+
+            @Override
+            @SuppressWarnings("deprecation")
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                return assetLoader.shouldInterceptRequest(Uri.parse(url));
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.evaluateJavascript(
+                        "(function(){" +
+                        "if(!document.getElementById('carservice-final-css')){" +
+                        "var l=document.createElement('link');" +
+                        "l.id='carservice-final-css';l.rel='stylesheet';l.href='final.css';document.head.appendChild(l);}" +
+                        "})();",
+                        null
+                );
+            }
+        });
+
         webView.clearCache(true);
-        webView.loadUrl("file:///android_asset/index.html");
+        webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
     }
 
     @Override
