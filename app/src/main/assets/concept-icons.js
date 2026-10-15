@@ -19,26 +19,20 @@
   };
 
   const categoryMap={
-    'öl & filter':['oil','black'],
-    'flüssigkeiten':['fluids','blue'],
-    'kühlung & flüssigkeiten':['cooling','blue'],
-    'riemen':['belt','dark'],
-    'riemen & wasserpumpe':['belt','dark'],
-    'abgas & adblue':['exhaust','blue'],
-    'abgas & diesel':['exhaust','dark'],
-    'adblue & scr':['fluids','blue'],
-    'kontrollen':['inspect','dark'],
-    'weitere arbeiten':['more','blue'],
-    'bremsen':['brake','dark'],
-    'motor & antrieb':['engine','dark'],
-    'fahrwerk & lenkung':['gear','dark'],
-    'elektrik & beleuchtung':['electric','dark'],
-    'klima & komfort':['climate','blue'],
-    'sommerreifen':['tire','dark'],
-    'winterreifen':['tire','dark'],
-    'reifen & räder':['tire','dark'],
-    'sonstiges':['more','dark']
+    'öl & filter':['oil','black'],'flüssigkeiten':['fluids','blue'],'kühlung & flüssigkeiten':['cooling','blue'],
+    'riemen':['belt','dark'],'riemen & wasserpumpe':['belt','dark'],'abgas & adblue':['exhaust','blue'],
+    'abgas & diesel':['exhaust','dark'],'adblue & scr':['fluids','blue'],'kontrollen':['inspect','dark'],
+    'weitere arbeiten':['more','blue'],'bremsen':['brake','dark'],'motor & antrieb':['engine','dark'],
+    'fahrwerk & lenkung':['gear','dark'],'elektrik & beleuchtung':['electric','dark'],'klima & komfort':['climate','blue'],
+    'sommerreifen':['tire','dark'],'winterreifen':['tire','dark'],'reifen & räder':['tire','dark'],'sonstiges':['more','dark']
   };
+
+  const vehicleImageParts={
+    '508':['vehicle-images/508-1.b64','vehicle-images/508-2.b64','vehicle-images/508-3.b64','vehicle-images/508-4.b64'],
+    '2008':['vehicle-images/2008h-1.hex','vehicle-images/2008h-2.hex','vehicle-images/2008h-3.hex','vehicle-images/2008h-4.hex','vehicle-images/2008h-5.hex','vehicle-images/2008h-6.hex','vehicle-images/2008h-7.hex','vehicle-images/2008h-8.hex']
+  };
+  const vehicleObjectUrls={};
+  let vehicleImagesLoading=false;
 
   function ensureStyle(){
     if(document.getElementById('concept-icon-system-style')) return;
@@ -50,11 +44,10 @@
       .concept-category-icon{width:22px;height:22px;flex:0 0 22px;display:inline-grid;place-items:center;border-radius:7px}
       .concept-category-icon svg{width:18px;height:18px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
       .concept-category-icon .icon-fill{fill:currentColor!important;stroke:none!important}
-      .concept-category-icon.black{color:#111827;background:#eef0f3}
-      .concept-category-icon.dark{color:#263244;background:#eef1f5}
-      .concept-category-icon.blue{color:#1f75d6;background:#e6f1ff}
+      .concept-category-icon.black{color:#111827;background:#eef0f3}.concept-category-icon.dark{color:#263244;background:#eef1f5}.concept-category-icon.blue{color:#1f75d6;background:#e6f1ff}
       html[data-theme="dark"] .concept-category-icon.black,html[data-theme="dark"] .concept-category-icon.dark{color:#f4f7fb;background:#263246}
       html[data-theme="dark"] .concept-category-icon.blue{color:#7ab7ff;background:#173459}
+      .vehicle-photo{background:#fff!important}.vehicle-photo img[data-vehicle-artwork]{background:#fff!important}
     `;
     document.head.appendChild(style);
   }
@@ -77,15 +70,43 @@
     el.insertBefore(span,el.firstChild);
   }
 
+  async function loadTextParts(paths){
+    const values=await Promise.all(paths.map(path=>fetch(path).then(r=>{if(!r.ok) throw new Error(path+' '+r.status);return r.text();})));
+    return values.join('').replace(/\s+/g,'');
+  }
+
+  function base64ToBlobUrl(base64){
+    const binary=atob(base64),bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+    return URL.createObjectURL(new Blob([bytes],{type:'image/jpeg'}));
+  }
+
+  function hexToBlobUrl(hex){
+    const bytes=new Uint8Array(hex.length/2);
+    for(let i=0;i<bytes.length;i++) bytes[i]=parseInt(hex.slice(i*2,i*2+2),16);
+    return URL.createObjectURL(new Blob([bytes],{type:'image/jpeg'}));
+  }
+
+  async function ensureVehicleImages(){
+    if(vehicleImagesLoading || (vehicleObjectUrls['508'] && vehicleObjectUrls['2008'])) return;
+    vehicleImagesLoading=true;
+    try{
+      const values=await Promise.all([loadTextParts(vehicleImageParts['508']),loadTextParts(vehicleImageParts['2008'])]);
+      vehicleObjectUrls['508']=base64ToBlobUrl(values[0]);
+      vehicleObjectUrls['2008']=hexToBlobUrl(values[1]);
+      patchVehicleImages();
+    }catch(err){console.error('CarService vehicle artwork load failed',err);}
+    finally{vehicleImagesLoading=false;}
+  }
+
   function patchVehicleImages(){
     document.querySelectorAll('.vehicle-photo img').forEach(img=>{
-      const source=((img.getAttribute('src')||'')+' '+(img.getAttribute('alt')||'')).toLowerCase();
-      const replacement=source.includes('2008')?'peugeot-2008.jpg':'peugeot-508.jpg';
-      if(!img.getAttribute('src') || !img.getAttribute('src').endsWith(replacement)) img.setAttribute('src',replacement);
-      img.removeAttribute('onerror');
-      img.style.removeProperty('display');
-      const holder=img.closest('.vehicle-photo');
-      if(holder) holder.classList.remove('image-load-error');
+      const source=((img.getAttribute('src')||'')+' '+(img.getAttribute('alt')||'')+' '+(img.dataset.vehicleArtwork||'')).toLowerCase();
+      const key=source.includes('2008')?'2008':'508';
+      const replacement=vehicleObjectUrls[key];
+      if(replacement && img.getAttribute('src')!==replacement){img.setAttribute('src',replacement);img.dataset.vehicleArtwork=key;}
+      img.removeAttribute('onerror');img.style.removeProperty('display');
+      const holder=img.closest('.vehicle-photo');if(holder) holder.classList.remove('image-load-error');
     });
   }
 
@@ -93,8 +114,7 @@
     ensureStyle();
     setSectionIcon(document.querySelector('.next-service-icon'),'next');
     document.querySelectorAll('.page-title-row').forEach(row=>{
-      const title=(row.querySelector('h2')?.textContent||'').trim();
-      const box=row.querySelector('.page-title-icon');
+      const title=(row.querySelector('h2')?.textContent||'').trim(),box=row.querySelector('.page-title-icon');
       if(title==='Peugeot-Service') setSectionIcon(box,'service');
       if(title==='Historie') setSectionIcon(box,'history');
     });
@@ -103,12 +123,9 @@
   }
 
   let scheduled=false;
-  function scheduleApply(){
-    if(scheduled) return;
-    scheduled=true;
-    requestAnimationFrame(()=>{scheduled=false;apply();});
-  }
+  function scheduleApply(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;apply();});}
 
   apply();
+  ensureVehicleImages();
   new MutationObserver(scheduleApply).observe(document.documentElement,{childList:true,subtree:true});
 })();
