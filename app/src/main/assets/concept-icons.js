@@ -28,8 +28,7 @@
   };
 
   const vehicleImageParts={
-    '508':['vehicle-images/508-1.b64','vehicle-images/508-2.b64','vehicle-images/508-3.b64','vehicle-images/508-4.b64'],
-    '2008':['vehicle-images/2008h-1.hex','vehicle-images/2008h-2.hex','vehicle-images/2008h-3.hex','vehicle-images/2008h-4.hex','vehicle-images/2008h-5.hex','vehicle-images/2008h-6.hex','vehicle-images/2008h-7.hex','vehicle-images/2008h-8.hex']
+    '508':['vehicle-images/508-1.b64','vehicle-images/508-2.b64','vehicle-images/508-3.b64','vehicle-images/508-4.b64']
   };
   const vehicleObjectUrls={};
   let vehicleImagesLoading=false;
@@ -82,31 +81,26 @@
     return URL.createObjectURL(new Blob([bytes],{type:'image/jpeg'}));
   }
 
-  function hexToBlobUrl(hex){
-    const bytes=new Uint8Array(hex.length/2);
-    for(let i=0;i<bytes.length;i++) bytes[i]=parseInt(hex.slice(i*2,i*2+2),16);
-    return URL.createObjectURL(new Blob([bytes],{type:'image/jpeg'}));
-  }
-
   async function ensureVehicleImages(){
-    if(vehicleImagesLoading || (vehicleObjectUrls['508'] && vehicleObjectUrls['2008'])) return;
+    if(vehicleImagesLoading || vehicleObjectUrls['508']) return;
     vehicleImagesLoading=true;
     try{
-      const values=await Promise.all([loadTextParts(vehicleImageParts['508']),loadTextParts(vehicleImageParts['2008'])]);
-      vehicleObjectUrls['508']=base64ToBlobUrl(values[0]);
-      vehicleObjectUrls['2008']=hexToBlobUrl(values[1]);
+      const value=await loadTextParts(vehicleImageParts['508']);
+      vehicleObjectUrls['508']=base64ToBlobUrl(value);
       patchVehicleImages();
-    }catch(err){console.error('CarService vehicle artwork load failed',err);}
+    }catch(err){console.error('CarService 508 artwork load failed',err);}
     finally{vehicleImagesLoading=false;}
   }
 
   function patchVehicleImages(){
     document.querySelectorAll('.vehicle-photo img').forEach(img=>{
-      const source=((img.getAttribute('src')||'')+' '+(img.getAttribute('alt')||'')+' '+(img.dataset.vehicleArtwork||'')).toLowerCase();
-      const key=source.includes('2008')?'2008':'508';
-      const replacement=vehicleObjectUrls[key];
-      if(replacement && img.getAttribute('src')!==replacement){img.setAttribute('src',replacement);img.dataset.vehicleArtwork=key;}
-      img.removeAttribute('onerror');img.style.removeProperty('display');
+      const card=img.closest('.vehicle-card');
+      const context=((card?.textContent||'')+' '+(img.getAttribute('alt')||'')+' '+(img.dataset.vehicleArtwork||'')).toLowerCase();
+      const is2008=context.includes('2008');
+      const replacement=is2008?'peugeot-2008.jpg':vehicleObjectUrls['508'];
+      if(replacement && img.getAttribute('src')!==replacement){img.setAttribute('src',replacement);img.dataset.vehicleArtwork=is2008?'2008':'508';}
+      img.removeAttribute('onerror');
+      img.style.removeProperty('display');
       const holder=img.closest('.vehicle-photo');if(holder) holder.classList.remove('image-load-error');
     });
   }
