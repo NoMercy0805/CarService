@@ -12,15 +12,12 @@
     try{ openServiceChecklist(); }catch(e){ console.error('Service refresh failed',e); }
   }
 
-  // Switching the vehicle already updates state + dashboard through renderAll().
-  // The Peugeot-Service list used to remain untouched, so it showed the previous car.
   document.addEventListener('click',function(e){
     const button=e.target&&e.target.closest?e.target.closest('#vehicleTabs [data-vehicle]'):null;
     if(!button) return;
     setTimeout(refreshServiceForSelectedVehicle,0);
   },true);
 
-  // Also protect against any other code path that changes the selected vehicle and calls renderAll().
   try{
     const originalRenderAll=renderAll;
     renderAll=function(){
@@ -31,7 +28,6 @@
     };
   }catch(e){}
 
-  // Make the dashboard's "Nächster Service" panel explicit: when + what.
   try{
     renderNextServicePlan=function(v){
       const rules=rulesFor(v);
@@ -77,8 +73,6 @@
         });
       });
 
-      // HU/AU is not part of a normal Peugeot service, but if it is due soon it should still
-      // remain visible in the dashboard as an upcoming vehicle task.
       rules.filter(r=>r.hu).forEach(rule=>{
         const info=dueInfo(v,rule);
         if(info&&(info.status==='due'||info.status==='soon')){
@@ -86,7 +80,6 @@
         }
       });
 
-      // Remove duplicates while keeping the service as first item.
       const seen=new Set();
       const unique=items.filter(item=>{
         if(!item.id||seen.has(item.id)) return false;
@@ -102,9 +95,71 @@
     };
   }catch(e){ console.error('Dashboard service patch failed',e); }
 
-  // Refresh the currently visible page once after installation.
   try{
     renderDashboard();
     refreshServiceForSelectedVehicle();
   }catch(e){}
+})();
+
+(function(){
+  if(window.__carserviceHistoryInlineInstalled) return;
+  window.__carserviceHistoryInlineInstalled=true;
+
+  function ensureHistoryStyle(){
+    if(document.getElementById('carservice-history-inline-style')) return;
+    const style=document.createElement('style');
+    style.id='carservice-history-inline-style';
+    style.textContent='.service-history-inline{margin-top:9px;display:flex;flex-direction:column;gap:5px}.service-history-inline-title{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.35px}.service-history-inline-item{display:grid;grid-template-columns:17px 1fr;gap:7px;align-items:start;font-size:11px;line-height:1.35;color:var(--ink)}.service-history-inline-check{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green);font-size:9px;font-weight:900;margin-top:1px}.service-history-inline-note{margin-top:7px;padding-top:7px;border-top:1px solid var(--rule);font-size:10.5px;line-height:1.4;color:var(--muted)}.service-history-record{align-items:start}';
+    document.head.appendChild(style);
+  }
+
+  function addInlineDetails(){
+    try{
+      const v=vehicle();
+      document.querySelectorAll('.service-history-record[data-service-details]').forEach(row=>{
+        if(row.querySelector('.service-history-inline')) return;
+        const base=(v.records||[]).find(r=>String(r.id)===String(row.dataset.serviceDetails));
+        if(!base) return;
+        const info=serviceHistoryInfo(base,v);
+        if(!info||!Array.isArray(info.items)||!info.items.length) return;
+        const left=row.firstElementChild;
+        if(!left) return;
+        const box=document.createElement('div');
+        box.className='service-history-inline';
+        const title=document.createElement('div');
+        title.className='service-history-inline-title';
+        title.textContent='Durchgeführte Arbeiten';
+        box.appendChild(title);
+        info.items.forEach(name=>{
+          const item=document.createElement('div');
+          item.className='service-history-inline-item';
+          const check=document.createElement('span');
+          check.className='service-history-inline-check';
+          check.textContent='✓';
+          const text=document.createElement('span');
+          text.textContent=name;
+          item.append(check,text);
+          box.appendChild(item);
+        });
+        if(info.note){
+          const note=document.createElement('div');
+          note.className='service-history-inline-note';
+          note.textContent=info.note;
+          box.appendChild(note);
+        }
+        left.appendChild(box);
+      });
+    }catch(e){console.error('History inline details failed',e);}
+  }
+
+  ensureHistoryStyle();
+  try{
+    const originalRenderHistory=renderHistory;
+    renderHistory=function(){
+      const result=originalRenderHistory.apply(this,arguments);
+      addInlineDetails();
+      return result;
+    };
+  }catch(e){}
+  addInlineDetails();
 })();
