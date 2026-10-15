@@ -1,22 +1,30 @@
 {
   "vehicles": {
     "508": {
+      "vin": "VF38ERHH8BL071113",
       "hsn": "3003",
       "tsn": "AOK",
       "model": "Peugeot 508 SW 2.0 HDi",
+      "engineCode": "RHH",
+      "engineFamily": "DW10CTED4",
       "powerKw": 120,
       "powerPs": 163,
-      "profiles": ["508_early", "508_late"],
-      "note": "HSN/TSN identifies the vehicle type, but not whether the early or late 2012 maintenance profile applies. Production date/ORGA or Peugeot service documentation is still required."
+      "profiles": ["508_early"],
+      "selectedProfile": "508_early",
+      "note": "VIN-specific binding: RHH/DW10CTED4, early 508 maintenance schedule. Normal service 30,000 km / 24 months; timing belt and water pump 240,000 km / 120 months."
     },
     "2008": {
+      "vin": "VF3CUBHZMGY078951",
       "hsn": "3003",
       "tsn": "AUH",
       "model": "Peugeot 2008 1.6 BlueHDi",
+      "engineCode": "BHZ",
+      "engineFamily": "DV6FC",
       "powerKw": 88,
       "powerPs": 120,
       "profiles": ["2008_normal", "2008_severe"],
-      "note": "Normal vs. severe profile depends on operating conditions."
+      "selectedProfile": "2008_normal",
+      "note": "VIN-specific binding: BHZ/DV6FC. Normal vs. severe schedule depends on operating conditions; normal remains default."
     }
   }
 }
