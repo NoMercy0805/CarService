@@ -1,11 +1,13 @@
 package com.schiwy.carservice;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.view.Window;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -17,7 +19,9 @@ import androidx.webkit.WebViewClientCompat;
 
 public class MainActivity extends Activity {
 
+    private static final int FOLDER_PICKER_REQUEST = 778;
     private WebView webView;
+    private WebAppInterface bridge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +60,9 @@ public class MainActivity extends Activity {
             settings.setForceDark(WebSettings.FORCE_DARK_OFF);
         }
 
+        bridge = new WebAppInterface(this);
+        webView.addJavascriptInterface(bridge, "AndroidBridge");
+
         final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
                 .addPathHandler("/res/", new WebViewAssetLoader.ResourcesPathHandler(this))
@@ -82,6 +89,8 @@ public class MainActivity extends Activity {
                         "var l=document.createElement('link');l.id='carservice-final-css';l.rel='stylesheet';l.href='final.css';document.head.appendChild(l);}" +
                         "if(!document.getElementById('carservice-concept-icons')){" +
                         "var s=document.createElement('script');s.id='carservice-concept-icons';s.src='concept-icons.js';document.head.appendChild(s);}" +
+                        "if(!document.getElementById('carservice-backup-system')){" +
+                        "var b=document.createElement('script');b.id='carservice-backup-system';b.src='backup.js';document.head.appendChild(b);}" +
                         "})();",
                         null
                 );
@@ -90,6 +99,60 @@ public class MainActivity extends Activity {
 
         webView.clearCache(true);
         webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+    }
+
+    /** Called by AndroidBridge.pickBackupFolder(). */
+    void launchBackupFolderPicker() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        try {
+            startActivityForResult(intent, FOLDER_PICKER_REQUEST);
+        } catch (Exception e) {
+            notifyFolderPicked(false, null);
+        }
+    }
+
+    private void notifyFolderPicked(boolean success, String folderName) {
+        if (webView == null) return;
+        String safeName = folderName == null ? "null"
+                : "'" + folderName.replace("\\", "\\\\").replace("'", "\\'") + "'";
+        webView.evaluateJavascript(
+                "window.onBackupFolderPicked && window.onBackupFolderPicked(" + success + "," + safeName + ");",
+                null);
+    }
+
+    private String friendlyFolderName(Uri treeUri) {
+        try {
+            String docId = DocumentsContract.getTreeDocumentId(treeUri);
+            int colon = docId.indexOf(':');
+            String path = colon >= 0 ? docId.substring(colon + 1) : docId;
+            return path.isEmpty() ? "Gewählter Ordner" : path;
+        } catch (Exception e) {
+            return "Gewählter Ordner";
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FOLDER_PICKER_REQUEST) {
+            if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+                Uri treeUri = data.getData();
+                try {
+                    getContentResolver().takePersistableUriPermission(
+                            treeUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                } catch (Exception ignored) {}
+                String displayName = friendlyFolderName(treeUri);
+                if (bridge != null) bridge.storeBackupFolder(treeUri, displayName);
+                notifyFolderPicked(true, displayName);
+            } else {
+                notifyFolderPicked(false, null);
+            }
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
