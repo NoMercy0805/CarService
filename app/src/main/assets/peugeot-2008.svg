@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 220" role="img" aria-label="Peugeot 2008">
+  <defs>
+    <linearGradient id="body" x1="0" x2="1">
+      <stop offset="0" stop-color="#d9e4ef"/>
+      <stop offset="0.55" stop-color="#f8fbfe"/>
+      <stop offset="1" stop-color="#b9c8d8"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" x2="1">
+      <stop offset="0" stop-color="#6f8eae"/>
+      <stop offset="1" stop-color="#cbdbe9"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="280" cy="190" rx="205" ry="13" fill="#dfe7ef"/>
+  <path d="M93 145c7-31 24-50 51-57l74-18c18-5 37-7 57-7h72c27 0 47 8 64 25l50 48c11 10 17 20 19 31H73c1-9 7-17 20-22z" fill="url(#body)" stroke="#8193a6" stroke-width="3"/>
+  <path d="M206 77h73v55H168l30-45c3-5 5-7 8-10zm86 0h57c20 0 35 6 49 20l36 35H292z" fill="url(#glass)" stroke="#7d90a5" stroke-width="3"/>
+  <path d="M280 77v55M362 80v52M169 133h270" fill="none" stroke="#7b8da1" stroke-width="3"/>
+  <path d="M80 151h405v18H75c0-7 2-13 5-18z" fill="#aebdcb" opacity=".72"/>
+  <rect x="431" y="143" width="39" height="9" rx="4" fill="#d94f4f"/>
+  <rect x="87" y="142" width="39" height="10" rx="4" fill="#f4d28a"/>
+  <circle cx="166" cy="168" r="35" fill="#26384a"/>
+  <circle cx="166" cy="168" r="18" fill="#d9e0e8" stroke="#7f8c99" stroke-width="3"/>
+  <circle cx="404" cy="168" r="35" fill="#26384a"/>
+  <circle cx="404" cy="168" r="18" fill="#d9e0e8" stroke="#7f8c99" stroke-width="3"/>
+  <path d="M122 148h16M444 148h20" stroke="#f6fbff" stroke-width="5" stroke-linecap="round"/>
+</svg>
