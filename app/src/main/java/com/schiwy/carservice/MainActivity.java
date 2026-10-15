@@ -91,8 +91,6 @@ public class MainActivity extends Activity {
                         "var s=document.createElement('script');s.id='carservice-concept-icons';s.src='concept-icons.js';document.head.appendChild(s);}" +
                         "if(!document.getElementById('carservice-backup-system')){" +
                         "var b=document.createElement('script');b.id='carservice-backup-system';b.src='backup.js';document.head.appendChild(b);}" +
-                        "if(!document.getElementById('carservice-service-ui-fix')){" +
-                        "var f=document.createElement('script');f.id='carservice-service-ui-fix';f.src='service-ui-fix.js';document.head.appendChild(f);}" +
                         "})();",
                         null
                 );
