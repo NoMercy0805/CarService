@@ -79,8 +79,10 @@ public class MainActivity extends Activity {
                 view.evaluateJavascript(
                         "(function(){" +
                         "if(!document.getElementById('carservice-final-css')){" +
-                        "var l=document.createElement('link');" +
-                        "l.id='carservice-final-css';l.rel='stylesheet';l.href='final.css';document.head.appendChild(l);}" +
+                        "var l=document.createElement('link');l.id='carservice-final-css';l.rel='stylesheet';l.href='final.css';document.head.appendChild(l);}" +
+                        "if(!document.getElementById('carservice-concept-icon-style')){" +
+                        "var s=document.createElement('style');s.id='carservice-concept-icon-style';" +
+                        "s.textContent='.next-service-icon svg,.page-title-icon svg{width:25px!important;height:25px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.9!important;stroke-linecap:round!important;stroke-linejoin:round!important}.next-service-icon,.page-title-icon{font-family:inherit!important}';document.head.appendChild(s);}" +
                         "function patchVisuals(){" +
                         "document.querySelectorAll('.vehicle-photo img').forEach(function(img){" +
                         "var source=((img.getAttribute('src')||'')+' '+(img.getAttribute('alt')||'')).toLowerCase();" +
@@ -89,10 +91,12 @@ public class MainActivity extends Activity {
                         "img.removeAttribute('onerror');img.style.removeProperty('display');" +
                         "var holder=img.closest('.vehicle-photo');if(holder){holder.classList.remove('image-load-error');}" +
                         "});" +
-                        "var icon=document.querySelector('.next-service-icon');" +
-                        "if(icon){icon.innerHTML='<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14.7 6.3a4 4 0 0 0-5 5L3.5 17.5a2.1 2.1 0 0 0 3 3l6.2-6.2a4 4 0 0 0 5-5l-2.5 2.5-3-3 2.5-2.5Z\"/><path d=\"m15.5 15.5 5 5\"/><path d=\"m18 13 3 3\"/></svg>';" +
-                        "var svg=icon.querySelector('svg');if(svg){svg.style.width='24px';svg.style.height='24px';}" +
-                        "}" +
+                        "var icons={" +
+                        "next:'<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"4\" y=\"5\" width=\"16\" height=\"15\" rx=\"2\"/><path d=\"M8 3v4M16 3v4M4 9h16\"/><path d=\"m8.5 14 2 2 4-4\"/></svg>'," +
+                        "service:'<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M14.7 6.3a4 4 0 0 0-5-5L12 3.6 9.6 6 7.3 3.7a4 4 0 0 0 5 5L19 15.4a2.1 2.1 0 1 1-3 3l-6.7-6.7\"/><path d=\"m4 20 5.2-5.2\"/><path d=\"M3 21l1-3 2 2-3 1Z\"/></svg>'," +
+                        "history:'<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M3 12a9 9 0 1 0 3-6.7\"/><path d=\"M3 4v6h6\"/><path d=\"M12 7v5l3 2\"/></svg>'};" +
+                        "var ni=document.querySelector('.next-service-icon');if(ni){ni.innerHTML=icons.next;}" +
+                        "document.querySelectorAll('.page-title-row').forEach(function(row){var h=row.querySelector('h2');var b=row.querySelector('.page-title-icon');if(!h||!b)return;var t=(h.textContent||'').trim();if(t==='Peugeot-Service')b.innerHTML=icons.service;if(t==='Historie')b.innerHTML=icons.history;});" +
                         "}" +
                         "patchVisuals();setTimeout(patchVisuals,80);setTimeout(patchVisuals,300);" +
                         "})();",
