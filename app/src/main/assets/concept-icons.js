@@ -33,6 +33,7 @@
     style.id='concept-icon-system-style';
     style.textContent=`
       .next-service-icon svg,.page-title-icon svg{width:25px!important;height:25px!important;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+      .next-service-panel:after{display:none!important;background:none!important;content:none!important}
       .service-group-title.concept-category-title,.manual-picker-group-title.concept-category-title{display:flex!important;align-items:center!important;gap:8px!important}
       .concept-category-icon{width:22px;height:22px;flex:0 0 22px;display:inline-grid;place-items:center;border-radius:7px}
       .concept-category-icon svg{width:18px;height:18px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
