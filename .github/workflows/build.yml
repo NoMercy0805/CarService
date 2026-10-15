@@ -49,20 +49,6 @@ jobs:
           assert 'Nebenaggregateriemen' not in s
           PY
 
-      - name: Fetch exact Peugeot vehicle photos
-        run: |
-          set -euo pipefail
-          UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36'
-          curl --fail --location --retry 3 --user-agent "$UA" \
-            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Peugeot_508-SW_Side_view.JPG' \
-            -o app/src/main/assets/peugeot-508.jpg
-          curl --fail --location --retry 3 --user-agent "$UA" \
-            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Peugeot_2008_%282016_facelift%29_%282%29.jpg' \
-            -o app/src/main/assets/peugeot-2008.jpg
-          test $(stat -c%s app/src/main/assets/peugeot-508.jpg) -gt 20000
-          test $(stat -c%s app/src/main/assets/peugeot-2008.jpg) -gt 20000
-          file app/src/main/assets/peugeot-508.jpg app/src/main/assets/peugeot-2008.jpg
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -114,20 +100,6 @@ jobs:
           p.write_text(s)
           assert 'Nebenaggregateriemen' not in s
           PY
-
-      - name: Fetch exact Peugeot vehicle photos
-        run: |
-          set -euo pipefail
-          UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36'
-          curl --fail --location --retry 3 --user-agent "$UA" \
-            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Peugeot_508-SW_Side_view.JPG' \
-            -o app/src/main/assets/peugeot-508.jpg
-          curl --fail --location --retry 3 --user-agent "$UA" \
-            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Peugeot_2008_%282016_facelift%29_%282%29.jpg' \
-            -o app/src/main/assets/peugeot-2008.jpg
-          test $(stat -c%s app/src/main/assets/peugeot-508.jpg) -gt 20000
-          test $(stat -c%s app/src/main/assets/peugeot-2008.jpg) -gt 20000
-          file app/src/main/assets/peugeot-508.jpg app/src/main/assets/peugeot-2008.jpg
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
