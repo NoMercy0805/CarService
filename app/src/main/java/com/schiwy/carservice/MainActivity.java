@@ -81,6 +81,20 @@ public class MainActivity extends Activity {
                         "if(!document.getElementById('carservice-final-css')){" +
                         "var l=document.createElement('link');" +
                         "l.id='carservice-final-css';l.rel='stylesheet';l.href='final.css';document.head.appendChild(l);}" +
+                        "function patchVisuals(){" +
+                        "document.querySelectorAll('.vehicle-photo img').forEach(function(img){" +
+                        "var source=((img.getAttribute('src')||'')+' '+(img.getAttribute('alt')||'')).toLowerCase();" +
+                        "var replacement=source.indexOf('2008')>=0?'peugeot-2008.svg':'peugeot-508.svg';" +
+                        "if(!img.getAttribute('src')||img.getAttribute('src').indexOf(replacement)<0){img.setAttribute('src',replacement);}" +
+                        "img.removeAttribute('onerror');img.style.removeProperty('display');" +
+                        "var holder=img.closest('.vehicle-photo');if(holder){holder.classList.remove('image-load-error');}" +
+                        "});" +
+                        "var icon=document.querySelector('.next-service-icon');" +
+                        "if(icon){icon.innerHTML='<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14.7 6.3a4 4 0 0 0-5 5L3.5 17.5a2.1 2.1 0 0 0 3 3l6.2-6.2a4 4 0 0 0 5-5l-2.5 2.5-3-3 2.5-2.5Z\"/><path d=\"m15.5 15.5 5 5\"/><path d=\"m18 13 3 3\"/></svg>';" +
+                        "var svg=icon.querySelector('svg');if(svg){svg.style.width='24px';svg.style.height='24px';}" +
+                        "}" +
+                        "}" +
+                        "patchVisuals();setTimeout(patchVisuals,80);setTimeout(patchVisuals,300);" +
                         "})();",
                         null
                 );
