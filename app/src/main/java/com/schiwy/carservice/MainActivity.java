@@ -97,6 +97,8 @@ public class MainActivity extends Activity {
                         "var v=document.createElement('script');v.id='carservice-vin-profile';v.src='vehicle-vin-profile.js';document.head.appendChild(v);}" +
                         "if(!document.getElementById('carservice-history-inline')){" +
                         "var h=document.createElement('script');h.id='carservice-history-inline';h.src='history-ui-fix.js';document.head.appendChild(h);}" +
+                        "if(!document.getElementById('carservice-first-aid-kit')){" +
+                        "var a=document.createElement('script');a.id='carservice-first-aid-kit';a.src='first-aid-kit.js';document.head.appendChild(a);}" +
                         "})();",
                         null
                 );
