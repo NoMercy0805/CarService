@@ -80,7 +80,7 @@
   function patchVehicleImages(){
     document.querySelectorAll('.vehicle-photo img').forEach(img=>{
       const source=((img.getAttribute('src')||'')+' '+(img.getAttribute('alt')||'')).toLowerCase();
-      const replacement=source.includes('2008')?'peugeot-2008.svg':'peugeot-508.svg';
+      const replacement=source.includes('2008')?'peugeot-2008.jpg':'peugeot-508.jpg';
       if(!img.getAttribute('src') || !img.getAttribute('src').endsWith(replacement)) img.setAttribute('src',replacement);
       img.removeAttribute('onerror');
       img.style.removeProperty('display');
