@@ -1,0 +1,1 @@
+The vehicle card artwork is supplied by the app owner and is stored as local APK assets. Runtime code must use these committed assets and must not replace them with generic SVG vehicle drawings.
