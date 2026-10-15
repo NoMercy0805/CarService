@@ -23,19 +23,15 @@ jobs:
           python3 - <<'PY'
           import json
           from pathlib import Path
-
           mapping = json.loads(Path('vehicle-identification.json').read_text())['vehicles']
           html = Path('app/src/main/assets/index.html').read_text()
-
           assert mapping['508']['hsn'] == '3003' and mapping['508']['tsn'] == 'AOK'
           assert mapping['508']['profiles'] == ['508_early', '508_late']
           assert mapping['2008']['hsn'] == '3003' and mapping['2008']['tsn'] == 'AUH'
           assert mapping['2008']['profiles'] == ['2008_normal', '2008_severe']
-
           assert 'const options=v.id==="508"?["508_early","508_late"]:["2008_normal","2008_severe"];' in html
           assert 'id:"508",name:"Peugeot 508 SW"' in html and 'profile:"508_late"' in html
           assert 'id:"2008",name:"Peugeot 2008"' in html and 'profile:"2008_normal"' in html
-
           print('Vehicle/profile mapping OK: 3003/AOK -> 508 profiles; 3003/AUH -> 2008 profiles')
           PY
 
@@ -56,12 +52,12 @@ jobs:
       - name: Fetch exact Peugeot vehicle photos
         run: |
           set -euo pipefail
-          UA='CarService-build/1.0 (Wikimedia Commons licensed assets)'
-          curl --fail --location --retry 3 -A "$UA" \
-            'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Peugeot_508-SW_Side_view.JPG/1024px-Peugeot_508-SW_Side_view.JPG' \
+          UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36'
+          curl --fail --location --retry 3 --user-agent "$UA" \
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Peugeot_508-SW_Side_view.JPG' \
             -o app/src/main/assets/peugeot-508.jpg
-          curl --fail --location --retry 3 -A "$UA" \
-            'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Peugeot_2008_%282016_facelift%29_%282%29.jpg/1024px-Peugeot_2008_%282016_facelift%29_%282%29.jpg' \
+          curl --fail --location --retry 3 --user-agent "$UA" \
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Peugeot_2008_%282016_facelift%29_%282%29.jpg' \
             -o app/src/main/assets/peugeot-2008.jpg
           test $(stat -c%s app/src/main/assets/peugeot-508.jpg) -gt 20000
           test $(stat -c%s app/src/main/assets/peugeot-2008.jpg) -gt 20000
@@ -93,19 +89,15 @@ jobs:
           python3 - <<'PY'
           import json
           from pathlib import Path
-
           mapping = json.loads(Path('vehicle-identification.json').read_text())['vehicles']
           html = Path('app/src/main/assets/index.html').read_text()
-
           assert mapping['508']['hsn'] == '3003' and mapping['508']['tsn'] == 'AOK'
           assert mapping['508']['profiles'] == ['508_early', '508_late']
           assert mapping['2008']['hsn'] == '3003' and mapping['2008']['tsn'] == 'AUH'
           assert mapping['2008']['profiles'] == ['2008_normal', '2008_severe']
-
           assert 'const options=v.id==="508"?["508_early","508_late"]:["2008_normal","2008_severe"];' in html
           assert 'id:"508",name:"Peugeot 508 SW"' in html and 'profile:"508_late"' in html
           assert 'id:"2008",name:"Peugeot 2008"' in html and 'profile:"2008_normal"' in html
-
           print('Vehicle/profile mapping OK: 3003/AOK -> 508 profiles; 3003/AUH -> 2008 profiles')
           PY
 
@@ -126,12 +118,12 @@ jobs:
       - name: Fetch exact Peugeot vehicle photos
         run: |
           set -euo pipefail
-          UA='CarService-build/1.0 (Wikimedia Commons licensed assets)'
-          curl --fail --location --retry 3 -A "$UA" \
-            'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Peugeot_508-SW_Side_view.JPG/1024px-Peugeot_508-SW_Side_view.JPG' \
+          UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36'
+          curl --fail --location --retry 3 --user-agent "$UA" \
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Peugeot_508-SW_Side_view.JPG' \
             -o app/src/main/assets/peugeot-508.jpg
-          curl --fail --location --retry 3 -A "$UA" \
-            'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Peugeot_2008_%282016_facelift%29_%282%29.jpg/1024px-Peugeot_2008_%282016_facelift%29_%282%29.jpg' \
+          curl --fail --location --retry 3 --user-agent "$UA" \
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Peugeot_2008_%282016_facelift%29_%282%29.jpg' \
             -o app/src/main/assets/peugeot-2008.jpg
           test $(stat -c%s app/src/main/assets/peugeot-508.jpg) -gt 20000
           test $(stat -c%s app/src/main/assets/peugeot-2008.jpg) -gt 20000
@@ -191,7 +183,6 @@ jobs:
           }
           trap report ERR
           exec > >(tee "$LOG") 2>&1
-
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -1)
           echo "apksigner: $APKSIGNER"
           test -x "$APKSIGNER"
