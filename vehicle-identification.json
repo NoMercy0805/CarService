@@ -9,7 +9,7 @@
       "engineFamily": "DW10CTED4",
       "powerKw": 120,
       "powerPs": 163,
-      "profiles": ["508_early"],
+      "profiles": ["508_early", "508_late"],
       "selectedProfile": "508_early",
       "note": "VIN-specific binding: RHH/DW10CTED4, early 508 maintenance schedule. Normal service 30,000 km / 24 months; timing belt and water pump 240,000 km / 120 months."
     },
