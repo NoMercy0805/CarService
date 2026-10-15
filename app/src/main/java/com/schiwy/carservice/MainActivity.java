@@ -93,6 +93,8 @@ public class MainActivity extends Activity {
                         "var b=document.createElement('script');b.id='carservice-backup-system';b.src='backup.js';document.head.appendChild(b);}" +
                         "if(!document.getElementById('carservice-service-ui-fix')){" +
                         "var f=document.createElement('script');f.id='carservice-service-ui-fix';f.src='service-ui-fix.js';document.head.appendChild(f);}" +
+                        "if(!document.getElementById('carservice-vin-profile')){" +
+                        "var v=document.createElement('script');v.id='carservice-vin-profile';v.src='vehicle-vin-profile.js';document.head.appendChild(v);}" +
                         "})();",
                         null
                 );
