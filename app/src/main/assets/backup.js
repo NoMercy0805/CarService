@@ -29,8 +29,9 @@
   function setStatus(message,kind){
     const el=document.getElementById('autoBackupStatus');
     if(!el) return;
-    el.textContent=message;
-    el.dataset.kind=kind||'info';
+    if(el.textContent!==message) el.textContent=message;
+    const nextKind=kind||'info';
+    if(el.dataset.kind!==nextKind) el.dataset.kind=nextKind;
   }
 
   function folderName(){
@@ -115,8 +116,12 @@
     const clear=document.getElementById('clearBackupFolderBtn');
     if(!label) return;
     const name=folderName();
-    label.textContent=name?('Backup-Ordner: '+name):'Noch kein Backup-Ordner gewählt';
-    if(clear) clear.style.display=name?'block':'none';
+    const text=name?('Backup-Ordner: '+name):'Noch kein Backup-Ordner gewählt';
+    if(label.textContent!==text) label.textContent=text;
+    if(clear){
+      const display=name?'block':'none';
+      if(clear.style.display!==display) clear.style.display=display;
+    }
   }
 
   function installSettingsUi(){
@@ -186,7 +191,6 @@
     }else setStatus('Ordnerauswahl abgebrochen.','info');
   };
 
-  // Intercept every successful CarService save without changing the existing business logic.
   const originalSetItem=Storage.prototype.setItem;
   Storage.prototype.setItem=function(key,value){
     originalSetItem.apply(this,arguments);
@@ -200,6 +204,4 @@
   installStyle();
   installSettingsUi();
   backupNow(false);
-
-  new MutationObserver(()=>{installSettingsUi();refreshFolderUi();}).observe(document.documentElement,{childList:true,subtree:true});
 })();
