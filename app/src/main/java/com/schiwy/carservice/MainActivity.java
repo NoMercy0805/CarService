@@ -103,6 +103,8 @@ public class MainActivity extends Activity {
                         "var hu=document.createElement('script');hu.id='carservice-hu-status';hu.src='hu-status.js';document.head.appendChild(hu);}" +
                         "if(!document.getElementById('carservice-save-feedback')){" +
                         "var sf=document.createElement('script');sf.id='carservice-save-feedback';sf.src='save-feedback.js';document.head.appendChild(sf);}" +
+                        "if(!document.getElementById('carservice-manual-picker-search')){" +
+                        "var ms=document.createElement('script');ms.id='carservice-manual-picker-search';ms.src='manual-picker-search.js';document.head.appendChild(ms);}" +
                         "})();",
                         null
                 );
