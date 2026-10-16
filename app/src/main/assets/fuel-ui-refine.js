@@ -7,6 +7,7 @@
     var style=document.createElement('style');
     style.id='carservice-fuel-ui-refine-style';
     style.textContent=`
+      body.carservice-fuel-page-active #vehicleTabs{display:none!important}
       #carChipsRow{display:none!important}
       .fuel-vehicle-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0}
       .fuel-vehicle-card-grid .vehicle-tab{min-height:0!important;width:100%;margin:0}
@@ -24,6 +25,11 @@
       @media(max-width:390px){.fuel-vehicle-card-grid{gap:8px}.fuel-vehicle-card-grid .vehicle-tab .vehicle-photo{height:76px}.fuel-vehicle-card-grid .vehicle-tab strong{font-size:13px}}
     `;
     document.head.appendChild(style);
+  }
+
+  function syncTopVehicleVisibility(){
+    var page=document.getElementById('page-fuel');
+    document.body.classList.toggle('carservice-fuel-page-active',!!(page&&page.classList.contains('active')));
   }
 
   function hiddenProxy(carId){
@@ -130,6 +136,7 @@
     wireHistory();
     syncVehicleCards();
     syncAllButton();
+    syncTopVehicleVisibility();
   }
 
   function observe(){
@@ -142,8 +149,9 @@
       });
       if(needsCardSync){syncVehicleCards();syncAllButton();}
       ensureAllButton();
+      syncTopVehicleVisibility();
     });
-    observer.observe(page,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+    observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 
     var top=document.getElementById('vehicleTabs');
     if(top){
