@@ -9,6 +9,10 @@
     try{return Array.isArray(state.vehicles)?state.vehicles:[];}catch(e){return [];}
   }
 
+  function getVehicle(id){
+    return getVehicles().find(function(v){return String(v.id)===String(id);})||null;
+  }
+
   function findRecord(id){
     var found=null;
     getVehicles().some(function(v){
@@ -18,6 +22,19 @@
       return false;
     });
     return found;
+  }
+
+  function lastFuelTypeForVehicle(vehicleId){
+    var v=getVehicle(vehicleId);
+    if(!v) return 'Diesel';
+    if(v.lastFuelType) return v.lastFuelType;
+    var logs=Array.isArray(v.fuelLogs)?v.fuelLogs.slice():[];
+    logs.sort(function(a,b){
+      var byDate=String(b.date||'').localeCompare(String(a.date||''));
+      return byDate||String(b.id||'').localeCompare(String(a.id||''));
+    });
+    var last=logs.find(function(l){return !!l.fuelType;});
+    return last&&last.fuelType?last.fuelType:'Diesel';
   }
 
   function ensureFuelTypeField(){
@@ -57,6 +74,8 @@
             });
           }
           if(target) target.fuelType=pendingSave.type||'Diesel';
+          var selectedVehicle=getVehicle(pendingSave.vehicleId);
+          if(selectedVehicle) selectedVehicle.lastFuelType=pendingSave.type||'Diesel';
         }catch(e){}
       }
       return original.apply(this,arguments);
@@ -72,9 +91,11 @@
     var original=btn.onclick;
     btn.onclick=function(){
       var type=document.getElementById('fuelType');
+      var vehicle=document.getElementById('fuelVehicle');
       var title=document.getElementById('fuelModalTitle');
       pendingSave={
         type:type&&type.value?type.value:'Diesel',
+        vehicleId:vehicle&&vehicle.value?vehicle.value:null,
         editingId:title&&title.textContent.indexOf('bearbeiten')>=0&&lastEdit?lastEdit.id:null,
         beforeIds:allIds()
       };
@@ -90,6 +111,24 @@
     select.value=rec&&rec.fuelType?rec.fuelType:'Diesel';
   }
 
+  function setTypeForNew(vehicleId){
+    ensureFuelTypeField();
+    var select=document.getElementById('fuelType');
+    if(!select) return;
+    select.value=lastFuelTypeForVehicle(vehicleId);
+  }
+
+  function wireVehicleSelect(){
+    var vehicle=document.getElementById('fuelVehicle');
+    if(!vehicle||vehicle.__fuelTypeWired) return;
+    vehicle.__fuelTypeWired=true;
+    vehicle.addEventListener('change',function(){
+      var title=document.getElementById('fuelModalTitle');
+      var editing=title&&title.textContent.indexOf('bearbeiten')>=0;
+      if(!editing) setTypeForNew(vehicle.value);
+    });
+  }
+
   function wireOpenTracking(){
     if(document.__fuelTypeOpenTracking) return;
     document.__fuelTypeOpenTracking=true;
@@ -103,7 +142,12 @@
       var fab=e.target.closest&&e.target.closest('#fuelFab');
       if(fab){
         lastEdit=null;
-        setTimeout(function(){ensureFuelTypeField();var s=document.getElementById('fuelType');if(s)s.value='Diesel';},0);
+        setTimeout(function(){
+          ensureFuelTypeField();
+          wireVehicleSelect();
+          var vehicle=document.getElementById('fuelVehicle');
+          setTypeForNew(vehicle&&vehicle.value?vehicle.value:null);
+        },0);
       }
     },true);
   }
@@ -129,6 +173,7 @@
       ensureFuelTypeField();
       wrapSave();
       wireSaveButton();
+      wireVehicleSelect();
       annotateRows();
     }).observe(root,{childList:true,subtree:true});
   }
@@ -137,6 +182,7 @@
     ensureFuelTypeField();
     wrapSave();
     wireSaveButton();
+    wireVehicleSelect();
     wireOpenTracking();
     annotateRows();
     observe();
