@@ -85,6 +85,8 @@ public class MainActivity extends Activity {
                 super.onPageFinished(view, url);
                 view.evaluateJavascript(
                         "(function(){" +
+                        "if(!document.getElementById('carservice-native-storage')){" +
+                        "var ns=document.createElement('script');ns.id='carservice-native-storage';ns.src='native-storage.js';document.head.appendChild(ns);}" +
                         "if(!document.getElementById('carservice-final-css')){" +
                         "var l=document.createElement('link');l.id='carservice-final-css';l.rel='stylesheet';l.href='final.css';document.head.appendChild(l);}" +
                         "if(!document.getElementById('carservice-concept-icons')){" +
