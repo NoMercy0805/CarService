@@ -21,7 +21,12 @@
       .fuel-row{cursor:pointer;transition:background .15s ease}
       .fuel-row:active{background:var(--paper)}
       .fuel-actions{max-height:0;opacity:0;overflow:hidden;margin-top:0;pointer-events:none;transition:max-height .2s ease,opacity .2s ease,margin-top .2s ease}
-      .fuel-row[data-fuel-actions-open="1"] .fuel-actions{max-height:54px;opacity:1;margin-top:7px;pointer-events:auto}
+      .fuel-row[data-fuel-actions-open="1"] .fuel-actions{max-height:78px;opacity:1;margin-top:10px;pointer-events:auto}
+      .fuel-actions{gap:10px!important}
+      .fuel-action-wrap{gap:4px!important;min-width:56px!important}
+      .fuel-icon-btn{width:36px!important;height:36px!important;border-radius:12px!important;padding:0!important;box-shadow:0 2px 8px rgba(0,0,0,.06)!important}
+      .fuel-icon-btn svg{width:15px!important;height:15px!important;display:block}
+      .fuel-icon-label{font-size:10px!important;line-height:1.15!important;font-weight:650!important;margin-top:0!important;color:var(--muted)!important}
       @media(max-width:390px){.fuel-vehicle-card-grid{gap:8px}.fuel-vehicle-card-grid .vehicle-tab .vehicle-photo{height:76px}.fuel-vehicle-card-grid .vehicle-tab strong{font-size:13px}}
     `;
     document.head.appendChild(style);
