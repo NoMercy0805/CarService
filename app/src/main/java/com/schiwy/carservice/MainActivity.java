@@ -105,6 +105,8 @@ public class MainActivity extends Activity {
                         "var sf=document.createElement('script');sf.id='carservice-save-feedback';sf.src='save-feedback.js';document.head.appendChild(sf);}" +
                         "if(!document.getElementById('carservice-manual-picker-search')){" +
                         "var ms=document.createElement('script');ms.id='carservice-manual-picker-search';ms.src='manual-picker-search.js';document.head.appendChild(ms);}" +
+                        "if(!document.getElementById('carservice-fuel-tracker')){" +
+                        "var ft=document.createElement('script');ft.id='carservice-fuel-tracker';ft.src='fuel-tracker.js';document.head.appendChild(ft);}" +
                         "})();",
                         null
                 );
