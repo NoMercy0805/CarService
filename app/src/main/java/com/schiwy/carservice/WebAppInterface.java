@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-/** Native bridge for CarService backups, storage and reminders. */
+/** Native bridge for CarService backups and persistent storage. */
 public class WebAppInterface {
     private static final String PREFS = "backup_prefs";
     private static final String KEY_TREE_URI = "backup_tree_uri";
@@ -54,54 +54,6 @@ public class WebAppInterface {
     public void nativeRemoveItem(String key) {
         NativeKeyValueStore.getInstance(context).removeItem(key);
     }
-
-    // ---------- Fälligkeits-Benachrichtigungen ----------
-
-    @JavascriptInterface
-    public void syncReminderData(String json) {
-        if (json == null) return;
-        try {
-            new JSONArray(json);
-            context.getSharedPreferences(ReminderReceiver.PREFS, Context.MODE_PRIVATE)
-                    .edit().putString(ReminderReceiver.KEY_DATA, json).apply();
-            ReminderReceiver.schedule(context);
-            ReminderReceiver.checkNow(context);
-        } catch (Exception ignored) {}
-    }
-
-    @JavascriptInterface
-    public String getReminderSettings() {
-        SharedPreferences prefs = context.getSharedPreferences(ReminderReceiver.PREFS, Context.MODE_PRIVATE);
-        JSONObject obj = new JSONObject();
-        try {
-            obj.put("service", prefs.getBoolean("enabled_service", true));
-            obj.put("hu", prefs.getBoolean("enabled_hu", true));
-            obj.put("firstAid", prefs.getBoolean("enabled_firstAid", true));
-            obj.put("permission", activity.isNotificationPermissionGranted());
-        } catch (Exception ignored) {}
-        return obj.toString();
-    }
-
-    @JavascriptInterface
-    public void setReminderEnabled(String type, boolean enabled) {
-        if (!"service".equals(type) && !"hu".equals(type) && !"firstAid".equals(type)) return;
-        context.getSharedPreferences(ReminderReceiver.PREFS, Context.MODE_PRIVATE)
-                .edit().putBoolean("enabled_" + type, enabled).apply();
-        ReminderReceiver.schedule(context);
-        ReminderReceiver.checkNow(context);
-    }
-
-    @JavascriptInterface
-    public boolean isReminderPermissionGranted() {
-        return activity.isNotificationPermissionGranted();
-    }
-
-    @JavascriptInterface
-    public void requestReminderPermission() {
-        mainHandler.post(activity::requestNotificationPermissionIfNeeded);
-    }
-
-    // ---------- Backups ----------
 
     @JavascriptInterface
     public void pickBackupFolder() {
@@ -193,6 +145,10 @@ public class WebAppInterface {
         }
     }
 
+    /**
+     * Keeps two app-private, last-known-good snapshots. These survive WebView/localStorage
+     * corruption and are updated atomically whenever valid CarService data is saved.
+     */
     @JavascriptInterface
     public synchronized boolean saveInternalBackup(String json) {
         if (!isValidBackup(json)) return false;
