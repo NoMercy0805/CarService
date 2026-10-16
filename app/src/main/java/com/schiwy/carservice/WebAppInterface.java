@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-/** Native bridge for CarService backups. */
+/** Native bridge for CarService backups and persistent storage. */
 public class WebAppInterface {
     private static final String PREFS = "backup_prefs";
     private static final String KEY_TREE_URI = "backup_tree_uri";
@@ -36,6 +36,23 @@ public class WebAppInterface {
     public WebAppInterface(MainActivity activity) {
         this.activity = activity;
         this.context = activity.getApplicationContext();
+    }
+
+    // ---------- Native SQLite storage ----------
+
+    @JavascriptInterface
+    public String nativeGetItem(String key) {
+        return NativeKeyValueStore.getInstance(context).getItem(key);
+    }
+
+    @JavascriptInterface
+    public void nativeSetItem(String key, String value) {
+        NativeKeyValueStore.getInstance(context).setItem(key, value);
+    }
+
+    @JavascriptInterface
+    public void nativeRemoveItem(String key) {
+        NativeKeyValueStore.getInstance(context).removeItem(key);
     }
 
     @JavascriptInterface
