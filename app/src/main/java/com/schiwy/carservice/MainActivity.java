@@ -1,7 +1,9 @@
 package com.schiwy.carservice;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
@@ -20,6 +22,7 @@ import androidx.webkit.WebViewClientCompat;
 public class MainActivity extends Activity {
 
     private static final int FOLDER_PICKER_REQUEST = 778;
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 779;
     private WebView webView;
     private WebAppInterface bridge;
 
@@ -35,13 +38,12 @@ public class MainActivity extends Activity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int flags = window.getDecorView().getSystemUiVisibility();
-            if (!darkMode) {
-                flags |= android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-            } else {
-                flags &= ~android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
-            }
+            if (!darkMode) flags |= android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            else flags &= ~android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
             window.getDecorView().setSystemUiVisibility(flags);
         }
+
+        ReminderReceiver.schedule(this);
 
         webView = new WebView(this);
         webView.setBackgroundColor(darkMode ? Color.rgb(15, 16, 19) : Color.rgb(246, 248, 252));
@@ -113,6 +115,8 @@ public class MainActivity extends Activity {
                         "var fr=document.createElement('script');fr.id='carservice-fuel-ui-refine';fr.src='fuel-ui-refine.js';document.head.appendChild(fr);}" +
                         "if(!document.getElementById('carservice-fuel-type')){" +
                         "var ftype=document.createElement('script');ftype.id='carservice-fuel-type';ftype.src='fuel-type.js';document.head.appendChild(ftype);}" +
+                        "if(!document.getElementById('carservice-reminders')){" +
+                        "var rem=document.createElement('script');rem.id='carservice-reminders';rem.src='reminders.js';document.head.appendChild(rem);}" +
                         "})();",
                         null
                 );
@@ -121,6 +125,17 @@ public class MainActivity extends Activity {
 
         webView.clearCache(true);
         webView.loadUrl("https://appassets.androidplatform.net/assets/index.html");
+    }
+
+    boolean isNotificationPermissionGranted() {
+        return Build.VERSION.SDK_INT < 33
+                || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= 33 && !isNotificationPermissionGranted()) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST);
+        }
     }
 
     /** Called by AndroidBridge.pickBackupFolder(). */
@@ -186,14 +201,9 @@ public class MainActivity extends Activity {
         webView.evaluateJavascript(
                 "(function(){ return window.closeAnyOpenOverlay ? window.closeAnyOpenOverlay() : false; })();",
                 value -> {
-                    if ("true".equals(value)) {
-                        return;
-                    }
-                    if (webView.canGoBack()) {
-                        webView.goBack();
-                    } else {
-                        MainActivity.super.onBackPressed();
-                    }
+                    if ("true".equals(value)) return;
+                    if (webView.canGoBack()) webView.goBack();
+                    else MainActivity.super.onBackPressed();
                 }
         );
     }
