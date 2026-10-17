@@ -13,7 +13,7 @@
       .due-status-tile span{display:block;font-size:10.5px;font-weight:800;color:var(--muted);margin-bottom:4px}
       .due-status-tile b{display:block;font-size:15px;line-height:1.15;color:var(--ink)}
       .due-status-tile small{display:block;margin-top:4px;font-size:10px;line-height:1.25;color:var(--muted)}
-      .due-status-tile.ok{border-color:rgba(0,169,113,.30)}
+      .due-status-tile.ok{border-color:rgba(0,169,113,.30);background:var(--green-soft)}
       .due-status-tile.soon{border-color:rgba(230,135,0,.42);background:var(--orange-soft)}
       .due-status-tile.due{border-color:rgba(227,66,42,.38);background:var(--red-soft)}
       .due-status-tile.unknown{border-color:rgba(47,128,237,.25)}
