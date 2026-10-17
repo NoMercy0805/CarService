@@ -16,6 +16,53 @@
     document.head.appendChild(style);
   }
 
+  function monthValue(value){
+    const s=String(value||'');
+    return /^\d{4}-\d{2}/.test(s)?s.slice(0,7):'';
+  }
+
+  function monthEnd(value){
+    const m=monthValue(value);
+    if(!m) return '';
+    const p=m.split('-');
+    const last=new Date(Number(p[0]),Number(p[1]),0).getDate();
+    return `${p[0]}-${p[1]}-${String(last).padStart(2,'0')}`;
+  }
+
+  function fmtMonth(value){
+    const m=monthValue(value);
+    if(!m) return '–';
+    const p=m.split('-');
+    return `${p[1]}/${p[0]}`;
+  }
+
+  function monthDiff(value){
+    const m=monthValue(value);
+    if(!m) return null;
+    const p=m.split('-');
+    const now=new Date();
+    return (Number(p[0])*12+(Number(p[1])-1))-(now.getFullYear()*12+now.getMonth());
+  }
+
+  function normalizeSettingsInput(){
+    const input=document.getElementById('settingsHuDue');
+    if(!input || typeof vehicle!=='function') return;
+    input.type='month';
+    input.value=monthValue(vehicle().huDue||'');
+    const field=input.closest('.field');
+    if(field){
+      const label=field.querySelector('label');
+      if(label) label.textContent='Nächste HU / TÜV';
+      let help=field.querySelector('.hu-month-help');
+      if(!help){
+        help=document.createElement('div');
+        help.className='help hu-month-help';
+        field.appendChild(help);
+      }
+      help.textContent='Monat und Jahr laut HU-Plakette bzw. Prüfbericht.';
+    }
+  }
+
   function ensureCard(){
     let card=document.getElementById('huDashboardCard');
     if(card) return card;
@@ -35,6 +82,7 @@
 
   function renderHuStatus(){
     ensureStyle();
+    normalizeSettingsInput();
     const card=ensureCard();
     if(!card || typeof vehicle!=='function') return;
     const v=vehicle();
@@ -42,24 +90,46 @@
     const text=document.getElementById('huDashboardText');
     const badge=document.getElementById('huDashboardBadge');
     badge.className='hu-status-badge';
-    if(!due){
-      text.textContent='Nächster HU-Termin nicht eingetragen · antippen zum Eintragen';
+    if(!monthValue(due)){
+      text.textContent='Nächster HU-Monat nicht eingetragen · antippen zum Eintragen';
       badge.classList.add('unknown');badge.textContent='Offen';return;
     }
-    const days=typeof daysBetween==='function'?daysBetween(today(),due):Math.ceil((new Date(due+'T12:00:00')-new Date())/86400000);
-    if(days<0){
-      text.textContent='Überfällig seit '+(typeof fmtDate==='function'?fmtDate(due):due)+' · Termin vereinbaren';
+    const diff=monthDiff(due);
+    if(diff<0){
+      text.textContent='Überfällig seit '+fmtMonth(due)+' · Termin vereinbaren';
       badge.classList.add('due');badge.textContent='Überfällig';
-    }else if(days===0){
-      text.textContent='Heute fällig';
-      badge.classList.add('due');badge.textContent='Heute';
-    }else if(days<=60){
-      text.textContent='Fällig am '+(typeof fmtDate==='function'?fmtDate(due):due)+' · noch '+days+' '+(days===1?'Tag':'Tage');
+    }else if(diff===0){
+      text.textContent='Diesen Monat fällig · '+fmtMonth(due);
+      badge.classList.add('soon');badge.textContent='Diesen Monat';
+    }else if(diff<=2){
+      text.textContent='Fällig '+fmtMonth(due);
       badge.classList.add('soon');badge.textContent='Bald';
     }else{
-      text.textContent='Nächste HU am '+(typeof fmtDate==='function'?fmtDate(due):due);
+      text.textContent='Nächste HU '+fmtMonth(due);
       badge.classList.add('ok');badge.textContent='Gültig';
     }
+  }
+
+  const originalRenderSettings=typeof renderSettings==='function'?renderSettings:null;
+  if(originalRenderSettings){
+    renderSettings=function(){
+      originalRenderSettings();
+      normalizeSettingsInput();
+    };
+  }
+
+  const originalSaveVehicleSettings=typeof saveVehicleSettings==='function'?saveVehicleSettings:null;
+  if(originalSaveVehicleSettings){
+    saveVehicleSettings=function(){
+      normalizeSettingsInput();
+      const input=document.getElementById('settingsHuDue');
+      const chosen=input?input.value:'';
+      originalSaveVehicleSettings();
+      vehicle().huDue=monthEnd(chosen);
+      save();
+      renderAll();
+      renderHuStatus();
+    };
   }
 
   const originalRenderDashboard=typeof renderDashboard==='function'?renderDashboard:null;
