@@ -15,14 +15,50 @@
     document.head.appendChild(style);
   }
 
+  function monthValue(value){
+    const s=String(value||'');
+    return /^\d{4}-\d{2}/.test(s)?s.slice(0,7):'';
+  }
+
+  function monthEnd(value){
+    const m=monthValue(value);
+    if(!m) return '';
+    const parts=m.split('-');
+    const y=Number(parts[0]),mon=Number(parts[1]);
+    const last=new Date(y,mon,0).getDate();
+    return `${parts[0]}-${parts[1]}-${String(last).padStart(2,'0')}`;
+  }
+
+  function fmtMonth(value){
+    const m=monthValue(value);
+    if(!m) return '–';
+    const p=m.split('-');
+    return `${p[1]}/${p[0]}`;
+  }
+
+  function monthDiff(value){
+    const m=monthValue(value);
+    if(!m) return null;
+    const p=m.split('-');
+    const now=new Date();
+    return (Number(p[0])*12+(Number(p[1])-1))-(now.getFullYear()*12+now.getMonth());
+  }
+
   function ensureSettingsField(){
-    if(document.getElementById('settingsFirstAidDue')) return;
-    const hu=document.getElementById('settingsHuDue');
-    if(!hu) return;
-    const field=document.createElement('div');
-    field.className='field';
-    field.innerHTML='<label>Verbandskasten haltbar bis</label><input id="settingsFirstAidDue" class="input" type="date"><div class="help">Das Ablaufdatum gilt für den Verbandskasten im aktuell ausgewählten Fahrzeug.</div>';
-    hu.closest('.field').insertAdjacentElement('afterend',field);
+    let input=document.getElementById('settingsFirstAidDue');
+    if(!input){
+      const hu=document.getElementById('settingsHuDue');
+      if(!hu) return;
+      const field=document.createElement('div');
+      field.className='field';
+      field.innerHTML='<label>Verbandskasten haltbar bis</label><input id="settingsFirstAidDue" class="input" type="month"><div class="help">Monat und Jahr laut Aufdruck des Verbandskastens.</div>';
+      hu.closest('.field').insertAdjacentElement('afterend',field);
+      input=document.getElementById('settingsFirstAidDue');
+    }
+    if(input){
+      input.type='month';
+      input.value=monthValue(vehicle().firstAidDue||'');
+    }
     const sub=document.querySelector('[data-open-settings="fahrzeug"] .settings-nav-sub');
     if(sub) sub.textContent='Kennzeichen, Kilometer, FIN, HU, Verbandskasten und Wartungsplan';
   }
@@ -52,19 +88,22 @@
     const text=document.getElementById('firstAidDashboardText');
     const status=document.getElementById('firstAidDashboardStatus');
     status.className='first-aid-status';
-    if(!due){
-      text.textContent='Ablaufdatum nicht eingetragen · antippen zum Eintragen';
+    if(!monthValue(due)){
+      text.textContent='Ablaufmonat nicht eingetragen · antippen zum Eintragen';
       status.classList.add('unknown');status.textContent='Offen';return;
     }
-    const days=typeof daysBetween==='function'?daysBetween(today(),due):Math.ceil((new Date(due+'T12:00:00')-new Date())/86400000);
-    if(days<0){
-      text.textContent='Abgelaufen am '+fmtDate(due)+' · bitte ersetzen';
+    const diff=monthDiff(due);
+    if(diff<0){
+      text.textContent='Abgelaufen seit '+fmtMonth(due)+' · bitte ersetzen';
       status.classList.add('due');status.textContent='Abgelaufen';
-    }else if(days<=90){
-      text.textContent='Haltbar bis '+fmtDate(due)+' · noch '+days+' '+(days===1?'Tag':'Tage');
+    }else if(diff===0){
+      text.textContent='Läuft diesen Monat ab · '+fmtMonth(due);
+      status.classList.add('soon');status.textContent='Diesen Monat';
+    }else if(diff<=3){
+      text.textContent='Haltbar bis '+fmtMonth(due);
       status.classList.add('soon');status.textContent='Bald';
     }else{
-      text.textContent='Haltbar bis '+fmtDate(due);
+      text.textContent='Haltbar bis '+fmtMonth(due);
       status.classList.add('ok');status.textContent='Gültig';
     }
   }
@@ -75,7 +114,7 @@
       originalRenderSettings();
       ensureSettingsField();
       const input=document.getElementById('settingsFirstAidDue');
-      if(input) input.value=vehicle().firstAidDue||'';
+      if(input) input.value=monthValue(vehicle().firstAidDue||'');
     };
   }
 
@@ -84,8 +123,11 @@
     saveVehicleSettings=function(){
       ensureSettingsField();
       const input=document.getElementById('settingsFirstAidDue');
-      if(input) vehicle().firstAidDue=input.value||'';
+      const chosen=input?input.value:'';
       originalSaveVehicleSettings();
+      vehicle().firstAidDue=monthEnd(chosen);
+      save();
+      renderAll();
       renderFirstAid();
     };
   }
