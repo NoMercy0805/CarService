@@ -11,23 +11,6 @@
       .first-aid-icon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:24px;font-weight:900;background:var(--primary-soft);color:var(--primary)}
       .first-aid-card h4{margin:0 0 3px;font-size:13.5px;line-height:1.25}.first-aid-card p{margin:0;font-size:11px;line-height:1.35;color:var(--muted)}
       .first-aid-status{font-size:10px;font-weight:800;padding:5px 8px;border-radius:999px;white-space:nowrap}.first-aid-status.ok{background:var(--green-soft);color:var(--green)}.first-aid-status.soon{background:var(--orange-soft);color:var(--orange)}.first-aid-status.due{background:var(--red-soft);color:var(--red)}.first-aid-status.unknown{background:var(--primary-soft);color:var(--primary)}
-      .vehicle-tabs{margin-top:10px!important;padding-top:2px!important}
-      .vehicle-tab{min-height:212px!important}
-      .vehicle-card-dates{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;margin-top:8px!important;padding-top:8px!important;border-top:1px solid var(--rule)!important}
-      .vehicle-card-date{min-width:0!important;padding:6px 7px!important;border-radius:9px!important;background:var(--paper)!important;color:var(--ink)!important}
-      .vehicle-tab.active .vehicle-card-date{background:rgba(255,255,255,.72)!important}
-      html[data-theme="dark"] .vehicle-tab.active .vehicle-card-date{background:rgba(15,17,22,.48)!important}
-      .vehicle-card-date small{display:block!important;margin:0 0 2px!important;font-size:8.8px!important;line-height:1.1!important;font-weight:750!important;color:var(--muted)!important;white-space:nowrap!important}
-      .vehicle-card-date b{display:block!important;font-size:10.5px!important;line-height:1.15!important;font-weight:800!important;color:var(--ink)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
-      #firstAidDashboardCard,#huDashboardCard{display:none!important}
-      @media(max-width:390px){
-        .vehicle-tabs{margin-top:8px!important}
-        .vehicle-tab{min-height:202px!important}
-        .vehicle-card-dates{gap:5px!important;margin-top:7px!important;padding-top:7px!important}
-        .vehicle-card-date{padding:5px 6px!important}
-        .vehicle-card-date small{font-size:8.3px!important}
-        .vehicle-card-date b{font-size:9.8px!important}
-      }
     `;
     document.head.appendChild(style);
   }
@@ -59,22 +42,6 @@
     const p=m.split('-');
     const now=new Date();
     return (Number(p[0])*12+(Number(p[1])-1))-(now.getFullYear()*12+now.getMonth());
-  }
-
-  function applyVehicleCardDates(){
-    ensureStyle();
-    if(typeof state==='undefined' || !state || !Array.isArray(state.vehicles)) return;
-    document.querySelectorAll('.vehicle-tab[data-vehicle]').forEach(tab=>{
-      const v=state.vehicles.find(x=>String(x.id)===String(tab.dataset.vehicle));
-      if(!v) return;
-      let dates=tab.querySelector('.vehicle-card-dates');
-      if(!dates){
-        dates=document.createElement('div');
-        dates.className='vehicle-card-dates';
-        tab.appendChild(dates);
-      }
-      dates.innerHTML='<span class="vehicle-card-date"><small>TÜV / HU</small><b>'+fmtMonth(v.huDue)+'</b></span><span class="vehicle-card-date"><small>Verbandskasten</small><b>'+fmtMonth(v.firstAidDue)+'</b></span>';
-    });
   }
 
   function bindDirectSave(){
@@ -127,7 +94,6 @@
   function renderFirstAid(){
     ensureStyle();
     ensureSettingsField();
-    applyVehicleCardDates();
     const card=ensureDashboardCard();
     if(!card || typeof vehicle!=='function') return;
     const v=vehicle();
@@ -173,16 +139,6 @@
       if(input) vehicle().firstAidDue=monthEnd(input.value);
       originalSaveVehicleSettings();
       renderFirstAid();
-      applyVehicleCardDates();
-    };
-  }
-
-  const originalRenderTabs=typeof renderTabs==='function'?renderTabs:null;
-  if(originalRenderTabs){
-    renderTabs=function(){
-      const result=originalRenderTabs.apply(this,arguments);
-      applyVehicleCardDates();
-      return result;
     };
   }
 
@@ -193,13 +149,12 @@
 
   const originalRenderAll=typeof renderAll==='function'?renderAll:null;
   if(originalRenderAll){
-    renderAll=function(){originalRenderAll();renderFirstAid();applyVehicleCardDates();};
+    renderAll=function(){originalRenderAll();renderFirstAid();};
   }
 
   ensureSettingsField();
   bindDirectSave();
   renderFirstAid();
-  applyVehicleCardDates();
-  setTimeout(function(){bindDirectSave();applyVehicleCardDates();},250);
-  new MutationObserver(function(){bindDirectSave();applyVehicleCardDates();}).observe(document.documentElement,{childList:true,subtree:true});
+  setTimeout(bindDirectSave,250);
+  new MutationObserver(bindDirectSave).observe(document.documentElement,{childList:true,subtree:true});
 })();
