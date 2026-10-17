@@ -7,11 +7,17 @@
     const style=document.createElement('style');
     style.id='hu-status-style';
     style.textContent=`
-      .hu-status-card{width:100%;display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;text-align:left;margin:0 0 14px;padding:13px 14px;border:1px solid var(--rule);border-radius:16px;background:var(--surface2);color:var(--ink);box-shadow:0 4px 14px rgba(40,77,118,.055)}
-      .hu-status-icon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary)}
-      .hu-status-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-      .hu-status-card h4{margin:0 0 3px;font-size:13.5px;line-height:1.25}.hu-status-card p{margin:0;font-size:11px;line-height:1.35;color:var(--muted)}
-      .hu-status-badge{font-size:10px;font-weight:800;padding:5px 8px;border-radius:999px;white-space:nowrap}.hu-status-badge.ok{background:var(--green-soft);color:var(--green)}.hu-status-badge.soon{background:var(--orange-soft);color:var(--orange)}.hu-status-badge.due{background:var(--red-soft);color:var(--red)}.hu-status-badge.unknown{background:var(--primary-soft);color:var(--primary)}
+      #firstAidDashboardCard,#huDashboardCard{display:none!important}
+      .due-status-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+      .due-status-tile{width:100%;text-align:left;border:1px solid var(--rule);border-radius:15px;background:var(--surface2);padding:12px 13px;box-shadow:0 4px 14px rgba(40,77,118,.055);color:var(--ink)}
+      .due-status-tile span{display:block;font-size:10.5px;font-weight:800;color:var(--muted);margin-bottom:4px}
+      .due-status-tile b{display:block;font-size:15px;line-height:1.15;color:var(--ink)}
+      .due-status-tile small{display:block;margin-top:4px;font-size:10px;line-height:1.25;color:var(--muted)}
+      .due-status-tile.ok{border-color:rgba(0,169,113,.30)}
+      .due-status-tile.soon{border-color:rgba(230,135,0,.42);background:var(--orange-soft)}
+      .due-status-tile.due{border-color:rgba(227,66,42,.38);background:var(--red-soft)}
+      .due-status-tile.unknown{border-color:rgba(47,128,237,.25)}
+      @media(max-width:390px){.due-status-strip{gap:8px}.due-status-tile{padding:11px}.due-status-tile b{font-size:14px}}
     `;
     document.head.appendChild(style);
   }
@@ -44,6 +50,15 @@
     return (Number(p[0])*12+(Number(p[1])-1))-(now.getFullYear()*12+now.getMonth());
   }
 
+  function statusFor(value,soonMonths){
+    const diff=monthDiff(value);
+    if(diff===null) return {cls:'unknown',text:'Nicht eingetragen'};
+    if(diff<0) return {cls:'due',text:'Überfällig'};
+    if(diff===0) return {cls:'soon',text:'Diesen Monat'};
+    if(diff<=soonMonths) return {cls:'soon',text:'Bald fällig'};
+    return {cls:'ok',text:'Gültig'};
+  }
+
   function normalizeSettingsInput(){
     const input=document.getElementById('settingsHuDue');
     if(!input || typeof vehicle!=='function') return;
@@ -63,59 +78,43 @@
     }
   }
 
-  function ensureCard(){
-    let card=document.getElementById('huDashboardCard');
-    if(card) return card;
-    const firstAid=document.getElementById('firstAidDashboardCard');
+  function ensureStatusStrip(){
     const panel=document.querySelector('#page-dashboard .next-service-panel');
     if(!panel) return null;
-    card=document.createElement('button');
-    card.type='button';
-    card.id='huDashboardCard';
-    card.className='hu-status-card';
-    card.innerHTML='<span class="hu-status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16"/><path d="m8.5 14 2 2 4-4"/></svg></span><span><h4>TÜV / HU</h4><p id="huDashboardText">Nächster Termin nicht eingetragen</p></span><span id="huDashboardBadge" class="hu-status-badge unknown">Offen</span>';
-    card.onclick=()=>{ if(typeof openSettingsSub==='function') openSettingsSub('fahrzeug'); };
-    if(firstAid) firstAid.insertAdjacentElement('afterend',card);
-    else panel.insertAdjacentElement('afterend',card);
-    return card;
+    let strip=document.getElementById('dueStatusStrip');
+    if(!strip){
+      strip=document.createElement('div');
+      strip.id='dueStatusStrip';
+      strip.className='due-status-strip';
+      strip.innerHTML='<button type="button" id="dueStatusHu" class="due-status-tile"><span>TÜV / HU</span><b>–</b><small>Nicht eingetragen</small></button><button type="button" id="dueStatusFirstAid" class="due-status-tile"><span>Verbandskasten</span><b>–</b><small>Nicht eingetragen</small></button>';
+      panel.insertAdjacentElement('beforebegin',strip);
+      strip.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{ if(typeof openSettingsSub==='function') openSettingsSub('fahrzeug'); });
+    }
+    return strip;
+  }
+
+  function renderStatusStrip(){
+    ensureStyle();
+    const strip=ensureStatusStrip();
+    if(!strip || typeof vehicle!=='function') return;
+    const v=vehicle();
+    const hu=statusFor(v.huDue,2);
+    const aid=statusFor(v.firstAidDue,3);
+    const huTile=document.getElementById('dueStatusHu');
+    const aidTile=document.getElementById('dueStatusFirstAid');
+    if(huTile){huTile.className='due-status-tile '+hu.cls;huTile.querySelector('b').textContent=fmtMonth(v.huDue);huTile.querySelector('small').textContent=hu.text;}
+    if(aidTile){aidTile.className='due-status-tile '+aid.cls;aidTile.querySelector('b').textContent=fmtMonth(v.firstAidDue);aidTile.querySelector('small').textContent=aid.text;}
   }
 
   function renderHuStatus(){
     ensureStyle();
     normalizeSettingsInput();
-    const card=ensureCard();
-    if(!card || typeof vehicle!=='function') return;
-    const v=vehicle();
-    const due=String(v.huDue||'');
-    const text=document.getElementById('huDashboardText');
-    const badge=document.getElementById('huDashboardBadge');
-    badge.className='hu-status-badge';
-    if(!monthValue(due)){
-      text.textContent='Nächster HU-Monat nicht eingetragen · antippen zum Eintragen';
-      badge.classList.add('unknown');badge.textContent='Offen';return;
-    }
-    const diff=monthDiff(due);
-    if(diff<0){
-      text.textContent='Überfällig seit '+fmtMonth(due)+' · Termin vereinbaren';
-      badge.classList.add('due');badge.textContent='Überfällig';
-    }else if(diff===0){
-      text.textContent='Diesen Monat fällig · '+fmtMonth(due);
-      badge.classList.add('soon');badge.textContent='Diesen Monat';
-    }else if(diff<=2){
-      text.textContent='Fällig '+fmtMonth(due);
-      badge.classList.add('soon');badge.textContent='Bald';
-    }else{
-      text.textContent='Nächste HU '+fmtMonth(due);
-      badge.classList.add('ok');badge.textContent='Gültig';
-    }
+    renderStatusStrip();
   }
 
   const originalRenderSettings=typeof renderSettings==='function'?renderSettings:null;
   if(originalRenderSettings){
-    renderSettings=function(){
-      originalRenderSettings();
-      normalizeSettingsInput();
-    };
+    renderSettings=function(){originalRenderSettings();normalizeSettingsInput();};
   }
 
   const originalSaveVehicleSettings=typeof saveVehicleSettings==='function'?saveVehicleSettings:null;
