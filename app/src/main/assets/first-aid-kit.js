@@ -44,6 +44,18 @@
     return (Number(p[0])*12+(Number(p[1])-1))-(now.getFullYear()*12+now.getMonth());
   }
 
+  function bindDirectSave(){
+    const btn=document.getElementById('saveVehicleSettings');
+    if(!btn || btn.dataset.firstAidSaveBound==='1') return;
+    btn.dataset.firstAidSaveBound='1';
+    btn.addEventListener('click',function(){
+      const input=document.getElementById('settingsFirstAidDue');
+      if(typeof vehicle==='function' && input){
+        vehicle().firstAidDue=monthEnd(input.value);
+      }
+    },true);
+  }
+
   function ensureSettingsField(){
     let input=document.getElementById('settingsFirstAidDue');
     if(!input){
@@ -57,8 +69,9 @@
     }
     if(input){
       input.type='month';
-      input.value=monthValue(vehicle().firstAidDue||'');
+      if(document.activeElement!==input) input.value=monthValue(vehicle().firstAidDue||'');
     }
+    bindDirectSave();
     const sub=document.querySelector('[data-open-settings="fahrzeug"] .settings-nav-sub');
     if(sub) sub.textContent='Kennzeichen, Kilometer, FIN, HU, Verbandskasten und Wartungsplan';
   }
@@ -123,11 +136,8 @@
     saveVehicleSettings=function(){
       ensureSettingsField();
       const input=document.getElementById('settingsFirstAidDue');
-      const chosen=input?input.value:'';
+      if(input) vehicle().firstAidDue=monthEnd(input.value);
       originalSaveVehicleSettings();
-      vehicle().firstAidDue=monthEnd(chosen);
-      save();
-      renderAll();
       renderFirstAid();
     };
   }
@@ -142,5 +152,9 @@
     renderAll=function(){originalRenderAll();renderFirstAid();};
   }
 
+  ensureSettingsField();
+  bindDirectSave();
   renderFirstAid();
+  setTimeout(bindDirectSave,250);
+  new MutationObserver(bindDirectSave).observe(document.documentElement,{childList:true,subtree:true});
 })();
